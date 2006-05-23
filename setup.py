@@ -8,7 +8,7 @@ except ImportError:
 # revision (set to True for real releases)
 RELEASE = False
 
-__version__ = '1.0a2'
+__version__ = '3.0b2'
 
 from setuptools import setup, find_packages
 import sys, os
@@ -18,23 +18,23 @@ import finddata
 
 setup(
     name="SchevoGtk",
-    
+
     version=__version__,
-    
+
     description="Schevo tools for PyGTK",
-    
+
     long_description=textwrap.dedent("""
     Provides integration between Schevo_ and PyGTK_.
 
     .. _Schevo: http://schevo.org/
 
     .. _PyGTK: http://pygtk.org/
-    
+
     The latest development version is available in a `Subversion
     repository
     <svn://orbtech.com/schevo/SchevoGtk/trunk#egg=SchevoGtk-dev>`__.
     """),
-    
+
     classifiers=[
 ##     'Development Status :: 4 - Beta',
 ##     'Environment :: Console',
@@ -49,9 +49,9 @@ setup(
     keywords='',
     
     author='Orbtech, L.L.C. and contributors',
-    author_email='schevo-devel@lists.orbtech.com',
+    author_email='schevo-devel@lists.schevo.org',
 
-    url='http://schevo.org/SchevoGtk/',
+    url='http://schevo.org/trac/wiki/SchevoGtk',
     
     license='LGPL',
     
@@ -61,14 +61,10 @@ setup(
 
     package_data=finddata.find_package_data(),
 
-    namespace_packages=['schevo'],
-
     zip_safe=False,
     
     install_requires=[
-    'Schevo==dev,>=3.0b2dev-r1728',
-    'PyProtocols >= 1.0a0dev',
-    'RuleDispatch >= 0.5a0dev',
+    'Schevo==dev,>=3.0b2dev-r2093',
     # XXX: The following don't work yet.
 ##     'kiwi==dev',
 ##     'gazpacho==dev',
@@ -83,7 +79,7 @@ setup(
     },
     
     entry_points = """
-    [schevo.evo_command]
-    gnav = schevo.gtk.script:start
+    [schevo.schevo_command]
+    gnav = schevogtk2.script:start
     """,
     )
