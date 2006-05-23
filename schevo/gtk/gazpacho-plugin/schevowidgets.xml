@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<glade-catalog name="schevowidgets" library="schevo">
+
+  <glade-widget-classes>
+    <glade-widget-class name="EntityGrid"
+                        generic-name="entity_grid"
+                        title="Entity Grid" />
+    <glade-widget-class name="ExtentGrid"
+                        generic-name="extent_grid"
+                        title="Extent Grid" />
+    <glade-widget-class name="RelatedGrid"
+                        generic-name="related_grid"
+                        title="Related Grid" />
+    <glade-widget-class name="FieldLabel"
+                        generic-name="field_label"
+                        title="Field Label" />
+    <glade-widget-class name="DynamicField"
+                        generic-name="dynamic_field"
+                        title="Dynamic Field" />
+  </glade-widget-classes>
+
+  <glade-widget-group name="schevo" title="Schevo Widgets">
+    <glade-widget-class-ref name="EntityGrid"/>
+    <glade-widget-class-ref name="ExtentGrid"/>
+    <glade-widget-class-ref name="RelatedGrid"/>
+    <glade-widget-class-ref name="FieldLabel"/>
+    <glade-widget-class-ref name="DynamicField"/>
+  </glade-widget-group>
+  
+</glade-catalog>
