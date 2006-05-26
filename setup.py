@@ -8,7 +8,7 @@ except ImportError:
 # revision (set to True for real releases)
 RELEASE = False
 
-__version__ = '3.0b2'
+__version__ = '1.0a1'
 
 from setuptools import setup, find_packages
 import sys, os
