@@ -32,7 +32,7 @@ setup(
 
     The latest development version is available in a `Subversion
     repository
-    <svn://orbtech.com/schevo/SchevoGtk/trunk#egg=SchevoGtk-dev>`__.
+    <http://schevo.org/svn/trunk/Gtk#egg=SchevoGtk-dev>`__.
     """),
 
     classifiers=[
