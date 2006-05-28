@@ -55,17 +55,12 @@ class Grid(objectlist.ObjectList):
         view.set_model(None)
         self.unselect_all()
         self.clear()
+##         model.set_sort_column_id(1, gtk.SORT_ASCENDING)
         if instances:
             iters = self._iters
             for instance in instances:
                 inst_id = id(instance)
                 iters[inst_id] = model.append((instance,))
-            sort_column_index = self._sort_column_index
-            if sort_column_index != -1:
-                column = self._columns[sort_column_index]
-                view_column = view.get_column(sort_column_index)
-                view_column.set_sort_indicator(True)
-                model.set_sort_column_id(sort_column_index, column.order)
             if self._autosize:
                 view.columns_autosize()
                 self._autosize = False
