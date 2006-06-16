@@ -3,6 +3,7 @@
 For copyright, license, and warranty, see bottom of file.
 """
 
+import gc
 import sys
 from schevo.lib import optimize
 
@@ -55,6 +56,7 @@ class Grid(objectlist.ObjectList):
         view.set_model(None)
         self.unselect_all()
         self.clear()
+        gc.collect()
 ##         model.set_sort_column_id(1, gtk.SORT_ASCENDING)
         if instances:
             iters = self._iters
@@ -69,7 +71,7 @@ class Grid(objectlist.ObjectList):
         else:
             view.set_model(model)
         view.thaw_notify()
-        gobject.idle_add(self.set_cursor)
+        self.set_cursor()
 
     def _after_treeview__key_press_event(self, widget, event):
         keyval = event.keyval

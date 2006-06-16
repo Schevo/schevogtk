@@ -142,7 +142,7 @@ class EntityGrid(grid.Grid):
         oids.clear()
         for instance in instances:
             inst_id = id(instance)
-            oids[instance.sys.oid] = inst_id
+            oids[instance._oid] = inst_id
         super(EntityGrid, self).set_rows(instances)
 
     def _get_columns_for_extent(self, extent):
