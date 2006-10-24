@@ -10,10 +10,22 @@ from schevo.label import label, plural
 
 from schevogtk2 import action
 from schevogtk2 import grid
+from schevogtk2 import icon
+from schevogtk2.utils import gsignal, type_register
 
 import gtk
 
-from kiwi.utils import gsignal, type_register
+from schevogtk2.grid import OBJECT_COLUMN
+
+
+class ExtentColumn(grid.Column):
+
+    _has_icon = True
+
+    def cell_icon(self, column, cell, model, row_iter):
+        extent = model[row_iter][OBJECT_COLUMN]
+        pixbuf = icon.small_pixbuf(self, extent)
+        cell.set_property('pixbuf', pixbuf)
 
 
 class ExtentGrid(grid.Grid):
@@ -23,18 +35,19 @@ class ExtentGrid(grid.Grid):
     gsignal('action-selected', object)
 
     def __init__(self):
-        columns = []
-        column = grid.Column('_plural', 'Name', data_type=str, sorted=True)
-        columns.append(column)
-        column = grid.CallableColumn('__len__', 'Qty',
-                                     data_type=int, sorted=False)
-        columns.append(column)
-        super(ExtentGrid, self).__init__(columns)
+        super(ExtentGrid, self).__init__()
         self._show_hidden_extents = False
         self._filter = self._model.filter_new()
         self._filter.set_visible_func(self._is_visible)
+        self._sorter = gtk.TreeModelSort(self._filter)
         self._row_popup_menu = PopupMenu(self)
         self._set_bindings()
+        columns = []
+        column = ExtentColumn('_plural', 'Name', str)
+        columns.append(column)
+        column = grid.Column('__len__', 'Qty', int, call=True)
+        columns.append(column)
+        self.set_columns(columns)
 
     def select_action(self, action):
         self.emit('action-selected', action)
@@ -65,14 +78,12 @@ class ExtentGrid(grid.Grid):
     show_hidden_extents = property(fget=_get_show_hidden_extents,
                                    fset=_set_show_hidden_extents)
 
-    def _is_visible(self, model, treeiter):
-        extent = model[treeiter][0]
-        if extent is None:
-            # XXX Find out why this is happening.
-            return False
-        visible = True
-        if extent.hidden and not self._show_hidden_extents:
-            visible = False
+    def _is_visible(self, model, row_iter):
+        visible = False
+        extent = model[row_iter][OBJECT_COLUMN]
+        if extent is not None:
+            if self._show_hidden_extents or not extent.hidden:
+                visible = True
         return visible
 
     def _set_bindings(self):

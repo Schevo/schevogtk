@@ -13,15 +13,9 @@ environ._root = root  # XXX Evil hackery.
 environ.add_resource(resource='glade', path='glade')
 
 
-import gettext
-
-## import gobject
-## import gtk
-
 from gazpacho.loader.custom import (
     Adapter, PythonWidgetAdapter, adapter_registry)
 
-from kiwi.log import Logger
 
 # Schevo widgets.
 from schevogtk2.entitygrid import EntityGrid
@@ -29,11 +23,6 @@ from schevogtk2.extentgrid import ExtentGrid
 from schevogtk2.field import FieldLabel
 from schevogtk2.field import DynamicField
 from schevogtk2.relatedgrid import RelatedGrid
-
-
-_ = gettext.gettext
-
-log = Logger('gazpacholoader')
 
 
 class EntityGridAdapter(PythonWidgetAdapter):

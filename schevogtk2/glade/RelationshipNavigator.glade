@@ -110,7 +110,7 @@
                     <widget class="GtkVBox" id="header_vbox">
                         <property name="visible">True</property>
                         <child>
-                            <widget class="ProxyLabel" id="header_label">
+                            <widget class="GtkLabel" id="header_label">
                                 <property name="label" context="yes" translatable="yes">Extent :: Entity Label</property>
                                 <property name="visible">True</property>
                                 <property name="xalign">0.0</property>

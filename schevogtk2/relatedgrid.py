@@ -10,10 +10,10 @@ from schevo.label import label, plural
 
 from schevogtk2 import action
 from schevogtk2 import grid
+from schevogtk2 import icon
+from schevogtk2.utils import gsignal, type_register
 
 import gtk
-
-from kiwi.utils import gsignal, type_register
 
 
 class Related(object):
@@ -29,6 +29,16 @@ class Related(object):
         return self.entity.sys.count(self.extent.name, self.field_name)
 
 
+class RelatedExtentColumn(grid.Column):
+
+    _has_icon = True
+
+    def cell_icon(self, column, cell, model, row):
+        extent = model[row][0].extent
+        pixbuf = icon.small_pixbuf(self, extent)
+        cell.set_property('pixbuf', pixbuf)
+
+
 class RelatedGrid(grid.Grid):
 
     __gtype_name__ = 'RelatedGrid'
@@ -36,21 +46,21 @@ class RelatedGrid(grid.Grid):
     gsignal('action-selected', object)
 
     def __init__(self):
-        columns = []
-        column = grid.Column('plural', 'Name', data_type=str, sorted=True)
-        columns.append(column)
-        column = grid.Column('field_label', 'Field',
-                             data_type=str, sorted=False)
-        columns.append(column)
-        column = grid.CallableColumn('__len__', 'Qty',
-                                     data_type=int, sorted=False)
-        columns.append(column)
-        super(RelatedGrid, self).__init__(columns)
+        super(RelatedGrid, self).__init__()
         self._show_hidden_extents = False
         self._filter = self._model.filter_new()
         self._filter.set_visible_func(self._is_visible)
+        self._sorter = gtk.TreeModelSort(self._filter)
         self._row_popup_menu = PopupMenu(self)
         self._set_bindings()
+        columns = []
+        column = RelatedExtentColumn('plural', 'Name', str)
+        columns.append(column)
+        column = grid.Column('field_label', 'Field', str)
+        columns.append(column)
+        column = grid.Column('__len__', 'Qty', int, call=True)
+        columns.append(column)
+        self.set_columns(columns)
 
     def select_action(self, action):
         self.emit('action-selected', action)
@@ -84,8 +94,8 @@ class RelatedGrid(grid.Grid):
     show_hidden_extents = property(fget=_get_show_hidden_extents,
                                    fset=_set_show_hidden_extents)
 
-    def _is_visible(self, model, treeiter):
-        related = model[treeiter][0]
+    def _is_visible(self, model, row):
+        related = model[row][0]
         if related is None:
             # XXX Find out why this is happening.
             return False

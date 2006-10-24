@@ -9,33 +9,39 @@ from schevo.lib import optimize
 import gtk
 from gtk import gdk
 
-from kiwi.ui.delegates import Delegate
-
-from schevogtk2.field import FieldLabel, DynamicField
-from schevogtk2 import plugin
-
 import schevo.base
 from schevo.label import label
 
+from schevogtk2.field import FieldLabel, DynamicField
+from schevogtk2 import plugin
+from schevogtk2.utils import gsignal
+from schevogtk2.widgettree import GladeSignalBroker, WidgetTree
 
-class CustomWindow(Delegate):
+
+class CustomWindow(object):
 
     gladefile = ''
-    toplevel_name = ''
 
-    def __init__(self, db, tx, keyactions=None):
-        Delegate.__init__(self,
-                          keyactions=keyactions,
-                          gladefile=self.gladefile,
-                          toplevel_name=self.toplevel_name)
+    def __init__(self, db, tx):
+        self._bindings = {}
         self._db = db
         self._tx = tx
         self.tx_result = None
-        self.get_toplevel().connect('hide', self.quit)
-        self.set_widgets()
+        self.widgets = []
+        wt = self._glade_adaptor = WidgetTree(self, self.gladefile,
+                                              self.widgets)
+        toplevel = self.toplevel = wt.get_widget(self.gladefile)
+        assert isinstance(toplevel, gtk.Window)
+        toplevel.connect('delete-event', self._on_delete_event)
+        toplevel.connect('hide', self.quit)
+        toplevel.connect('key-press-event', self._on_key_press_event)
+        self._accel_groups = gtk.accel_groups_from_object(toplevel)
+        self._broker = GladeSignalBroker(self, self)
+        self._set_widgets()
+        self._set_bindings()
 
     def destroy(self, *args):
-        self.get_toplevel().destroy()
+        self.toplevel.destroy()
 
     def execute_tx(self):
         tx = self._tx
@@ -48,31 +54,60 @@ class CustomWindow(Delegate):
             try:
                 setattr(tx, name, value)
             except Exception, e:
-                show_error(self.get_toplevel(), Exception, e)
+                show_error(self.toplevel, Exception, e)
                 return
         try:
             self.result = self._db.execute(tx)
         except Exception, e:
-            show_error(self.get_toplevel(), Exception, e)
+            show_error(self.toplevel, Exception, e)
+            if not hasattr(sys, 'frozen'):
+                raise
         except:
             raise
         else:
             self.hide()
 
+    def hide(self):
+        self.toplevel.hide()
+
+    def _on_delete_event(self, window, event):
+        self.quit()
+
+    def _on_key_press_event(self, window, event):
+        keyval = event.keyval
+        mask = event.state & gdk.MODIFIER_MASK
+        binding = (keyval, mask)
+        if binding in self._bindings:
+            func = self._bindings[binding]
+            func()
+
     def quit(self, *args):
         gtk.main_quit()
 
     def run(self):
-        self.show()
+        self.toplevel.show()
         gtk.main()
 
+    def _set_bindings(self):
+        items = [
+            ('<Control>F4', self.hide),
+            ('Escape', self.hide),
+            ]
+        self._bindings = dict([(gtk.accelerator_parse(name), func)
+                               for name, func in items])
+        # Hack to support these with CapsLock on.
+        for name, func in items:
+            keyval, mod = gtk.accelerator_parse(name)
+            mod = mod | gtk.gdk.LOCK_MASK
+            self._bindings[(keyval, mod)] = func
+
     def set_cursor(self, cursor=None):
-        window = self.get_toplevel().window
+        window = self.toplevel.window
         # If the app isn't running yet there is no gdk.window.
         if window is not None:
             window.set_cursor(cursor)
 
-    def set_widgets(self):
+    def _set_widgets(self):
         db = self._db
         tx = self._tx
         for name in tx.f:
@@ -81,6 +116,24 @@ class CustomWindow(Delegate):
             label.set_field(db, field)
             widget = getattr(self, name)
             widget.set_field(db, field)
+
+    def _get_all_methods(self, klass=None):
+        klass = klass or self.__class__
+        # Very poor simulation of inheritance.
+        classes = [klass]
+        # Collect bases for class, using recursion.
+        for klass in classes:
+            map(classes.append, klass.__bases__)
+        # Order bases so that the class itself is the last one
+        # referred to in the loop. This guarantees that the
+        # inheritance ordering for the methods is preserved.
+        classes.reverse()
+        methods = {}
+        for c in classes:
+            for name in c.__dict__.keys():
+                # Use getattr() to ensure we get bound methods.
+                methods[name] = getattr(self, name)
+        return methods
 
 
 class FormBox(gtk.VBox):
@@ -113,6 +166,7 @@ class FormWindow(gtk.Window):
 
     def __init__(self):
         super(FormWindow, self).__init__()
+        self._bindings = {}
         self._db = None
         self._model = None
         self.tx_result = None
@@ -143,12 +197,22 @@ class FormWindow(gtk.Window):
         vbox.pack_start(bbox, expand=False, fill=True, padding=0)
         self.add(vbox)
         self.connect('hide', self.quit)
+        self.connect('key-press-event', self._on_key_press_event)
+        self._set_bindings()
 
     def on_cancel_button__clicked(self, widget):
         self.hide()
 
     def on_close_button__clicked(self, widget):
         self.hide()
+
+    def _on_key_press_event(self, window, event):
+        keyval = event.keyval
+        mask = event.state & gdk.MODIFIER_MASK
+        binding = (keyval, mask)
+        if binding in self._bindings:
+            func = self._bindings[binding]
+            func()
 
     def on_ok_button__clicked(self, widget):
         tx = self._model
@@ -166,6 +230,8 @@ class FormWindow(gtk.Window):
             self.tx_result = self._db.execute(tx)
         except Exception, e:
             show_error(self, Exception, e)
+            if not hasattr(sys, 'frozen'):
+                raise
         except:
             raise
         else:
@@ -177,6 +243,19 @@ class FormWindow(gtk.Window):
     def run(self):
         self.show()
         gtk.main()
+
+    def _set_bindings(self):
+        items = [
+            ('<Control>F4', self.hide),
+            ('Escape', self.hide),
+            ]
+        self._bindings = dict([(gtk.accelerator_parse(name), func)
+                               for name, func in items])
+        # Hack to support these with CapsLock on.
+        for name, func in items:
+            keyval, mod = gtk.accelerator_parse(name)
+            mod = mod | gtk.gdk.LOCK_MASK
+            self._bindings[(keyval, mod)] = func
 
     def set_db(self, db):
         self._db = db
@@ -199,7 +278,7 @@ class FormWindow(gtk.Window):
 
 def get_custom_tx_dialog(WindowClass, parent, db, tx):
     dialog = WindowClass(db, tx)
-    window = dialog.get_toplevel()
+    window = dialog.toplevel
     window.set_modal(True)
     window.set_transient_for(parent)
     window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
@@ -213,8 +292,9 @@ def get_default_tx_dialog(parent, db, tx):
     else:
         title = u'%s :: %s' % (label(tx), extent_name)
         text = u'%s :: %s' % (label(tx), extent_name)
-    field_map = tx.sys.fields()
+    field_map = tx.sys.field_map()
     fields = field_map.values()
+    fields = [field for field in fields if not field.hidden]
     dialog = get_dialog(title, parent, text, db, tx, fields)
     return dialog
 
@@ -226,6 +306,7 @@ def get_dialog(title, parent, text, db, model, fields):
     window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
     window.set_title(title)
     window.set_header_text(text)
+    fields = [field for field in fields if not field.hidden]
     window.set_fields(model, fields)
     return window
 
@@ -269,10 +350,15 @@ def get_view_dialog(parent, db, entity, action):
     extent_text = label(entity.sys.extent)
     title = u'View :: %s' % (extent_text, )
     text = u'View :: %s :: %s' % (extent_text, entity)
-    field_map = entity.sys.fields(include_expensive=action.include_expensive)
-    fields = field_map.values()
-    for field in fields:
-        field.readonly = True
+    def include(field):
+        if action.include_expensive:
+            return True
+        elif field.expensive:
+            return False
+        else:
+            return True
+    f_map = entity.sys.field_map(include)
+    fields = f_map.values()
     dialog = get_dialog(title, parent, text, db, entity, fields)
     return dialog
 

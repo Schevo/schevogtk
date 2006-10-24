@@ -1,7 +1,10 @@
-"""schevo.gtk / schevo.icon integration.
+"""schevogtk2 / schevo.icon integration.
 
 For copyright, license, and warranty, see bottom of file.
 """
+
+import sys
+from schevo.lib import optimize
 
 import weakref
 
@@ -9,8 +12,6 @@ import gtk
 
 from schevo.base import Extent
 from schevo.database import Database
-
-from schevo.lib import optimize
 
 
 _db_map = weakref.WeakKeyDictionary()
@@ -60,7 +61,7 @@ def large_pixbuf(widget, *args):
     """Return a large-size Pixbuf for the object."""
     iset = iconset(widget, *args)
     return iset.render_icon(
-        style=None,
+        style=widget.get_style(),
         direction=gtk.TEXT_DIR_NONE,
         state=gtk.STATE_NORMAL,
         size=gtk.ICON_SIZE_LARGE_TOOLBAR,
@@ -73,7 +74,7 @@ def small_pixbuf(widget, *args):
     """Return a small-size Pixbuf for the object."""
     iset = iconset(widget, *args)
     return iset.render_icon(
-        style=None,
+        style=widget.get_style(),
         direction=gtk.TEXT_DIR_NONE,
         state=gtk.STATE_NORMAL,
         size=gtk.ICON_SIZE_SMALL_TOOLBAR,
@@ -85,12 +86,14 @@ def small_pixbuf(widget, *args):
 def _iconset(widget, db, name):
     """Return an IconSet for an extent."""
     name_iconset = _db_map.setdefault(db, {})
-    style = widget.get_style()
+    style = None
+    if hasattr(widget, 'get_style'):
+        style = widget.get_style()
     if (style, name) in name_iconset:
         return name_iconset[(style, name)]
     else:
-        png = db._icon(name, use_default=False)
-        if png is None:
+        data = db._icon(name, use_default=False)
+        if data is None:
             if name in _stock_map:
                 stock_id = _stock_map[name]
             else:
@@ -98,7 +101,7 @@ def _iconset(widget, db, name):
             iset = style.lookup_icon_set(stock_id)
         else:
             loader = gtk.gdk.PixbufLoader()
-            loader.write(png)
+            loader.write(data)
             loader.close()
             pixbuf = loader.get_pixbuf()
             iset = gtk.IconSet(pixbuf)
@@ -106,7 +109,6 @@ def _iconset(widget, db, name):
         return iset
 
 
-import sys
 optimize.bind_all(sys.modules[__name__])  # Last line of module.
 
 

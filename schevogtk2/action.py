@@ -67,7 +67,12 @@ def get_view_actions(entity):
     """Return list of view actions for an entity instance."""
     actions = []
     if entity is not None:
-        for include_expensive in [False, True]:
+        options = [False]
+        for name, FieldClass in entity._field_spec.iteritems():
+            if FieldClass.expensive:
+                options.append(True)
+                break
+        for include_expensive in options:
             action = get_view_action(entity, include_expensive)
             actions.append(action)
     return actions

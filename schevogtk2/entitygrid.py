@@ -6,15 +6,42 @@ For copyright, license, and warranty, see bottom of file.
 import sys
 from schevo.lib import optimize
 
-import schevo.field
+from schevo import base
+from schevo import field
 from schevo.label import label, plural
+from schevo.constant import UNASSIGNED
+from schevo.error import EntityDoesNotExist
 
 from schevogtk2 import action
 from schevogtk2 import grid
+from schevogtk2 import icon
+from schevogtk2.utils import gsignal, type_register
 
 import gtk
 
-from kiwi.utils import gsignal, type_register
+from schevogtk2.grid import OBJECT_COLUMN
+
+
+class EntityColumn(grid.Column):
+
+    _has_icon = True
+
+    def cell_icon(self, column, cell, model, row_iter):
+        super(EntityColumn, self).cell_icon(column, cell, model, row_iter)
+        instance = model[row_iter][OBJECT_COLUMN]
+        try:
+            entity = getattr(instance, self.attribute)
+        except EntityDoesNotExist: 
+            entity = UNASSIGNED
+        if entity is UNASSIGNED:
+            cell.set_property('stock_id', gtk.STOCK_NO)
+            cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
+            cell.set_property('visible', False)
+        else:
+            extent = entity.sys.extent
+            pixbuf = icon.small_pixbuf(self, extent)
+            cell.set_property('pixbuf', pixbuf)
+            cell.set_property('visible', True)
 
 
 class EntityGrid(grid.Grid):
@@ -25,50 +52,85 @@ class EntityGrid(grid.Grid):
 
     def __init__(self):
         super(EntityGrid, self).__init__()
-        self._autosize = False
-        self._extent = None
-        self._related = None
-        self._oids = {}
+        self._hidden = []  # List of fieldnames of columns to hide.
         self._row_popup_menu = PopupMenu(self)
         self._set_bindings()
+        self.reset()
 
     def add_row(self, oid):
         instance = self._extent[oid]
-        inst_id = id(instance)
-        self._oids[oid] = inst_id
-        self._iters[inst_id] = self._model.append((instance,))
+        row_iter = super(EntityGrid, self).add_row(instance)
+        self._row_map[oid] = row_iter
+
+    def identify(self, instance):
+        return instance._oid
+
+    def refresh(self):
+        extent = self._extent
+        query = self._query
+        related = self._related
+        row_map = self._row_map
+        oids = []
+        if query is not None:
+            results = query()
+            self.set_rows([])
+            self.set_rows(results)
+        elif related is not None:
+            if related.entity.sys.exists:
+                if extent is not None:
+                    results = related.entity.sys.links(extent.name,
+                                                       related.field_name)
+                    oids = [entity._oid for entity in results]
+            else:
+                self.set_related(None)
+        elif extent is not None:
+            oids = extent.find_oids()
+        # Delete entities that no longer exist.
+        for oid in row_map.keys():
+            if oid not in oids:
+                self.remove_row(oid)
+        # Add new entities.
+        for oid in oids:
+            if oid not in row_map:
+                self.add_row(oid)
+        self.refilter()
+
+    def reflect_changes(self, result, tx):
+        if self._extent is not None:
+            summary = tx.sys.summarize()
+            for oid in summary.deletes.get(self._extent.name, []):
+                self.remove_row(oid)
+            for oid in summary.creates.get(self._extent.name, []):
+                self.add_row(oid)
+            if isinstance(result, self._extent._EntityClass):
+                self.select_row(result.sys.oid)
 
     def remove_row(self, oid):
         model = self._model
-        inst_id = self._oids.pop(oid)
+        row_iter = self._row_map.pop(oid)
         # Get the current position.
-        row_iter = self._iters[inst_id]
         pos = model[row_iter].path[0]
         # Remove the instance.
-        self._remove(inst_id)
+        model.remove(row_iter)
         # Select the next logical row, if any remain.
         end = len(model) - 1
         if pos > end:
             pos = end
         if pos > -1:
-            other = model[pos][0]
+            other = model[pos][OBJECT_COLUMN]
             self.select(other)
 
-    def select_row(self, oid):
-        inst_id = self._oids[oid]
-        row_iter = self._iters[inst_id]
-        self._select_and_focus_row(row_iter)
+    def reset(self):
+        self._extent = None
+        self._query = None
+        self._related = None
+        self._row_popup_menu.set_extent(None)
+        self.set_rows([])
+        self.set_columns([])
 
-    def reflect_changes(self, result, tx):
-        summary = tx.sys.summarize()
-        oids = summary.deletes.get(self._extent.name, [])
-        for oid in oids:
-            self.remove_row(oid)
-        oids = summary.creates.get(self._extent.name, [])
-        for oid in oids:
-            self.add_row(oid)
-        if result is not None:
-            self.select_row(result.sys.oid)
+    def select_row(self, oid):
+        row_iter = self._row_map[oid]
+        self.select_and_focus_row(row_iter)
 
     def select_action(self, action):
         self.emit('action-selected', action)
@@ -107,62 +169,82 @@ class EntityGrid(grid.Grid):
     def set_db(self, db):
         self._db = db
         if db is None:
-            self.set_extent(None)
+            self.reset()
 
     def set_extent(self, extent):
         if extent == self._extent:
             return
-        self._extent = extent
-        self._row_popup_menu.set_extent(extent)
-        self.set_rows([])
-        self.set_columns([])
+        self.reset()
         if extent is not None:
-            columns = self._get_columns_for_extent(extent)
-            results = extent.find()
+            self._extent = extent
+            self._row_popup_menu.set_extent(extent)
+            columns = self._get_columns_for_field_spec(extent.field_spec)
             self.set_columns(columns)
-            self.set_rows(results)
+            self.set_rows(extent)
+
+    def set_query(self, query):
+        if query == self._query:
+            return
+        self.reset()
+        if query is not None:
+            self._query = query
+            # For now, assume the results are homogenous and take the
+            # field_spec of the first result.
+            field_spec = None
+            results = query()
+            for result in results:
+                if field_spec is not None:
+                    break
+                if isinstance(result, base.Entity):
+                    field_spec = result._extent.field_spec
+                elif isinstance(result, base.View):
+                    field_spec = result._field_spec
+            if field_spec is not None:
+                columns = self._get_columns_for_field_spec(field_spec)
+                self.set_columns(columns)
+                self.set_rows(results)
 
     def set_related(self, related):
         if related == self._related:
             return
-        self._related = related
-        extent = related.extent
-        self._extent = extent
-        self._row_popup_menu.set_extent(extent)
-        self.set_rows([])
-        self.set_columns([])
-        if extent is not None:
-            columns = self._get_columns_for_extent(extent)
-            results = related.entity.sys.links(extent.name, related.field_name)
-            self.set_columns(columns)
-            self.set_rows(results)
+        self.reset()
+        if related is not None:
+            extent = related.extent
+            if extent is not None:
+                self._extent = extent
+                self._related = related
+                self._row_popup_menu.set_extent(extent)
+                columns = self._get_columns_for_field_spec(extent.field_spec)
+                results = related.entity.sys.links(extent.name,
+                                                   related.field_name)
+                self.set_columns(columns)
+                self.set_rows(results)
 
-    def set_rows(self, instances):
-        oids = self._oids
-        oids.clear()
-        for instance in instances:
-            inst_id = id(instance)
-            oids[instance._oid] = inst_id
-        super(EntityGrid, self).set_rows(instances)
-
-    def _get_columns_for_extent(self, extent):
+    def _get_columns_for_field_spec(self, field_spec):
         columns = []
-        column = grid.Column('_oid', 'OID', data_type=int, sorted=True)
-        columns.append(column)
-##         column = grid.Column('sys.rev', 'Rev', data_type=int)
-##         columns.append(column)
-        for field_name, FieldClass in extent.field_spec.iteritems():
-            data_type = str
-##             # XXX Don't like the look of a boolean column.
-##             if issubclass(FieldClass, schevo.field.Boolean):
-##                 data_type = bool
-            if issubclass(FieldClass, schevo.field.Float):
-                data_type = float
-            if issubclass(FieldClass, schevo.field.Integer):
-                data_type = int
+        if '_oid' not in self._hidden:
+            column = grid.Column('_oid', 'OID', data_type=int)
+            columns.append(column)
+        if '_rev' not in self._hidden:
+            column = grid.Column('_rev', 'Rev', data_type=int)
+            columns.append(column)
+        for field_name, FieldClass in field_spec.iteritems():
+            if field_name in self._hidden:
+                # Don't create a column for this field.
+                continue
+            if self._related and field_name == self._related.field_name:
+                # Don't create a column for the related field.
+                continue
             if not FieldClass.expensive and not FieldClass.hidden:
+                data_type = FieldClass.data_type
                 title = label(FieldClass)
-                column = grid.Column(field_name, title, data_type=data_type)
+                if issubclass(FieldClass, field.Entity):
+                    column = EntityColumn(field_name, title, data_type)
+                elif issubclass(FieldClass, field.Image):
+                    column = grid.Column(field_name, title, data_type,
+                                         type='pixbuf')
+                else:
+                    column = grid.Column(field_name, title, data_type)
                 columns.append(column)
         return columns
 
@@ -174,6 +256,11 @@ class EntityGrid(grid.Grid):
             ]
         self._bindings = dict([(gtk.accelerator_parse(name), func)
                                for name, func in items])
+        # Hack to support these with CapsLock on.
+        for name, func in items:
+            keyval, mod = gtk.accelerator_parse(name)
+            mod = mod | gtk.gdk.LOCK_MASK
+            self._bindings[(keyval, mod)] = func
 
 type_register(EntityGrid)
 

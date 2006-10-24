@@ -6,13 +6,12 @@ For copyright, license, and warranty, see bottom of file.
 import sys
 from schevo.lib import optimize
 
-from schevogtk2 import gazpacholoader
-from schevogtk2 import navigator
+from schevogtk2.navigator import NavigatorWindow
 
 
 class Application(object):
 
-    WindowClass = navigator.Window
+    WindowClass = NavigatorWindow
 
     def __init__(self, window_class=None):
         if window_class is None:

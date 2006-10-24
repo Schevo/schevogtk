@@ -6,51 +6,25 @@ For copyright, license, and warranty, see bottom of file.
 import sys
 from schevo.lib import optimize
 
+import os
+
+if os.name == 'nt':
+    import pywintypes
+    import win32con
+    import win32gui
+
 import gtk
+import pango
 
 import schevo.field
 from schevo.label import label
 from schevo.constant import UNASSIGNED
 
-from kiwi.ui.widgets.combo import ProxyComboEntry
-## from kiwi.ui.widgets.checkbutton import ProxyCheckButton
-## from kiwi.ui.widgets.entry import ProxyEntry
-from kiwi.ui.widgets.label import ProxyLabel
-
-from kiwi.utils import gsignal, type_register
+from schevogtk2 import icon
+from schevogtk2.utils import gsignal, type_register
 
 
-HIGHLIGHT_COLOR_NAME = 'LightSteelBlue'
-HIGHLIGHT_COLOR = gtk.gdk.color_parse(HIGHLIGHT_COLOR_NAME)
-
-
-class FieldLabel(gtk.EventBox):
-
-    __gtype_name__ = 'FieldLabel'
-
-    def __init__(self):
-        super(FieldLabel, self).__init__()
-        text = u'Field label:'
-        label = ProxyLabel()
-        label.set_text(text)
-        label.set_alignment(1.0, 0.5)
-        label.set_bold(True)
-        label.set_padding(5, 0)
-        label.show()
-        self.add(label)
-
-    def set_field(self, db, field):
-        label = self.child
-        text = u'%s:' % (field.label)
-        label.set_text(text)
-        if field.readonly:
-            label.set_bold(False)
-        else:
-            label.set_bold(True)
-        if not field.required and not field.readonly:
-            self.modify_bg(gtk.STATE_NORMAL, HIGHLIGHT_COLOR)
-
-type_register(FieldLabel)
+MONO_FONT = pango.FontDescription('monospace normal')
 
 
 class DynamicField(gtk.EventBox):
@@ -74,9 +48,12 @@ class DynamicField(gtk.EventBox):
             widget = widget.child
         if isinstance(widget, gtk.CheckButton):
             value = widget.get_active()
-        elif isinstance(widget, gtk.FileChooserButton):
+        elif isinstance(widget, FileChooser):
             value = widget.get_filename()
-        elif isinstance(widget, ProxyComboEntry):
+        elif isinstance(widget, gtk.Image):
+            # XXX Hack since images can't be edited.
+            value = self._field.get()
+        elif isinstance(widget, EntityChooser):
             value = widget.get_selected()
             if value is None:
                 value = UNASSIGNED
@@ -112,77 +89,17 @@ class DynamicField(gtk.EventBox):
             widget.connect('toggled', self._on_widget__value_changed, field)
         # Entity.
         elif isinstance(field, schevo.field.Entity) and not field.readonly:
-            allow = field.allow
-            if len(allow) > 1:
-                allow_multiple = True
-            else:
-                allow_multiple = False
-            widget = ProxyComboEntry()
-            items = []
-            values = []
-            # Unassigned.
-            items.append((u'<UNASSIGNED>', UNASSIGNED))
-            values.append(UNASSIGNED)
-            # Preferred values.
-            preferred_values = field.preferred_values or []
-            if preferred_values:
-                values.extend(preferred_values)
-                more = []
-                for entity in preferred_values:
-                    extent_text = label(entity.sys.extent)
-                    if allow_multiple:
-                        text = u'%s :: %s' % (entity, extent_text)
-                    else:
-                        text = u'%s' % (entity, )
-                    more.append((text, entity))
-                more.sort()
-                items.extend(more)
-                # Empty row separator.
-                items.append(('-' * 20, None))
-            more = []
-            valid_values = field.valid_values
-            if valid_values is not None:
-                # Specific valid values.
-                values.extend(valid_values)
-                for entity in valid_values:
-                    extent_text = label(entity.sys.extent)
-                    if entity in preferred_values:
-                        continue
-                    if allow_multiple:
-                        text = u'%s :: %s' % (entity, extent_text)
-                    else:
-                        text = u'%s' % (entity, )
-                    more.append((text, entity))
-            else:
-                # Other allowed values.
-                for extent_name in field.allow:
-                    extent = db.extent(extent_name)
-                    extent_text = label(extent)
-                    for entity in extent.find():
-                        if entity in preferred_values:
-                            continue
-                        values.append(entity)
-                        if allow_multiple:
-                            text = u'%s :: %s' % (entity, extent_text)
-                        else:
-                            text = u'%s' % (entity, )
-                        more.append((text, entity))
-            more.sort()
-            items.extend(more)
-            if value not in values:
-                entity = value
-                extent_text = label(entity.sys.extent)
-                # Empty row separator.
-                items.append(('=' * 20, None))
-                if allow_multiple:
-                    text = u'%s :: %s' % (entity, extent_text)
-                else:
-                    text = u'%s' % (entity, )
-                items.append((text, entity))
-            widget.prefill(items)
-            widget.select_item_by_data(value)
-            widget.connect('content-changed',
+            widget = EntityChooser(db, field)
+            widget.connect('changed',
                            self._on_widget__value_changed, field)
+        # Image.
+        elif isinstance(field, schevo.field.Image):
+            widget = gtk.Image()
+            loader = gtk.gdk.PixbufLoader()
+            loader.write(value)
+            loader.close()
+            pixbuf = loader.get_pixbuf()
+            widget.set_from_pixbuf(pixbuf)
         # Memo.
         elif isinstance(field, schevo.field.Memo):
             self.expand = True
@@ -194,6 +111,9 @@ class DynamicField(gtk.EventBox):
             widget.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
             widget.set_shadow_type(gtk.SHADOW_ETCHED_IN)
             control = textview = gtk.TextView()
+            if field.monospace:
+                textview.modify_font(MONO_FONT)
+            textview.set_accepts_tab(False)
             textview.show()
             textview.set_size_request(-1, 150)
             textbuff = textview.props.buffer
@@ -202,15 +122,10 @@ class DynamicField(gtk.EventBox):
             widget.add(textview)
         # Path.
         elif isinstance(field, schevo.field.Path) and not field.readonly:
-            title = u'Select a file'
-            widget = gtk.FileChooserButton(title)
-            if field.file_only:
-                widget.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
-            elif field.directory_only:
-                widget.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
+            widget = FileChooser(db, field)
             if value:
                 widget.set_filename(value)
-            widget.connect('selection-changed',
+            widget.connect('value-changed',
                            self._on_widget__value_changed, field)
         # All other field types.
         else:
@@ -227,8 +142,16 @@ class DynamicField(gtk.EventBox):
         if control is None:
             control = widget
         if field.readonly:
-            control.set_editable(False)
-##             control.set_sensitive(False)
+            if hasattr(control, 'set_editable'):
+                control.set_editable(False)
+            if hasattr(control.props, 'can-focus'):
+                control.props.can_focus = False
+            if hasattr(control.props, 'has-focus'):
+                control.props.has_focus = False
+            if hasattr(control, 'set_sensitive'):
+                control.set_sensitive(False)
+##             if hasattr(control, 'set_selectable'):  # Label only.
+##                 control.set_selectable(True)
         widget.show()
         self.add(widget)
 
@@ -238,6 +161,277 @@ class DynamicField(gtk.EventBox):
         self.emit('value-changed')
 
 type_register(DynamicField)
+
+
+class EntityChooser(gtk.ComboBox):
+
+    __gtype_name__ = 'EntityChooser'
+
+    gsignal('value-changed')
+
+    def __init__(self, db, field):
+        super(EntityChooser, self).__init__()
+        self.db = db
+        self.field = field
+        self.model = gtk.ListStore(str, object)
+        cell = self.cell_pb = gtk.CellRendererPixbuf()
+        self.pack_start(cell, False)
+        self.set_cell_data_func(cell, self.cell_icon)
+        self.set_row_separator_func(self.is_row_separator)
+        cell = self.cell_text = gtk.CellRendererText()
+        self.pack_start(cell)
+        self.add_attribute(cell, 'text', 0)
+##         self.reorder(cell, 0)
+        self._populate()
+        self.set_model(self.model)
+##         self.set_text_column(0)
+        self.select_item_by_data(field.get())
+##         self.entry = self.child
+##         self.entry.connect('activate', self._on_entry__activate)
+##         self.entry.connect('changed', self._on_entry__changed)
+        self.connect('changed', self._on_changed)
+
+    def cell_icon(self, layout, cell, model, row):
+        entity = model[row][1]
+        if entity in (UNASSIGNED, None):
+            cell.set_property('stock_id', gtk.STOCK_NO)
+            cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
+            cell.set_property('visible', False)
+        else:
+            extent = entity.sys.extent
+            pixbuf = icon.small_pixbuf(self, extent)
+            cell.set_property('pixbuf', pixbuf)
+            cell.set_property('visible', True)
+
+    def get_selected(self):
+        iter = self.get_active_iter()
+        if iter:
+            return self.model[iter][1]
+
+    def is_row_separator(self, model, row):
+        text, entity = model[row]
+        if text is None and entity is None:
+            return True
+        return False
+
+    def select_item_by_data(self, data):
+        for row in self.model:
+            if row[1] == data:
+                self.set_active_iter(row.iter)
+                break
+        
+    def _on_changed(self, widget):
+        self.emit('value-changed')
+
+##     def _on_entry__activate(self, entry):
+##         self.emit('activate')
+
+##     def _on_entry__changed(self, entry):
+##         self.emit('value-changed')
+
+    def _populate(self):
+        db = self.db
+        field = self.field
+        allow = field.allow
+        if len(allow) > 1:
+            allow_multiple = True
+        else:
+            allow_multiple = False
+        items = []
+        values = []
+        # Unassigned.
+        items.append((u'<UNASSIGNED>', UNASSIGNED))
+        values.append(UNASSIGNED)
+        # Preferred values.
+        preferred_values = field.preferred_values or []
+        if preferred_values:
+            values.extend(preferred_values)
+            more = []
+            for entity in sorted(preferred_values):
+                if entity is UNASSIGNED:
+                    continue
+                if allow_multiple:
+                    extent_text = label(entity.sys.extent)
+                    text = u'%s :: %s' % (entity, extent_text)
+                else:
+                    text = u'%s' % (entity, )
+                more.append((text, entity))
+            items.extend(more)
+            # Row separator.
+            items.append((None, None))
+        more = []
+        valid_values = field.valid_values
+        if valid_values is not None:
+            # Specific valid values.
+            values.extend(valid_values)
+            for entity in sorted(valid_values):
+                if entity is UNASSIGNED:
+                    continue
+                if entity in preferred_values:
+                    continue
+                if allow_multiple:
+                    extent_text = label(entity.sys.extent)
+                    text = u'%s :: %s' % (entity, extent_text)
+                else:
+                    text = u'%s' % (entity, )
+                more.append((text, entity))
+        else:
+            # Other allowed values.
+            for extent_name in field.allow:
+                extent = db.extent(extent_name)
+                for entity in sorted(extent):
+                    if entity in preferred_values:
+                        continue
+                    values.append(entity)
+                    if allow_multiple:
+                        extent_text = label(extent)
+                        text = u'%s :: %s' % (entity, extent_text)
+                    else:
+                        text = u'%s' % (entity, )
+                    more.append((text, entity))
+        items.extend(more)
+        value = field.get()
+        if value not in values:
+            entity = value
+            # Row separator.
+            items.append((None, None))
+            if allow_multiple:
+                extent_text = label(entity.sys.extent)
+                text = u'%s :: %s' % (entity, extent_text)
+            else:
+                text = u'%s' % (entity, )
+            items.append((text, entity))
+        # Update the model.
+        model = self.model
+        model.clear()
+        for text, entity in items:
+            model.append((text, entity))
+
+type_register(EntityChooser)
+
+
+class FieldLabel(gtk.EventBox):
+
+    __gtype_name__ = 'FieldLabel'
+
+    def __init__(self):
+        super(FieldLabel, self).__init__()
+        text = u'Field label:'
+        label = gtk.Label()
+        label.set_text(text)
+        label.set_alignment(1.0, 0.5)
+        label.set_padding(5, 0)
+        label.show()
+        self.add(label)
+
+    def set_field(self, db, field):
+        label = self.child
+        text = field.label
+        if field.readonly:
+            pattern = u'%s:'
+        else:
+            pattern = u'<b>%s:</b>'
+            if field.required:
+                text = '* ' + text
+        markup = pattern % text
+        label.set_markup(markup)
+
+type_register(FieldLabel)
+
+
+class FileChooser(gtk.EventBox):
+
+    __gtype_name__ = 'FileChooser'
+
+    gsignal('value-changed')
+
+    def __init__(self, db, field):
+        super(FileChooser, self).__init__()
+        self.db = db
+        self.field = field
+        if os.name == 'nt':
+            if field.file_only:
+                stock_id = gtk.STOCK_FILE
+            elif field.directory_only:
+                stock_id = gtk.STOCK_DIRECTORY
+            self._hbox = hbox = gtk.HBox()
+            hbox.show()
+            self._entry = entry = gtk.Entry()
+            entry.show()
+            self._button = button = gtk.Button()
+            button.show()
+            image = gtk.Image()
+            image.show()
+            image.set_from_stock(stock_id, gtk.ICON_SIZE_MENU)
+            button.add(image)
+            hbox.pack_start(entry)
+            hbox.pack_start(button, expand=False)
+            button.connect('clicked', self._on_clicked)
+            entry.connect('activate', self._on_changed)
+            self.add(hbox)
+        else:
+            self._filechooser = chooser = gtk.FileChooserButton()
+            chooser.show()
+            chooser.connect('selection-changed', self._on_changed)
+            self.add(chooser)
+
+    def get_filename(self):
+        if os.name == 'nt':
+            return self._entry.get_text()
+        else:
+            return self._filechooser.get_filename()
+
+    def set_filename(self, filename):
+        if os.name == 'nt':
+            self._entry.set_text(filename)
+        else:
+            return self._filechooser.set_filename(filename)
+
+    def _on_changed(self, widget):
+        self.emit('value-changed')
+
+    def _on_clicked(self, widget):
+        field = self.field
+        filename = None
+        file_ext_filter = 'Schevo Database Files\0*.db;*.schevo\0'
+        file_custom_filter = 'All Files\0*.*\0'
+        file_open_title = 'Select File'
+        if field.file_only:
+            try:
+                filename, custom_filter, flags = win32gui.GetSaveFileNameW(
+                    InitialDir='.',
+                    Flags=win32con.OFN_EXPLORER,
+                    Title='Select'
+##                     File='',
+##                     DefExt='',
+##                     Title=self.file_open_title,
+##                     Filter=self.file_ext_filter,
+##                     CustomFilter=self.file_custom_filter,
+##                     FilterIndex=1,
+                    )
+            except pywintypes.error:
+                # Cancel button raises an exception.
+                pass
+        elif field.directory_only:
+            try:
+                filename, custom_filter, flags = win32gui.GetSaveFileNameW(
+                    InitialDir='.',
+                    Flags=win32con.OFN_EXPLORER,
+                    Title='Select'
+##                     File='',
+##                     DefExt='',
+##                     Title=self.file_open_title,
+##                     Filter=self.file_ext_filter,
+##                     CustomFilter=self.file_custom_filter,
+##                     FilterIndex=1,
+                    )
+            except pywintypes.error:
+                # Cancel button raises an exception.
+                pass
+        if filename is not None:
+            self.set_filename(filename)
+
+type_register(FileChooser)
 
 
 optimize.bind_all(sys.modules[__name__])  # Last line of module.

@@ -154,13 +154,27 @@
                                         <property name="visible">True</property>
                                         <child>
                                             <widget class="GtkHBox" id="entity_grid_label_box">
+                                                <property name="spacing">4</property>
                                                 <property name="visible">True</property>
+                                                <child>
+                                                    <widget class="GtkImage" id="entity_grid_image">
+                                                        <property name="stock">gtk-info</property>
+                                                        <property name="visible">True</property>
+                                                    </widget>
+                                                    <packing>
+                                                        <property name="expand">False</property>
+                                                        <property name="fill">False</property>
+                                                    </packing>
+                                                </child>
                                                 <child>
                                                     <widget class="GtkLabel" id="entity_grid_label">
                                                         <property name="label" context="yes" translatable="yes">List of ...</property>
                                                         <property name="visible">True</property>
                                                         <property name="xalign">0.0</property>
                                                     </widget>
+                                                    <packing>
+                                                        <property name="position">1</property>
+                                                    </packing>
                                                 </child>
                                             </widget>
                                             <packing>
