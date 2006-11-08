@@ -6,6 +6,8 @@ For copyright, license, and warranty, see bottom of file.
 import sys
 from schevo.lib import optimize
 
+from xml.sax.saxutils import escape
+
 from schevo.label import label, plural
 
 from schevogtk2.window import Window
@@ -21,7 +23,7 @@ class RelationshipWindow(Window):
         self._entity = entity
         extent_text = label(entity.sys.extent)
         text = u'%s :: %s' % (extent_text, entity)
-        markup = u'<b>%s</b>' % text
+        markup = u'<b>%s</b>' % escape(text)
         self.header_label.set_markup(markup)
         self.related_grid.show_hidden_extents = True
         self.related_grid.set_entity(db, entity)

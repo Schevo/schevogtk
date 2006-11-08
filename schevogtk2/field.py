@@ -6,6 +6,7 @@ For copyright, license, and warranty, see bottom of file.
 import sys
 from schevo.lib import optimize
 
+from xml.sax.saxutils import escape
 import os
 
 if os.name == 'nt':
@@ -18,6 +19,7 @@ import pango
 
 import schevo.field
 from schevo.label import label
+from schevo.base import Transaction
 from schevo.constant import UNASSIGNED
 
 from schevogtk2 import icon
@@ -331,9 +333,9 @@ class FieldLabel(gtk.EventBox):
             pattern = u'%s:'
         else:
             pattern = u'<b>%s:</b>'
-            if field.required:
-                text = '* ' + text
-        markup = pattern % text
+        if field.required and isinstance(field.instance, Transaction):
+            text = '* ' + text
+        markup = pattern % escape(text)
         label.set_markup(markup)
 
 type_register(FieldLabel)
