@@ -19,9 +19,9 @@ if os.name == 'nt':
 import schevo.database
 from schevo.constant import UNASSIGNED
 
+from schevogtk2 import dialog
 from schevogtk2 import form
 from schevogtk2 import icon
-## from schevogtk2.dialog import Dialog
 from schevogtk2.widgettree import GladeSignalBroker, WidgetTree
 
 
@@ -158,9 +158,9 @@ class Window(object):
                 # Cancel button raises an exception.
                 pass
 ##         else:
-##             filename = dialogs.open(parent=self.toplevel,
-##                                     patterns=['*.db', '*.schevo', '*.*'],
-##                                     title='Select a database file to open')
+##             filename = dialog.open(title='Select a database file to open',
+##                                    parent=self.toplevel,
+##                                    patterns=['*.db', '*.schevo', '*.*'])
         if filename:
             self.database_new(filename)
 
@@ -181,9 +181,9 @@ class Window(object):
                 # Cancel button raises an exception.
                 pass
         else:
-            filename = dialogs.open(parent=self.toplevel,
-                                    patterns=['*.db', '*.schevo', '*.*'],
-                                    title='Select a database file to open')
+            filename = dialog.open(title='Select a database file to open',
+                                   parent=self.toplevel,
+                                   patterns=['*.db', '*.schevo', '*.*'])
         if filename:
             self.database_open(filename)
 
