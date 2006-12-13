@@ -83,6 +83,8 @@ class DynamicField(gtk.EventBox):
         # Boolean.
         if isinstance(field, schevo.field.Boolean) and not field.readonly:
             widget = gtk.CheckButton()
+            if value is UNASSIGNED:
+                value = False
             widget.set_active(value)
             widget.set_label(unicode(value))
             def on_toggled(widget):
@@ -97,11 +99,12 @@ class DynamicField(gtk.EventBox):
         # Image.
         elif isinstance(field, schevo.field.Image):
             widget = gtk.Image()
-            loader = gtk.gdk.PixbufLoader()
-            loader.write(value)
-            loader.close()
-            pixbuf = loader.get_pixbuf()
-            widget.set_from_pixbuf(pixbuf)
+            if value is not UNASSIGNED:
+                loader = gtk.gdk.PixbufLoader()
+                loader.write(value)
+                loader.close()
+                pixbuf = loader.get_pixbuf()
+                widget.set_from_pixbuf(pixbuf)
         # Memo.
         elif isinstance(field, schevo.field.Memo):
             self.expand = True
@@ -176,21 +179,29 @@ class EntityChooser(gtk.ComboBox):
         self.db = db
         self.field = field
         self.model = gtk.ListStore(str, object)
-        cell = self.cell_pb = gtk.CellRendererPixbuf()
-        self.pack_start(cell, False)
-        self.set_cell_data_func(cell, self.cell_icon)
         self.set_row_separator_func(self.is_row_separator)
-        cell = self.cell_text = gtk.CellRendererText()
-        self.pack_start(cell)
-        self.add_attribute(cell, 'text', 0)
-##         self.reorder(cell, 0)
         self._populate()
         self.set_model(self.model)
 ##         self.set_text_column(0)
+        cell = self.cell_pb = gtk.CellRendererPixbuf()
+        self.pack_start(cell, False)
+        self.set_cell_data_func(cell, self.cell_icon)
+##         self.reorder(cell, 0)
+        cell = self.cell_text = gtk.CellRendererText()
+        self.pack_start(cell)
+        self.add_attribute(cell, 'text', 0)
+##         self.completion = comp = gtk.EntryCompletion()
+##         comp.set_model(self.model)
+##         cell = self.comp_pb = gtk.CellRendererPixbuf()
+##         comp.pack_start(cell, False)
+##         comp.set_cell_data_func(cell, self.cell_icon)
+##         comp.set_text_column(0)
+##         self.entry = entry = self.child
+##         entry.set_completion(comp)
+##         entry.set_text(str(field.get()))
+##         entry.connect('activate', self._on_entry__activate)
+##         entry.connect('changed', self._on_entry__changed)
         self.select_item_by_data(field.get())
-##         self.entry = self.child
-##         self.entry.connect('activate', self._on_entry__activate)
-##         self.entry.connect('changed', self._on_entry__changed)
         self.connect('changed', self._on_changed)
 
     def cell_icon(self, layout, cell, model, row):
