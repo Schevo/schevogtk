@@ -69,7 +69,6 @@ class EntityGrid(grid.Grid):
         extent = self._extent
         query = self._query
         related = self._related
-        row_map = self._row_map
         oids = []
         if query is not None:
             results = query()
@@ -81,10 +80,16 @@ class EntityGrid(grid.Grid):
                     results = related.entity.sys.links(extent.name,
                                                        related.field_name)
                     oids = [entity._oid for entity in results]
+                    self.refresh_add_delete(oids)
             else:
                 self.set_related(None)
         elif extent is not None:
             oids = extent.find_oids()
+            self.refresh_add_delete(oids)
+        self.refilter()
+
+    def refresh_add_delete(self, oids):
+        row_map = self._row_map
         # Delete entities that no longer exist.
         for oid in row_map.keys():
             if oid not in oids:
@@ -93,7 +98,6 @@ class EntityGrid(grid.Grid):
         for oid in oids:
             if oid not in row_map:
                 self.add_row(oid)
-        self.refilter()
 
     def reflect_changes(self, result, tx):
         if self._extent is not None:
@@ -165,6 +169,12 @@ class EntityGrid(grid.Grid):
         if entity is not None:
             v_action = action.get_view_action(entity, include_expensive=False)
             self.select_action(v_action)
+
+    def set_all_x(self, name, value):
+        """Set x.name to value for all entities."""
+        for item in self._model:
+            entity = item[OBJECT_COLUMN]
+            setattr(entity.x, name, value)
 
     def set_db(self, db):
         self._db = db

@@ -65,6 +65,10 @@ class DynamicField(gtk.EventBox):
             value = text_buffer.get_text(startiter, enditer)
             if not value:
                 value = UNASSIGNED
+        elif isinstance(widget, ValueChooser):
+            value = widget.get_selected()
+            if value is None:
+                value = UNASSIGNED
         else:
             value = widget.get_text()
             if not value:
@@ -80,8 +84,16 @@ class DynamicField(gtk.EventBox):
         self.remove(self.child)
         control = None  # Defaults to the widget.
         value = field.get()
+        # Calculated field.
+        if field.fget:
+            if value is UNASSIGNED:
+                value = ''
+            else:
+                value = unicode(value)
+            widget = gtk.Entry()
+            widget.set_text(value)
         # Boolean.
-        if isinstance(field, schevo.field.Boolean) and not field.readonly:
+        elif isinstance(field, schevo.field.Boolean) and not field.readonly:
             widget = gtk.CheckButton()
             if value is UNASSIGNED:
                 value = False
@@ -134,19 +146,26 @@ class DynamicField(gtk.EventBox):
                            self._on_widget__value_changed, field)
         # All other field types.
         else:
-            if value is UNASSIGNED:
-                value = ''
+            # Valid values combo box.
+            if field.valid_values is not None:
+                widget = ValueChooser(db, field)
+                widget.connect('changed',
+                               self._on_widget__value_changed, field)
             else:
-                value = unicode(value)
-            widget = gtk.Entry()
-            widget.set_text(value)
-            widget.connect('activate', self._on_widget__value_changed, field)
+                if value is UNASSIGNED:
+                    value = ''
+                else:
+                    value = unicode(value)
+                widget = gtk.Entry()
+                widget.set_text(value)
+                widget.connect('activate',
+                               self._on_widget__value_changed, field)
 ##         data_type = field.data_type
 ##         widget.set_property('data-type', data_type)
 ##         widget.set_property('model_attribute', field.name)
         if control is None:
             control = widget
-        if field.readonly:
+        if field.fget or field.readonly:
             if hasattr(control, 'set_editable'):
                 control.set_editable(False)
             if hasattr(control.props, 'can-focus'):
@@ -272,6 +291,7 @@ class EntityChooser(gtk.ComboBox):
             items.extend(more)
             # Row separator.
             items.append((None, None))
+        # Valid values.
         more = []
         valid_values = field.valid_values
         if valid_values is not None:
@@ -308,6 +328,7 @@ class EntityChooser(gtk.ComboBox):
             entity = value
             # Row separator.
             items.append((None, None))
+            # Invalid, but current value.
             if allow_multiple:
                 extent_text = label(entity.sys.extent)
                 text = u'%s :: %s' % (entity, extent_text)
@@ -344,7 +365,8 @@ class FieldLabel(gtk.EventBox):
             pattern = u'%s:'
         else:
             pattern = u'<b>%s:</b>'
-        if field.required and isinstance(field.instance, Transaction):
+        if (not field.fget and field.required
+            and isinstance(field.instance, Transaction)):
             text = '* ' + text
         markup = pattern % escape(text)
         label.set_markup(markup)
@@ -445,6 +467,113 @@ class FileChooser(gtk.EventBox):
             self.set_filename(filename)
 
 type_register(FileChooser)
+
+
+class ValueChooser(gtk.ComboBox):
+
+    __gtype_name__ = 'ValueChooser'
+
+    gsignal('value-changed')
+
+    def __init__(self, db, field):
+        super(ValueChooser, self).__init__()
+        self.db = db
+        self.field = field
+        self.model = gtk.ListStore(str, object)
+        self.set_row_separator_func(self.is_row_separator)
+        self._populate()
+        self.set_model(self.model)
+##         cell = self.cell_pb = gtk.CellRendererPixbuf()
+##         self.pack_start(cell, False)
+##         self.set_cell_data_func(cell, self.cell_icon)
+        cell = self.cell_text = gtk.CellRendererText()
+        self.pack_start(cell)
+        self.add_attribute(cell, 'text', 0)
+        self.select_item_by_data(field.get())
+        self.connect('changed', self._on_changed)
+
+##     def cell_icon(self, layout, cell, model, row):
+##         entity = model[row][1]
+##         if entity in (UNASSIGNED, None):
+##             cell.set_property('stock_id', gtk.STOCK_NO)
+##             cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
+##             cell.set_property('visible', False)
+##         else:
+##             extent = entity.sys.extent
+##             pixbuf = icon.small_pixbuf(self, extent)
+##             cell.set_property('pixbuf', pixbuf)
+##             cell.set_property('visible', True)
+
+    def get_selected(self):
+        iter = self.get_active_iter()
+        if iter:
+            return self.model[iter][1]
+
+    def is_row_separator(self, model, row):
+        text, entity = model[row]
+        if text is None and entity is None:
+            return True
+        return False
+
+    def select_item_by_data(self, data):
+        for row in self.model:
+            if row[1] == data:
+                self.set_active_iter(row.iter)
+                break
+        
+    def _on_changed(self, widget):
+        self.emit('value-changed')
+
+##     def _on_entry__activate(self, entry):
+##         self.emit('activate')
+
+##     def _on_entry__changed(self, entry):
+##         self.emit('value-changed')
+
+    def _populate(self):
+        db = self.db
+        field = self.field
+        items = []
+        values = []
+        # Unassigned.
+        items.append((u'<UNASSIGNED>', UNASSIGNED))
+        values.append(UNASSIGNED)
+        # Preferred values.
+        preferred_values = field.preferred_values or []
+        if preferred_values:
+            values.extend(preferred_values)
+            more = []
+            for value in sorted(preferred_values):
+                if value is UNASSIGNED:
+                    continue
+                more.append((unicode(value), value))
+            items.extend(more)
+            # Row separator.
+            items.append((None, None))
+        # Valid values.
+        more = []
+        valid_values = field.valid_values
+        values.extend(valid_values)
+        for value in sorted(valid_values):
+            if value is UNASSIGNED:
+                continue
+            if value in preferred_values:
+                continue
+            more.append((unicode(value), value))
+        items.extend(more)
+        value = field.get()
+        if value not in values:
+            # Row separator.
+            items.append((None, None))
+            # Invalid, but current value.
+            items.append((unicode(value), value))
+        # Update the model.
+        model = self.model
+        model.clear()
+        for text, value in items:
+            model.append((text, value))
+
+type_register(ValueChooser)
 
 
 optimize.bind_all(sys.modules[__name__])  # Last line of module.

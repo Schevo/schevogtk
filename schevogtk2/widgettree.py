@@ -11,13 +11,14 @@ import os
 from schevogtk2 import gazpacholoader
 
 from gazpacho.loader.loader import ObjectBuilder
-from kiwi.ui import dialogs
+## from kiwi.ui import dialogs
 from kiwi.environ import environ
 from kiwi.ui.views import GladeSignalBroker
 ## from kiwi.ui.gazpacholoader import GazpachoWidgetTree as WidgetTree
 
 
 class Builder(ObjectBuilder):
+
     def find_resource(self, filename):
         return environ.find_resource("pixmaps",  filename)
 
