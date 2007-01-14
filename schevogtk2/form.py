@@ -112,6 +112,9 @@ class CustomWindow(object):
         tx = self._tx
         for name in tx.f:
             field = tx.f[name]
+            # Skip hidden fields.
+            if field.hidden:
+                continue
             label = getattr(self, name + '__label')
             label.set_field(db, field)
             widget = getattr(self, name)
@@ -317,6 +320,9 @@ def get_table(db, fields, field_widgets):
     table.set_col_spacings(5)
     row = 0
     for field in fields:
+        # Skip hidden fields.
+        if field.hidden:
+            continue
         # Label.
         label_box = FieldLabel()
         label_box.set_field(db, field)
