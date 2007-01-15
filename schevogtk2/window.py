@@ -28,22 +28,13 @@ from schevogtk2.widgettree import GladeSignalBroker, WidgetTree
 WATCH = gdk.Cursor(gdk.WATCH)
 
 
-class Window(object):
+class BaseWindow(object):
 
     gladefile = ''
     
-    if os.name == 'nt':
-        file_location = '.'
-        file_ext_filter = 'Schevo Database Files\0*.db;*.schevo\0'
-        file_custom_filter = 'All Files\0*.*\0'
-        file_new_default_extension = 'db'
-        file_new_title = 'New Schevo Database File'
-        file_open_title = 'Open Schevo Database File'
-
     def __init__(self):
         self._bindings = {}
         self._db = None
-        self._db_filename = None
         self.widgets = []
         wt = self._glade_adaptor = WidgetTree(self, self.gladefile,
                                               self.widgets)
@@ -60,60 +51,6 @@ class Window(object):
 
     def before_tx(self, tx):
         pass
-
-    def create_backup(self, filename):
-        if os.path.isfile(filename):
-            n = 1
-            backup_filename = filename + '.bk%s' % n
-            while os.path.isfile(backup_filename):
-                n += 1
-                backup_filename = filename + '.bk%s' % n
-            os.rename(filename, backup_filename)
-            # Popup a message telling them the file was renamed.
-            msg = '%s already exists, so a backup copy was saved as %s.' % (
-                filename, backup_filename)
-            flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
-            dialog = gtk.MessageDialog(parent=self.toplevel, flags=flags,
-                                       buttons=gtk.BUTTONS_OK,
-                                       message_format=msg)
-            dialog.run()
-            dialog.destroy()
-
-    def database_close(self):
-        """Close an existing database file."""
-        if self._db is not None:
-            self.set_cursor(WATCH)
-            self._db.close()
-            self._db = None
-            self._db_filename = None
-            self.update_ui()
-            self.set_cursor()
-
-    def database_new(self, filename):
-        """Create a new database file."""
-        raise NotImplementedError
-    
-    def database_open(self, filename):
-        """Open a database file."""
-        self.database_close()
-        self.set_cursor(WATCH)
-        label = os.path.basename(filename)
-        try:
-            self._db = schevo.database.open(filename, label=label)
-        except:
-            msg = 'Unable to open %s' % filename
-            self.message(msg)
-        else:
-            self._db_filename = filename
-            self.update_ui()
-        self.set_cursor()
-
-    def database_pack(self):
-        """Pack the currently open database file."""
-        if self._db is not None:
-            self.set_cursor(WATCH)
-            self._db.pack()
-            self.set_cursor()
 
     def destroy(self, *args):
         self.toplevel.destroy()
@@ -137,58 +74,6 @@ class Window(object):
                                    message_format=text)
         dialog.run()
         dialog.destroy()
-
-    def on_Close__activate(self, action):
-        self.database_close()
-
-    def on_New__activate(self, action):
-        filename = None
-        if os.name == 'nt':
-            try:
-                filename, custom_filter, flags = win32gui.GetSaveFileNameW(
-                    InitialDir=self.file_location,
-                    Flags=win32con.OFN_EXPLORER|win32con.OFN_OVERWRITEPROMPT,
-                    File='',
-                    DefExt=self.file_new_default_extension,
-                    Title=self.file_new_title,
-                    Filter=self.file_ext_filter,
-                    CustomFilter=self.file_custom_filter,
-                    FilterIndex=1)
-            except pywintypes.error:
-                # Cancel button raises an exception.
-                pass
-##         else:
-##             filename = dialog.open(title='Select a database file to open',
-##                                    parent=self.toplevel,
-##                                    patterns=['*.db', '*.schevo', '*.*'])
-        if filename:
-            self.database_new(filename)
-
-    def on_Open__activate(self, action):
-        filename = None
-        if os.name == 'nt':
-            try:
-                filename, custom_filter, flags = win32gui.GetOpenFileNameW(
-                    InitialDir=self.file_location,
-                    Flags=win32con.OFN_EXPLORER|win32con.OFN_FILEMUSTEXIST,
-                    File='',
-                    DefExt='',
-                    Title=self.file_open_title,
-                    Filter=self.file_ext_filter,
-                    CustomFilter=self.file_custom_filter,
-                    FilterIndex=1)
-            except pywintypes.error:
-                # Cancel button raises an exception.
-                pass
-        else:
-            filename = dialog.open(title='Select a database file to open',
-                                   parent=self.toplevel,
-                                   patterns=['*.db', '*.schevo', '*.*'])
-        if filename:
-            self.database_open(filename)
-
-    def on_Quit__activate(self, action):
-        self.quit()
 
     def _on_action_selected(self, widget, action):
         if action.type == 'relationship':
@@ -231,7 +116,7 @@ class Window(object):
             func = self._bindings[binding]
             func()
 
-    def quit(self):
+    def quit(self, *args):
         gtk.main_quit()
 
     def reflect_changes(self, result, tx):
@@ -296,6 +181,161 @@ class Window(object):
     def show(self):
         self.toplevel.show()
 
+    def _get_all_methods(self, klass=None):
+        klass = klass or self.__class__
+        # Very poor simulation of inheritance.
+        classes = [klass]
+        # Collect bases for class, using recursion.
+        for klass in classes:
+            map(classes.append, klass.__bases__)
+        # Order bases so that the class itself is the last one
+        # referred to in the loop. This guarantees that the
+        # inheritance ordering for the methods is preserved.
+        classes.reverse()
+        methods = {}
+        for c in classes:
+            for name in c.__dict__.keys():
+                # Use getattr() to ensure we get bound methods.
+                methods[name] = getattr(self, name)
+        return methods
+
+
+class Window(BaseWindow):
+
+    if os.name == 'nt':
+        file_location = '.'
+        file_ext_filter = 'Schevo Database Files\0*.db;*.schevo\0'
+        file_custom_filter = 'All Files\0*.*\0'
+        file_new_default_extension = 'db'
+        file_new_title = 'New Schevo Database File'
+        file_open_title = 'Open Schevo Database File'
+
+    def __init__(self):
+        BaseWindow.__init__(self)
+        self._db_filename = None
+
+    def create_backup(self, filename):
+        if os.path.isfile(filename):
+            n = 1
+            backup_filename = filename + '.bk%s' % n
+            while os.path.isfile(backup_filename):
+                n += 1
+                backup_filename = filename + '.bk%s' % n
+            os.rename(filename, backup_filename)
+            # Popup a message telling them the file was renamed.
+            msg = '%s already exists, so a backup copy was saved as %s.' % (
+                filename, backup_filename)
+            flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
+            dialog = gtk.MessageDialog(parent=self.toplevel, flags=flags,
+                                       buttons=gtk.BUTTONS_OK,
+                                       message_format=msg)
+            dialog.run()
+            dialog.destroy()
+
+    def database_close(self):
+        """Close an existing database file."""
+        if self._db is not None:
+            self.set_cursor(WATCH)
+            self._db.close()
+            self._db = None
+            self._db_filename = None
+            self.update_ui()
+            self.set_cursor()
+
+    def database_new(self, filename):
+        """Create a new database file."""
+        raise NotImplementedError
+    
+    def database_open(self, filename):
+        """Open a database file."""
+        self.database_close()
+        self.set_cursor(WATCH)
+        label = os.path.basename(filename)
+        try:
+            self._db = schevo.database.open(filename, label=label)
+        except:
+            msg = 'Unable to open %s' % filename
+            self.message(msg)
+        else:
+            self._db_filename = filename
+            self.update_ui()
+        self.set_cursor()
+
+    def database_pack(self):
+        """Pack the currently open database file."""
+        if self._db is not None:
+            self.set_cursor(WATCH)
+            self._db.pack()
+            self.set_cursor()
+
+    def on_Close__activate(self, action):
+        self.database_close()
+
+    def on_New__activate(self, action):
+        filename = None
+        if os.name == 'nt':
+            try:
+                filename, custom_filter, flags = win32gui.GetSaveFileNameW(
+                    InitialDir=self.file_location,
+                    Flags=win32con.OFN_EXPLORER|win32con.OFN_OVERWRITEPROMPT,
+                    File='',
+                    DefExt=self.file_new_default_extension,
+                    Title=self.file_new_title,
+                    Filter=self.file_ext_filter,
+                    CustomFilter=self.file_custom_filter,
+                    FilterIndex=1)
+            except pywintypes.error:
+                # Cancel button raises an exception.
+                pass
+##         else:
+##             filename = dialog.open(title='Select a database file to open',
+##                                    parent=self.toplevel,
+##                                    patterns=['*.db', '*.schevo', '*.*'])
+        if filename:
+            self.database_new(filename)
+
+    def on_Open__activate(self, action):
+        filename = None
+        if os.name == 'nt':
+            try:
+                filename, custom_filter, flags = win32gui.GetOpenFileNameW(
+                    InitialDir=self.file_location,
+                    Flags=win32con.OFN_EXPLORER|win32con.OFN_FILEMUSTEXIST,
+                    File='',
+                    DefExt='',
+                    Title=self.file_open_title,
+                    Filter=self.file_ext_filter,
+                    CustomFilter=self.file_custom_filter,
+                    FilterIndex=1)
+            except pywintypes.error:
+                # Cancel button raises an exception.
+                pass
+        else:
+            filename = dialog.open(title='Select a database file to open',
+                                   parent=self.toplevel,
+                                   patterns=['*.db', '*.schevo', '*.*'])
+        if filename:
+            self.database_open(filename)
+
+    def on_Quit__activate(self, action):
+        self.quit()
+
+    def run(self):
+        self.show()
+        gtk.main()
+
+    def _set_bindings(self):
+        items = [
+            ('<Control>F4', self.database_close),
+            ]
+        self._bindings = dict([(gtk.accelerator_parse(name), func)
+                               for name, func in items])
+        # Hack to support these with CapsLock on.
+        for name, func in items:
+            keyval, mod = gtk.accelerator_parse(name)
+            mod = mod | gtk.gdk.LOCK_MASK
+            self._bindings[(keyval, mod)] = func
+
     def show_and_loop(self):
         self.show()
         gtk.main()
@@ -321,6 +361,74 @@ class Window(object):
                 # Use getattr() to ensure we get bound methods.
                 methods[name] = getattr(self, name)
         return methods
+
+
+class CustomWindow(BaseWindow):
+
+    def __init__(self, db, tx):
+        BaseWindow.__init__(self)
+        self._db = db
+        self._tx = tx
+        self.tx_result = None
+        self.toplevel.connect('hide', self.quit)
+        self._set_widgets()
+
+    def execute_tx(self):
+        tx = self._tx
+        for name in tx.f:
+            field = tx.f[name]
+            if field.readonly:
+                continue
+            widget = getattr(self, name)
+            value = widget.get_value()
+            try:
+                setattr(tx, name, value)
+            except Exception, e:
+                show_error(self.toplevel, Exception, e)
+                return
+        try:
+            self.result = self._db.execute(tx)
+        except Exception, e:
+            show_error(self.toplevel, Exception, e)
+            if not hasattr(sys, 'frozen'):
+                raise
+        except:
+            raise
+        else:
+            self.hide()
+
+    def hide(self):
+        self.toplevel.hide()
+
+    def run(self):
+        self.toplevel.show()
+        gtk.main()
+
+    def _set_bindings(self):
+        items = [
+            ('<Control>F4', self.hide),
+            ('Escape', self.hide),
+            ]
+        self._bindings = dict([(gtk.accelerator_parse(name), func)
+                               for name, func in items])
+        # Hack to support these with CapsLock on.
+        for name, func in items:
+            keyval, mod = gtk.accelerator_parse(name)
+            mod = mod | gtk.gdk.LOCK_MASK
+            self._bindings[(keyval, mod)] = func
+
+    def _set_widgets(self):
+        db = self._db
+        tx = self._tx
+        for name in tx.f:
+            field = tx.f[name]
+            # Skip hidden fields.
+            if field.hidden:
+                continue
+            label = getattr(self, name + '__label')
+            label.set_field(db, field)
+            widget = getattr(self, name)
+            widget.set_field(db, field)
 
 
 optimize.bind_all(sys.modules[__name__])  # Last line of module.
