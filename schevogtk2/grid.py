@@ -274,13 +274,15 @@ class Grid(gtk.ScrolledWindow):
         model = self._model
         identify = self.identify
         row_map = self._row_map
-        append = model.append
+        insert = model.insert
+        n = 0
         for instance in instances:
             inst_id = identify(instance)
             color = self.row_background_color(instance)
             strikethrough = self.is_row_strikethrough(instance)
-            row_iter = append((instance, color, strikethrough))
+            row_iter = insert(n, (instance, color, strikethrough))
             row_map[inst_id] = row_iter
+            n += 1
         if self._sorter is not None:
             view.set_model(self._sorter)
         else:
