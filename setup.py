@@ -40,7 +40,7 @@ setup(
     author='Orbtech, L.L.C. and contributors',
     author_email='schevo-devel@lists.schevo.org',
 
-    url='http://schevo.org/trac/wiki/SchevoGtk',
+    url='http://schevo.org/wiki/SchevoGtk',
     
     license='LGPL',
     
