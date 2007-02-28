@@ -38,7 +38,7 @@ setup(
     keywords='',
     
     author='Orbtech, L.L.C. and contributors',
-    author_email='schevo-devel@lists.schevo.org',
+    author_email='schevo@googlegroups.com',
 
     url='http://schevo.org/wiki/SchevoGtk',
     
