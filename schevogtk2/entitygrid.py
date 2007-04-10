@@ -31,7 +31,7 @@ class EntityColumn(grid.Column):
         instance = model[row_iter][OBJECT_COLUMN]
         try:
             entity = getattr(instance, self.attribute)
-        except EntityDoesNotExist: 
+        except EntityDoesNotExist:
             entity = UNASSIGNED
         if entity is UNASSIGNED:
             cell.set_property('stock_id', gtk.STOCK_NO)

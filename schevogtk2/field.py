@@ -251,7 +251,7 @@ class EntityChooser(gtk.ComboBox):
             if row[1] == data:
                 self.set_active_iter(row.iter)
                 break
-        
+
     def _on_changed(self, widget):
         self.emit('value-changed')
 
@@ -520,7 +520,7 @@ class ValueChooser(gtk.ComboBox):
             if row[1] == data:
                 self.set_active_iter(row.iter)
                 break
-        
+
     def _on_changed(self, widget):
         self.emit('value-changed')
 

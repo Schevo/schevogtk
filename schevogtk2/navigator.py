@@ -20,7 +20,7 @@ from schevogtk2.window import Window
 class NavigatorWindow(Window):
 
     gladefile = 'DatabaseNavigator'
-    
+
     if os.name == 'nt':
         file_ext_filter = 'Schevo Database Files\0*.db;*.schevo\0'
         file_custom_filter = 'All Files\0*.*\0'
@@ -39,7 +39,7 @@ class NavigatorWindow(Window):
     def database_new(self, filename):
         """Create a new database file."""
         pass
-    
+
     def on_Hidden__activate(self, action):
         grid = self.extent_grid
         grid.show_hidden_extents = not grid.show_hidden_extents

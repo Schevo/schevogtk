@@ -31,7 +31,7 @@ WATCH = gdk.Cursor(gdk.WATCH)
 class BaseWindow(object):
 
     gladefile = ''
-    
+
     def __init__(self):
         self._bindings = {}
         self._db = None
@@ -245,7 +245,7 @@ class Window(BaseWindow):
     def database_new(self, filename):
         """Create a new database file."""
         raise NotImplementedError
-    
+
     def database_open(self, filename):
         """Open a database file."""
         self.database_close()

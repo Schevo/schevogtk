@@ -34,16 +34,16 @@ setup(
     'Topic :: Database :: Database Engines/Servers',
     'Topic :: Software Development :: Libraries :: Application Frameworks',
     ],
-    
+
     keywords='',
-    
+
     author='Orbtech, L.L.C. and contributors',
     author_email='schevo@googlegroups.com',
 
     url='http://schevo.org/wiki/SchevoGtk',
-    
+
     license='LGPL',
-    
+
     platforms=['UNIX', 'Windows'],
 
     packages=find_packages(exclude=['doc', 'tests']),
@@ -51,26 +51,26 @@ setup(
     include_package_data=True,
 
     zip_safe=False,
-    
+
     install_requires=[
     'Schevo >= 3.0b2',
     # XXX: The following don't yet work.
 ##     'kiwi==dev',
 ##     'gazpacho==dev',
     ],
-    
+
     tests_require=[
     'nose >= 0.9.0',
     ],
     test_suite='nose.collector',
-    
+
     extras_require={
     },
-    
+
     dependency_links = [
     'http://schevo.org/files/thirdparty/',
     ],
-    
+
     entry_points = """
     [schevo.schevo_command]
     gnav = schevogtk2.script:start
