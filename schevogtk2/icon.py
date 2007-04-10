@@ -10,8 +10,8 @@ import weakref
 
 import gtk
 
+from schevo.base import Database
 from schevo.base import Extent
-from schevo.database import Database
 
 
 _db_map = weakref.WeakKeyDictionary()
@@ -30,12 +30,12 @@ _stock_map = {
 def iconset(widget, *args):
     """Return a gtk.IconSet for the database object `obj`."""
     # Find database from obj.
-    if isinstance(args[0], Extent):
+    if isinstance(args[0], Database):
+        db, name = args
+    elif isinstance(args[0], Extent):
         extent = args[0]
         db = extent.db
         name = u'db.%s' % extent.name
-    elif isinstance(args[0], Database):
-        db, name = args
     else:
         # Could not find object.
         return gtk.IconSet()
