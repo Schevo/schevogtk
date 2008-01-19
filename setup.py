@@ -60,7 +60,7 @@ setup(
     ],
 
     tests_require=[
-    'nose >= 0.9.0',
+    'nose >= 0.10.1',
     ],
     test_suite='nose.collector',
 
@@ -68,7 +68,6 @@ setup(
     },
 
     dependency_links = [
-    'http://schevo.org/files/thirdparty/',
     ],
 
     entry_points = """
