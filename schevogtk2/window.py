@@ -250,9 +250,8 @@ class Window(BaseWindow):
         """Open a database file."""
         self.database_close()
         self.set_cursor(WATCH)
-        label = os.path.basename(filename)
         try:
-            self._db = schevo.database.open(filename, label=label)
+            self._db = schevo.database.open(filename)
         except:
             msg = 'Unable to open %s' % filename
             self.message(msg)
