@@ -45,6 +45,7 @@ class BaseWindow(object):
         self._accel_groups = gtk.accel_groups_from_object(toplevel)
         self._broker = GladeSignalBroker(self, self)
         self._set_bindings()
+        self._statusbar_context = self.statusbar.get_context_id('APP')
 
     def after_tx(self, tx):
         pass
@@ -61,17 +62,25 @@ class BaseWindow(object):
     def set_focus(self, widget):
         return self.toplevel.set_focus(widget)
 
+    def status(self, text=None):
+        if text is None:
+            self.statusbar.pop(self._statusbar_context)
+        else:
+            self.statusbar.push(self._statusbar_context, ' ' + text)
+
     def get_title(self):
         return self.toplevel.get_title()
 
     def set_title(self, title):
         return self.toplevel.set_title(title)
 
-    def message(self, text):
+    def message(self, text, title=None):
         flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         dialog = gtk.MessageDialog(parent=self.toplevel, flags=flags,
                                    buttons=gtk.BUTTONS_OK,
                                    message_format=text)
+        if title is not None:
+            dialog.set_title(title)
         dialog.run()
         dialog.destroy()
 
