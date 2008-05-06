@@ -25,8 +25,18 @@ class Related(object):
         self.field_name = field_name
         self.field_label = label(extent.field_spec.field_map()[field_name])
 
+    def __cmp__(self, other):
+        if other.__class__ is self.__class__:
+            return cmp((self.plural, self.field_label),
+                       (other.plural, other.field_label))
+        else:
+            return cmp(hash(self), hash(other))
+
     def __len__(self):
         return self.entity.sys.count(self.extent.name, self.field_name)
+
+    def __repr__(self):
+        return '%s %s %s' % (self.entity, self.extent, self.field_name)
 
 
 class RelatedExtentColumn(grid.Column):
