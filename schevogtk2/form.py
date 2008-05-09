@@ -192,6 +192,16 @@ def get_dialog(title, parent, text, db, model, fields):
     return window
 
 def get_table(db, fields, field_widgets):
+    """Return a gtk.Table widget containing labels and dynamic field widgets
+    for each field given.
+    
+    - `db`: The database containing the fields.
+    
+    - `fields`: Sequence of Schevo field instances to create widgets for.
+    
+    - `field_widgets`: Dictionary that is updated to store
+      field-name:field-widget pairs as the field widgets are created.
+    """
     field_count = len(fields)
     table = gtk.Table(rows=field_count, columns=2)
     table.set_row_spacings(5)
