@@ -19,7 +19,7 @@ import pango
 
 import schevo.field
 from schevo.label import label
-from schevo.base import Transaction
+from schevo.base import Entity, Transaction
 from schevo.constant import UNASSIGNED
 
 from schevogtk2 import icon
@@ -191,7 +191,7 @@ class DynamicField(gtk.EventBox):
 type_register(DynamicField)
 
 
-class EntityChooser(gtk.EventBox):
+class EntityChooser(gtk.HBox):
 
     __gtype_name__ = 'EntityChooser'
 
@@ -201,17 +201,58 @@ class EntityChooser(gtk.EventBox):
 
     def __init__(self, db, field):
         super(EntityChooser, self).__init__()
-        combobox = EntityComboBox(db, field)
-        combobox.show()
+        # By default, there are no create and update buttons.
+        self._create_button = None
+        self._update_button = None
+        # Always add the combobox.
+        combobox = self._entity_combobox = EntityComboBox(db, field)
         self.add(combobox)
+        combobox.show()
         combobox.connect('value-changed', self._on_value_changed)
+        # Also create create/update buttons if the entity field allows.
+        if isinstance(field, schevo.field.Entity):
+            if field.allow_create:
+                # For now, 
+                button = self._create_button = gtk.Button(label='+')
+                self.add(button)
+                button.show()
+                button.connect('clicked', self._on_create_button__clicked)
+            if field.allow_update:
+                button = self._update_button = gtk.Button(label='U')
+                self.add(button)
+                button.show()
+                button.connect('clicked', self._on_update_button__clicked)
+                self._reset_update_button_sensitivity()
 
     def get_selected(self):
-        return self.child.get_selected()
-        
+        """Return the currently selected Schevo object."""
+        return self._entity_combobox.get_selected()
+
+    def _on_create_button__clicked(self, widget):
+        print 'Create button clicked'
+        self.emit('create-clicked')
+
+    def _on_update_button__clicked(self, widget):
+        print 'Update button clicked'
+        self.emit('update-clicked')
+    
     def _on_value_changed(self, widget):
         self.emit('value-changed')
+        self._reset_update_button_sensitivity()
 
+    def _reset_update_button_sensitivity(self):
+        """Update the `_update_button` sensitivity based on whether or not the
+        current value of the combobox may be updated."""
+        button = self._update_button
+        if button is not None:
+            selected = self.get_selected()
+            # UNASSIGNED.
+            if selected is UNASSIGNED:
+                button.set_sensitive(False)
+            # Entity.
+            elif isinstance(selected, Entity):
+                button.set_sensitive('update' in selected.t)
+        
 type_register(EntityChooser)
         
 
@@ -264,6 +305,7 @@ class EntityComboBox(gtk.ComboBox):
             cell.set_property('visible', True)
 
     def get_selected(self):
+        """Return the currently selected Schevo object."""
         iter = self.get_active_iter()
         if iter:
             return self.model[iter][1]
