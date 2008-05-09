@@ -37,6 +37,8 @@ class DynamicField(gtk.EventBox):
 
     def __init__(self):
         super(DynamicField, self).__init__()
+        # Begin as a single-line text entry field, until later changed
+        # to another widget type.
         widget = gtk.Entry()
         widget.show()
         self.add(widget)
