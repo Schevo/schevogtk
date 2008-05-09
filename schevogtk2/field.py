@@ -33,8 +33,8 @@ class DynamicField(gtk.EventBox):
 
     __gtype_name__ = 'DynamicField'
 
-    gsignal('create-clicked')
-    gsignal('update-clicked')
+    gsignal('create-clicked', object)
+    gsignal('update-clicked', object)
     gsignal('value-changed')
 
     def __init__(self):
@@ -195,12 +195,14 @@ class EntityChooser(gtk.HBox):
 
     __gtype_name__ = 'EntityChooser'
 
-    gsignal('create-clicked')
-    gsignal('update-clicked')
+    gsignal('create-clicked', object)
+    gsignal('update-clicked', object)
     gsignal('value-changed')
 
     def __init__(self, db, field):
         super(EntityChooser, self).__init__()
+        self.db = db
+        self.field = field
         # By default, there are no create and update buttons.
         self._create_button = None
         self._update_button = None
@@ -229,12 +231,26 @@ class EntityChooser(gtk.HBox):
         return self._entity_combobox.get_selected()
 
     def _on_create_button__clicked(self, widget):
-        print 'Create button clicked'
-        self.emit('create-clicked')
+        db = self.db
+        field = self.field
+        if len(field.allow) == 0:
+            # Any extent that is not hidden, and whose create transaction
+            # is not hidden, is available.
+            allowed_extents = [
+                extent for extent in db.extents() if not extent.hidden]
+        else:
+            allowed_extents = [
+                db.extent(name) for name in sorted(field.allow)]
+        # Filter out extents where t.create is hidden.
+        allowed_extents = [
+            extent for extent in allowed_extents if 'create' in extent.t]
+        print 'Emitting', 'create-clicked', allowed_extents
+        self.emit('create-clicked', allowed_extents)
 
     def _on_update_button__clicked(self, widget):
-        print 'Update button clicked'
-        self.emit('update-clicked')
+        entity = self.get_selected()
+        print 'Emitting', 'update-clicked', entity
+        self.emit('update-clicked', entity)
     
     def _on_value_changed(self, widget):
         self.emit('value-changed')
