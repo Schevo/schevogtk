@@ -33,6 +33,8 @@ class DynamicField(gtk.EventBox):
 
     __gtype_name__ = 'DynamicField'
 
+    gsignal('create-clicked')
+    gsignal('update-clicked')
     gsignal('value-changed')
 
     def __init__(self):
@@ -108,7 +110,7 @@ class DynamicField(gtk.EventBox):
         # Entity.
         elif isinstance(field, schevo.field.Entity) and not field.readonly:
             widget = EntityChooser(db, field)
-            widget.connect('changed',
+            widget.connect('value-changed',
                            self._on_widget__value_changed, field)
         # Image.
         elif isinstance(field, schevo.field.Image):
@@ -189,14 +191,38 @@ class DynamicField(gtk.EventBox):
 type_register(DynamicField)
 
 
-class EntityChooser(gtk.ComboBox):
+class EntityChooser(gtk.EventBox):
 
     __gtype_name__ = 'EntityChooser'
 
+    gsignal('create-clicked')
+    gsignal('update-clicked')
     gsignal('value-changed')
 
     def __init__(self, db, field):
         super(EntityChooser, self).__init__()
+        combobox = EntityComboBox(db, field)
+        combobox.show()
+        self.add(combobox)
+        combobox.connect('value-changed', self._on_value_changed)
+
+    def get_selected(self):
+        return self.child.get_selected()
+        
+    def _on_value_changed(self, widget):
+        self.emit('value-changed')
+
+type_register(EntityChooser)
+        
+
+class EntityComboBox(gtk.ComboBox):
+
+    __gtype_name__ = 'EntityComboBox'
+
+    gsignal('value-changed')
+
+    def __init__(self, db, field):
+        super(EntityComboBox, self).__init__()
         self.db = db
         self.field = field
         self.model = gtk.ListStore(str, object)
@@ -343,7 +369,7 @@ class EntityChooser(gtk.ComboBox):
         for text, entity in items:
             model.append((text, entity))
 
-type_register(EntityChooser)
+type_register(EntityComboBox)
 
 
 class FieldLabel(gtk.EventBox):
