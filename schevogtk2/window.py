@@ -20,6 +20,8 @@ import schevo.database
 from schevo.constant import UNASSIGNED
 
 from schevogtk2 import dialog
+from schevogtk2.field import (
+    DEFAULT_GET_VALUE_HANDLERS, DEFAULT_SET_FIELD_HANDLERS)
 from schevogtk2 import form
 from schevogtk2 import icon
 from schevogtk2.widgettree import GladeSignalBroker, WidgetTree
@@ -31,6 +33,9 @@ WATCH = gdk.Cursor(gdk.WATCH)
 class BaseWindow(object):
 
     gladefile = ''
+
+    get_value_handlers = DEFAULT_GET_VALUE_HANDLERS
+    set_field_handlers = DEFAULT_SET_FIELD_HANDLERS
 
     def __init__(self):
         self._bindings = {}
@@ -153,7 +158,10 @@ class BaseWindow(object):
         self.set_cursor(WATCH)
         db = self._db
         parent = self.toplevel
-        dialog = form.get_tx_dialog(parent, db, tx, action)
+        dialog = form.get_tx_dialog(
+            parent, db, tx, action,
+            self.get_value_handlers, self.set_field_handlers,
+            )
         self.set_cursor()
         dialog.run()
         tx_result = dialog.tx_result
@@ -164,7 +172,10 @@ class BaseWindow(object):
         self.set_cursor(WATCH)
         db = self._db
         parent = self.toplevel
-        dialog = form.get_view_dialog(parent, db, entity, action)
+        dialog = form.get_view_dialog(
+            parent, db, entity, action,
+            self.get_value_handlers, self.set_field_handlers,
+            )
         self.set_cursor()
         dialog.run()
         dialog.destroy()

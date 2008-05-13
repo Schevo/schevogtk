@@ -30,10 +30,11 @@ class FormBox(gtk.VBox):
         self.pack_start(self.header_sep, expand=False, fill=False, padding=0)
         self.table = None
 
-    def set_fields(self, db, fields):
+    def set_fields(self, db, fields, get_value_handlers, set_field_handlers):
         field_count = len(fields)
         if field_count > 0:
-            self.table = get_table(db, fields, self.field_widgets)
+            self.table = get_table(db, fields, self.field_widgets,
+                                   get_value_handlers, set_field_handlers)
             self.table.show()
             self.pack_start(self.table, expand=True, fill=True, padding=0)
 
@@ -144,9 +145,10 @@ class FormWindow(gtk.Window):
     def set_header_text(self, text):
         self.form_box.set_header_text(text)
 
-    def set_fields(self, model, fields):
+    def set_fields(self, model, fields, get_value_handlers, set_field_handlers):
         self._model = model
-        self.form_box.set_fields(self._db, fields)
+        self.form_box.set_fields(self._db, fields,
+                                 get_value_handlers, set_field_handlers)
         if isinstance(model, schevo.base.Transaction):
             self.ok_button.show()
             self.cancel_button.show()
@@ -165,7 +167,8 @@ def get_custom_tx_dialog(WindowClass, parent, db, tx):
     window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
     return dialog
 
-def get_default_tx_dialog(parent, db, tx):
+def get_default_tx_dialog(parent, db, tx,
+                          get_value_handlers, set_field_handlers):
     extent_name = tx.sys.extent_name
     if extent_name is None:
         title = u'%s' % label(tx)
@@ -176,10 +179,12 @@ def get_default_tx_dialog(parent, db, tx):
     field_map = tx.sys.field_map()
     fields = field_map.values()
     fields = [field for field in fields if not field.hidden]
-    dialog = get_dialog(title, parent, text, db, tx, fields)
+    dialog = get_dialog(title, parent, text, db, tx, fields,
+                        get_value_handlers, set_field_handlers)
     return dialog
 
-def get_dialog(title, parent, text, db, model, fields):
+def get_dialog(title, parent, text, db, model, fields,
+               get_value_handlers, set_field_handlers):
     window = FormWindow()
     window.set_db(db)
     window.set_modal(True)
@@ -188,10 +193,11 @@ def get_dialog(title, parent, text, db, model, fields):
     window.set_title(title)
     window.set_header_text(text)
     fields = [field for field in fields if not field.hidden]
-    window.set_fields(model, fields)
+    window.set_fields(model, fields, get_value_handlers, set_field_handlers)
     return window
 
-def get_table(db, fields, field_widgets):
+def get_table(db, fields, field_widgets,
+              get_value_handlers, set_field_handlers):
     """Return a gtk.Table widget containing labels and dynamic field widgets
     for each field given.
     
@@ -201,6 +207,12 @@ def get_table(db, fields, field_widgets):
     
     - `field_widgets`: Dictionary that is updated to store
       field-name:field-widget pairs as the field widgets are created.
+
+    - `get_value_handlers`: A list of handlers to use when calling the
+      `get_value` method of a `DynamicField` widget.
+
+    - `set_field_handlers`: A list of handlers to use when calling the
+      `set_value` method of a `DynamicField` widget.
     """
     field_count = len(fields)
     table = gtk.Table(rows=field_count, columns=2)
@@ -216,7 +228,7 @@ def get_table(db, fields, field_widgets):
         label_box.set_field(db, field)
         label_box.show()
         # Widget.
-        widget_box = DynamicField()
+        widget_box = DynamicField(get_value_handlers, set_field_handlers)
         widget_box.set_field(db, field)
         widget_box.show()
         # Attach to table.
@@ -232,15 +244,20 @@ def get_table(db, fields, field_widgets):
         row += 1
     return table
 
-def get_tx_dialog(parent, db, tx, action):
+def get_tx_dialog(parent, db, tx, action,
+                  get_value_handlers, set_field_handlers):
     WindowClass = plugin.get_custom_tx_dialog_class(db, action)
     if WindowClass is None:
-        dialog = get_default_tx_dialog(parent, db, tx)
+        dialog = get_default_tx_dialog(
+            parent, db, tx,
+            get_value_handlers, set_field_handlers,
+            )
     else:
         dialog = get_custom_tx_dialog(WindowClass, parent, db, tx)
     return dialog
 
-def get_view_dialog(parent, db, entity, action):
+def get_view_dialog(parent, db, entity, action,
+                    get_value_handlers, set_field_handlers):
     extent_text = label(entity.sys.extent)
     title = u'View :: %s' % (extent_text, )
     text = u'View :: %s :: %s' % (extent_text, entity)
@@ -253,7 +270,8 @@ def get_view_dialog(parent, db, entity, action):
             return True
     f_map = entity.sys.field_map(include)
     fields = f_map.values()
-    dialog = get_dialog(title, parent, text, db, entity, fields)
+    dialog = get_dialog(title, parent, text, db, entity, fields,
+                        get_value_handlers, set_field_handlers)
     return dialog
 
 def show_error(parent, exception, e):

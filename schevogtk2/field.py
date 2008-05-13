@@ -32,7 +32,7 @@ class DynamicField(gtk.EventBox):
     gsignal('update-clicked', object)
     gsignal('value-changed')
 
-    def __init__(self, get_value_handlers=None, set_field_handlers=None):
+    def __init__(self, get_value_handlers, set_field_handlers):
         super(DynamicField, self).__init__()
         # Begin as a single-line text entry field, until later changed
         # to another widget type.
@@ -42,10 +42,8 @@ class DynamicField(gtk.EventBox):
         self._db = None
         self._field = None
         self.expand = False
-        self.get_value_handlers = (
-            get_value_handlers or DEFAULT_GET_VALUE_HANDLERS)
-        self.set_field_handlers = (
-            set_field_handlers or DEFAULT_SET_FIELD_HANDLERS)
+        self.get_value_handlers = get_value_handlers
+        self.set_field_handlers = set_field_handlers
 
     def get_value(self):
         widget = self.child
