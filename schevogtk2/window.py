@@ -146,6 +146,10 @@ class BaseWindow(object):
         db = self._db
         parent = self.toplevel
         dialog = relationship.RelationshipWindow(db, entity)
+        # Be sure to set the get_value and set_field handlers to match
+        # this window.
+        dialog.get_value_handlers = self.get_value_handlers
+        dialog.set_field_handlers = self.set_field_handlers
         window = dialog.toplevel
         window.set_modal(True)
         window.set_transient_for(parent)
