@@ -66,12 +66,12 @@ class EntityChooser(gtk.HBox):
                 # allowed extent.
                 if allowed_extents:
                     button = self._create_button = gtk.Button(label='+')
-                    self.add(button)
+                    self.pack_end(button, expand=False, fill=False)
                     button.show()
                     button.connect('clicked', self._on_create_button__clicked)
             if field.allow_update:
                 button = self._update_button = gtk.Button(label='U')
-                self.add(button)
+                self.pack_end(button, expand=False, fill=False)
                 button.show()
                 button.connect('clicked', self._on_update_button__clicked)
                 self._reset_update_button_sensitivity()
