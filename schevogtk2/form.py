@@ -160,6 +160,80 @@ class FormWindow(gtk.Window):
             self.close_button.show()
 
 
+class ExtentChoiceBox(gtk.VButtonBox):
+
+    def __init__(self, allowed_extents):
+        super(ExtentChoiceBox, self).__init__()
+        group = None
+        self.selected_extent = None
+        for extent in allowed_extents:
+            button = gtk.RadioButton(group, label(extent), use_underline=False)
+            if group is None:
+                # First in the list, so make it the group and the
+                # selected extent.
+                group = button
+                self.selected_extent = extent
+                button.props.active = True
+            button.connect('toggled', self.on_radio_button__toggled, extent)
+            button.show()
+            self.add(button)
+
+    def on_radio_button__toggled(self, button, extent):
+        self.selected_extent = extent
+
+
+class ExtentChoiceWindow(gtk.Window):
+
+    def __init__(self, allowed_extents):
+        super(ExtentChoiceWindow, self).__init__()
+        self.set_default_size(300, -1)
+        self.vbox = vbox = gtk.VBox()
+        vbox.set_spacing(5)
+        vbox.set_border_width(5)
+        vbox.show()
+        self.extent_choice_box = ecbox = ExtentChoiceBox(allowed_extents)
+        ecbox.show()
+        self.footer_sep = fsep = gtk.HSeparator()
+        fsep.show()
+        self.button_box = bbox = gtk.HButtonBox()
+        bbox.set_layout(gtk.BUTTONBOX_END)
+        bbox.set_spacing(5)
+        bbox.show()
+        self.ok_button = button = gtk.Button(stock=gtk.STOCK_OK)
+        button.connect('clicked', self.on_ok_button__clicked)
+        bbox.add(button)
+        button.show()
+        self.cancel_button = button = gtk.Button(stock=gtk.STOCK_CANCEL)
+        button.connect('clicked', self.on_cancel_button__clicked)
+        bbox.add(button)
+        button.show()
+        vbox.pack_start(ecbox, expand=True, fill=True, padding=0)
+        vbox.pack_start(fsep, expand=False, fill=False, padding=0)
+        vbox.pack_start(bbox, expand=False, fill=True, padding=0)
+        self.add(vbox)
+        self.connect('hide', self.quit)
+
+    @property
+    def selected_extent(self):
+        return self.extent_choice_box.selected_extent
+        
+    def on_cancel_button__clicked(self, widget):
+        # If cancelled or closed, even if the user selected an extent,
+        # ignore it.
+        self.extent_choice_box.selected_extent = None
+        self.hide()
+
+    def on_ok_button__clicked(self, widget):
+        self.hide()
+
+    def quit(self, *args):
+        gtk.main_quit()
+
+    def run(self):
+        self.show()
+        gtk.main()
+
+        
 def get_custom_tx_dialog(WindowClass, parent, db, tx):
     dialog = WindowClass(db, tx)
     window = dialog.toplevel
@@ -198,9 +272,46 @@ def get_dialog(title, parent, text, db, model, fields,
     fields = [field for field in fields if not field.hidden]
     fields_dict = dict((field.name, field) for field in fields)
     window.set_fields(model, fields, get_value_handlers, set_field_handlers)
-    # Attach update-clicked handlers to each of its fields.
+    # Attach create-clicked and update-clicked handlers to each of its
+    # fields.
     for name, widget in window.form_box.field_widgets.iteritems():
-        def on__update_clicked(dynamic_field, entity_to_update):
+        def on_create_clicked(dynamic_field, allowed_extents,
+                              name=name, widget=widget):
+            if len(allowed_extents) == 1:
+                # If only one extent, simply use that extent.
+                extent = allowed_extents[0]
+            else:
+                # If >1 extent, ask the user for an extent first.
+                dialog = ExtentChoiceWindow(allowed_extents)
+                dialog.set_modal(True)
+                dialog.set_transient_for(window)
+                dialog.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+                dialog.run()
+                extent = dialog.selected_extent
+                dialog.destroy()
+            # User may not have chosen an extent.  Only continue if
+            # they have. Otherwise do nothing.
+            if extent is not None:
+                action = get_method_action(extent, 't', 'create')
+                create_tx = action.method()
+                dialog = get_tx_dialog(
+                    parent = window,
+                    db = db,
+                    tx = create_tx,
+                    action = action,
+                    get_value_handlers = get_value_handlers,
+                    set_field_handlers = set_field_handlers,
+                    )
+                dialog.run()
+                tx_result = dialog.tx_result
+                dialog.destroy()
+                if tx_result is not None:
+                    field = fields_dict[name]
+                    field.set(tx_result)
+                    widget.set_field(db, field)
+        widget.connect('create-clicked', on_create_clicked)
+        def on_update_clicked(dynamic_field, entity_to_update,
+                              name=name, widget=widget):
             action = get_method_action(entity_to_update, 't', 'update')
             update_tx = action.method()
             dialog = get_tx_dialog(
@@ -218,7 +329,7 @@ def get_dialog(title, parent, text, db, model, fields,
                 field = fields_dict[name]
                 field.set(tx_result)
                 widget.set_field(db, field)
-        widget.connect('update-clicked', on__update_clicked)
+        widget.connect('update-clicked', on_update_clicked)
     return window
 
 def get_table(db, fields, field_widgets,
