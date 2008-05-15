@@ -78,12 +78,10 @@ class EntityChooser(gtk.HBox):
         # Filter out extents where t.create is hidden.
         allowed_extents = [
             extent for extent in allowed_extents if 'create' in extent.t]
-        print 'Emitting', 'create-clicked', allowed_extents
         self.emit('create-clicked', allowed_extents)
 
     def _on_update_button__clicked(self, widget):
         entity_to_update = self.get_selected()
-        print 'Emitting', 'update-clicked', self, entity_to_update
         self.emit('update-clicked', entity_to_update)
     
     def _on_value_changed(self, widget):

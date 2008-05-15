@@ -12,6 +12,7 @@ from gtk import gdk
 import schevo.base
 from schevo.label import label
 
+from schevogtk2.action import get_method_action
 from schevogtk2.field import FieldLabel, DynamicField
 from schevogtk2 import plugin
 from schevogtk2.utils import gsignal
@@ -185,6 +186,7 @@ def get_default_tx_dialog(parent, db, tx,
 
 def get_dialog(title, parent, text, db, model, fields,
                get_value_handlers, set_field_handlers):
+    # Create the form window and set its basic properties.
     window = FormWindow()
     window.set_db(db)
     window.set_modal(True)
@@ -192,8 +194,31 @@ def get_dialog(title, parent, text, db, model, fields,
     window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
     window.set_title(title)
     window.set_header_text(text)
+    # Populate its fields.
     fields = [field for field in fields if not field.hidden]
+    fields_dict = dict((field.name, field) for field in fields)
     window.set_fields(model, fields, get_value_handlers, set_field_handlers)
+    # Attach update-clicked handlers to each of its fields.
+    for name, widget in window.form_box.field_widgets.iteritems():
+        def on__update_clicked(dynamic_field, entity_to_update):
+            action = get_method_action(entity_to_update, 't', 'update')
+            update_tx = action.method()
+            dialog = get_tx_dialog(
+                parent = window,
+                db = db,
+                tx = update_tx,
+                action = action,
+                get_value_handlers = get_value_handlers,
+                set_field_handlers = set_field_handlers,
+                )
+            dialog.run()
+            tx_result = dialog.tx_result
+            dialog.destroy()
+            if tx_result is not None:
+                field = fields_dict[name]
+                field.set(tx_result)
+                widget.set_field(db, field)
+        widget.connect('update-clicked', on__update_clicked)
     return window
 
 def get_table(db, fields, field_widgets,

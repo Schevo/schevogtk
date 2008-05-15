@@ -97,11 +97,9 @@ class DynamicField(gtk.EventBox):
             'Could not find an endpoint set_field handler for %r' % self.child)
 
     def _on_widget__create_clicked(self, widget, allowed_extents):
-        print 'Emitting', 'create-clicked', self, allowed_extents
         self.emit('create-clicked', allowed_extents)
     
     def _on_widget__update_clicked(self, widget, entity_to_update):
-        print 'Emitting', 'update-clicked', self, entity_to_update
         self.emit('update-clicked', entity_to_update)
     
     def _on_widget__value_changed(self, widget, field):
