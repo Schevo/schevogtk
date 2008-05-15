@@ -29,11 +29,11 @@ class EntityChooser(gtk.HBox):
 
     __gtype_name__ = 'EntityChooser'
 
-    gsignal('create-clicked', object)
-    gsignal('update-clicked', object)
+    gsignal('create-clicked', object) # 'object' is list of allowable extents
+    gsignal('update-clicked', object) # 'object' is entity to update
     gsignal('value-changed')
 
-    def __init__(self, db, field):
+    def __init__(self, db, field, show_buttons=True):
         super(EntityChooser, self).__init__()
         self.db = db
         self.field = field
@@ -46,7 +46,7 @@ class EntityChooser(gtk.HBox):
         combobox.show()
         combobox.connect('value-changed', self._on_value_changed)
         # Also create create/update buttons if the entity field allows.
-        if isinstance(field, schevo.field.Entity):
+        if show_buttons and isinstance(field, schevo.field.Entity):
             if field.allow_create:
                 # For now, 
                 button = self._create_button = gtk.Button(label='+')
@@ -82,9 +82,9 @@ class EntityChooser(gtk.HBox):
         self.emit('create-clicked', allowed_extents)
 
     def _on_update_button__clicked(self, widget):
-        entity = self.get_selected()
-        print 'Emitting', 'update-clicked', entity
-        self.emit('update-clicked', entity)
+        entity_to_update = self.get_selected()
+        print 'Emitting', 'update-clicked', self, entity_to_update
+        self.emit('update-clicked', entity_to_update)
     
     def _on_value_changed(self, widget):
         self.emit('value-changed')

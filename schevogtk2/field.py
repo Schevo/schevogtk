@@ -9,6 +9,7 @@ from schevo.lib import optimize
 from xml.sax.saxutils import escape
 import os
 
+import gobject
 import gtk
 import pango
 
@@ -81,6 +82,13 @@ class DynamicField(gtk.EventBox):
                         control.set_sensitive(False)
 #                     if hasattr(control, 'set_selectable'):  # Label only.
 #                         control.set_selectable(True)
+                signal_names = gobject.signal_list_names(control.__class__)
+                if 'create-clicked' in signal_names:
+                    control.connect(
+                        'create-clicked', self._on_widget__create_clicked)
+                if 'update-clicked' in signal_names:
+                    control.connect(
+                        'update-clicked', self._on_widget__update_clicked)
                 widget.show()
                 self.add(widget)
                 return
@@ -88,6 +96,14 @@ class DynamicField(gtk.EventBox):
         raise ValueError(
             'Could not find an endpoint set_field handler for %r' % self.child)
 
+    def _on_widget__create_clicked(self, widget, allowed_extents):
+        print 'Emitting', 'create-clicked', self, allowed_extents
+        self.emit('create-clicked', allowed_extents)
+    
+    def _on_widget__update_clicked(self, widget, entity_to_update):
+        print 'Emitting', 'update-clicked', self, entity_to_update
+        self.emit('update-clicked', entity_to_update)
+    
     def _on_widget__value_changed(self, widget, field):
         value = self.get_value()
 ##         print '%s changed to: %s %r:' % (field.name, value, value)
