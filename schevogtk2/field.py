@@ -151,6 +151,11 @@ type_register(FieldLabel)
 #     value,  - The value retrieved from the widget, or None if continuing.
 #   )
 
+# All handlers are decorated with `optimize.do_not_optimize` since we
+# need to determine where they are in the `DEFAULT_...` lists in order
+# to insert custom handlers into custom handler lists.
+
+@optimize.do_not_optimize
 def _get_value_ScrolledWindow(widget):
     if isinstance(widget, gtk.ScrolledWindow):
         # Use the child widget if inspecting a scrolled window.
@@ -158,6 +163,7 @@ def _get_value_ScrolledWindow(widget):
     # Always continue.
     return (widget, True, None)
 
+@optimize.do_not_optimize
 def _get_value_CheckButton(widget):
     if isinstance(widget, gtk.CheckButton):
         value = widget.get_active()
@@ -165,6 +171,7 @@ def _get_value_CheckButton(widget):
     else:
         return (widget, True, None)
 
+@optimize.do_not_optimize
 def _get_value_FileChooser(widget):
     if isinstance(widget, fieldwidget.FileChooser):
         value = widget.get_filename()
@@ -172,6 +179,7 @@ def _get_value_FileChooser(widget):
     else:
         return (widget, True, None)
 
+@optimize.do_not_optimize
 def _get_value_Image(widget):
     if isinstance(widget, gtk.Image):
         # XXX: Hack since images cannot be edited.
@@ -180,6 +188,7 @@ def _get_value_Image(widget):
     else:
         return (widget, True, None)
 
+@optimize.do_not_optimize
 def _get_value_EntityChooser(widget):
     if isinstance(widget, fieldwidget.EntityChooser):
         value = widget.get_selected()
@@ -189,6 +198,7 @@ def _get_value_EntityChooser(widget):
     else:
         return (widget, True, None)
 
+@optimize.do_not_optimize
 def _get_value_TextView(widget):
     if isinstance(widget, gtk.TextView):
         text_buffer = widget.props.buffer
@@ -200,6 +210,7 @@ def _get_value_TextView(widget):
     else:
         return (widget, True, None)
 
+@optimize.do_not_optimize
 def _get_value_ValueChooser(widget):
     if isinstance(widget, fieldwidget.ValueChooser):
         value = widget.get_selected()
@@ -209,6 +220,7 @@ def _get_value_ValueChooser(widget):
     else:
         return (widget, True, None)
 
+@optimize.do_not_optimize
 def _get_value_generic(widget):
     value = widget.get_text()
     if not value:
@@ -241,6 +253,11 @@ DEFAULT_GET_VALUE_HANDLERS = [
 #     control, - The control that handles user input; None if same as widget.
 #   )
 
+# All handlers are decorated with `optimize.do_not_optimize` since we
+# need to determine where they are in the `DEFAULT_...` lists in order
+# to insert custom handlers into custom handler lists.
+
+@optimize.do_not_optimize
 def _set_field_calculated(db, field, value, change_cb):
     if field.fget:
         if value is UNASSIGNED:
@@ -253,6 +270,7 @@ def _set_field_calculated(db, field, value, change_cb):
     else:
         return (True, None, None)
 
+@optimize.do_not_optimize
 def _set_field_rw_boolean(db, field, value, change_cb):
     if isinstance(field, schevo.field.Boolean) and not field.readonly:
         widget = gtk.CheckButton()
@@ -268,6 +286,7 @@ def _set_field_rw_boolean(db, field, value, change_cb):
     else:
         return (True, None, None)
 
+@optimize.do_not_optimize
 def _set_field_rw_entity(db, field, value, change_cb):
     if isinstance(field, schevo.field.Entity) and not field.readonly:
         widget = fieldwidget.EntityChooser(db, field)
@@ -276,6 +295,7 @@ def _set_field_rw_entity(db, field, value, change_cb):
     else:
         return (True, None, None)
 
+@optimize.do_not_optimize
 def _set_field_image(db, field, value, change_cb):
     if isinstance(field, schevo.field.Image):
         widget = gtk.Image()
@@ -289,6 +309,7 @@ def _set_field_image(db, field, value, change_cb):
     else:
         return (True, None, None)
 
+@optimize.do_not_optimize
 def _set_field_memo(db, field, value, change_cb):
     if isinstance(field, schevo.field.Memo):
         self.expand = True
@@ -313,6 +334,7 @@ def _set_field_memo(db, field, value, change_cb):
     else:
         return (True, None, None)
 
+@optimize.do_not_optimize
 def _set_field_rw_path(db, field, value, change_cb):
     if isinstance(field, schevo.field.Path) and not field.readonly:
         widget = fieldwidget.FileChooser(db, field)
@@ -323,6 +345,7 @@ def _set_field_rw_path(db, field, value, change_cb):
     else:
         return (True, None, None)
 
+@optimize.do_not_optimize
 def _set_field_generic_valid_values(db, field, value, change_cb):
     if field.valid_values is not None:
         widget = fieldwidget.ValueChooser(db, field)
@@ -331,6 +354,7 @@ def _set_field_generic_valid_values(db, field, value, change_cb):
     else:
         return (True, None, None)
 
+@optimize.do_not_optimize
 def _set_field_generic(db, field, value, change_cb):
     if value is UNASSIGNED:
         value = ''
