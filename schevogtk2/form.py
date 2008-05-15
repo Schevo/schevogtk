@@ -286,6 +286,7 @@ def get_dialog(title, parent, text, db, model, fields,
                 dialog.set_modal(True)
                 dialog.set_transient_for(window)
                 dialog.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+                dialog.set_title('Select type to create')
                 dialog.run()
                 extent = dialog.selected_extent
                 dialog.destroy()

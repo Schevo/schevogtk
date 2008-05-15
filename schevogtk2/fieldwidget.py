@@ -48,11 +48,27 @@ class EntityChooser(gtk.HBox):
         # Also create create/update buttons if the entity field allows.
         if show_buttons and isinstance(field, schevo.field.Entity):
             if field.allow_create:
-                # For now, 
-                button = self._create_button = gtk.Button(label='+')
-                self.add(button)
-                button.show()
-                button.connect('clicked', self._on_create_button__clicked)
+                # Determine the allowed extents.
+                if len(field.allow) == 0:
+                    # Any extent that is not hidden, and whose create
+                    # transaction is not hidden, is available.
+                    allowed_extents = [
+                        extent for extent in db.extents() if not extent.hidden]
+                else:
+                    allowed_extents = [
+                        db.extent(name) for name in sorted(field.allow)]
+                # Filter out extents where t.create is hidden.
+                allowed_extents = self._create_button_allowed_extents = [
+                    extent for extent in allowed_extents
+                    if 'create' in extent.t
+                    ]
+                # Only create the button if there is at least one
+                # allowed extent.
+                if allowed_extents:
+                    button = self._create_button = gtk.Button(label='+')
+                    self.add(button)
+                    button.show()
+                    button.connect('clicked', self._on_create_button__clicked)
             if field.allow_update:
                 button = self._update_button = gtk.Button(label='U')
                 self.add(button)
@@ -67,18 +83,7 @@ class EntityChooser(gtk.HBox):
     def _on_create_button__clicked(self, widget):
         db = self.db
         field = self.field
-        if len(field.allow) == 0:
-            # Any extent that is not hidden, and whose create transaction
-            # is not hidden, is available.
-            allowed_extents = [
-                extent for extent in db.extents() if not extent.hidden]
-        else:
-            allowed_extents = [
-                db.extent(name) for name in sorted(field.allow)]
-        # Filter out extents where t.create is hidden.
-        allowed_extents = [
-            extent for extent in allowed_extents if 'create' in extent.t]
-        self.emit('create-clicked', allowed_extents)
+        self.emit('create-clicked', self._create_button_allowed_extents)
 
     def _on_update_button__clicked(self, widget):
         entity_to_update = self.get_selected()
@@ -90,7 +95,7 @@ class EntityChooser(gtk.HBox):
 
     def _reset_update_button_sensitivity(self):
         """Update the `_update_button` sensitivity based on whether or not the
-        current value of the combobox may be updated."""
+        current value of the combobox is alowed to be updated."""
         button = self._update_button
         if button is not None:
             selected = self.get_selected()
