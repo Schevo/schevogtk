@@ -115,6 +115,8 @@ class EntityComboBox(gtk.ComboBox):
 
     gsignal('value-changed')
 
+    unassigned_label = '<UNASSIGNED>'
+
     def __init__(self, db, field):
         super(EntityComboBox, self).__init__()
         self.db = db
@@ -195,7 +197,7 @@ class EntityComboBox(gtk.ComboBox):
         items = []
         values = []
         # Unassigned.
-        items.append((u'<UNASSIGNED>', UNASSIGNED))
+        items.append((self.unassigned_label, UNASSIGNED))
         values.append(UNASSIGNED)
         # Preferred values.
         preferred_values = field.preferred_values or []
