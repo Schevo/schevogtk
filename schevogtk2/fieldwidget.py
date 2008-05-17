@@ -223,8 +223,10 @@ class EntityComboBox(gtk.ComboBoxEntry):
             # row,
             ]
         for row in self.model:
-            if row[0].lower().startswith(entry_text_lower):
-                matching_rows.append(row)
+            row_text = row[0]
+            if isinstance(row_text, basestring):
+                if row[0].lower().startswith(entry_text_lower):
+                    matching_rows.append(row)
         # If there is one and only one such string,
         if len(matching_rows) == 1:
             row = matching_rows[0]
