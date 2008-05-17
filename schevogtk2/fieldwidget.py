@@ -215,7 +215,6 @@ class EntityComboBox(gtk.ComboBoxEntry):
     def _on_entry__insert_text(self, entry, new_text, new_text_len, position):
         if self._handling_insert_text:
             return
-        print '_on_entry__insert_text'
         # Get the full text of the Entry widget, and see if any
         # strings in the model begin with that text.
         entry_text = entry.get_text()
@@ -245,7 +244,6 @@ class EntityComboBox(gtk.ComboBoxEntry):
                 # doesn't work properly within a signal handler.
                 def select_region():
                     start = len(entry_text)
-                    print 'select region', start
                     entry.select_region(start, -1)
                     # Destroy the timer immediately.
                     return False
