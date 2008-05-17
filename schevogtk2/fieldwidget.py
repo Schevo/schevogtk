@@ -109,7 +109,7 @@ class EntityChooser(gtk.HBox):
 type_register(EntityChooser)
         
 
-class EntityComboBox(gtk.ComboBox):
+class EntityComboBox(gtk.ComboBoxEntry):
 
     __gtype_name__ = 'EntityComboBox'
 
@@ -125,25 +125,28 @@ class EntityComboBox(gtk.ComboBox):
         self.set_row_separator_func(self.is_row_separator)
         self._populate()
         self.set_model(self.model)
-##         self.set_text_column(0)
+        # Set the column that the combo box entry will search for text
+        # within.
+        self.set_text_column(0)
         cell = self.cell_pb = gtk.CellRendererPixbuf()
         self.pack_start(cell, False)
         self.set_cell_data_func(cell, self.cell_icon)
-##         self.reorder(cell, 0)
-        cell = self.cell_text = gtk.CellRendererText()
-        self.pack_start(cell)
-        self.add_attribute(cell, 'text', 0)
-##         self.completion = comp = gtk.EntryCompletion()
-##         comp.set_model(self.model)
-##         cell = self.comp_pb = gtk.CellRendererPixbuf()
-##         comp.pack_start(cell, False)
-##         comp.set_cell_data_func(cell, self.cell_icon)
-##         comp.set_text_column(0)
-##         self.entry = entry = self.child
-##         entry.set_completion(comp)
-##         entry.set_text(str(field.get()))
-##         entry.connect('activate', self._on_entry__activate)
-##         entry.connect('changed', self._on_entry__changed)
+        # Move the pixbuf cell to the zeroth column so it shows up in
+        # the correct location.
+        self.reorder(cell, 0)
+        # Set up the completion widget.
+        self.completion = comp = gtk.EntryCompletion()
+        comp.set_model(self.model)
+        cell = self.comp_pb = gtk.CellRendererPixbuf()
+        comp.pack_start(cell, False)
+        comp.set_cell_data_func(cell, self.cell_icon)
+        comp.set_text_column(0)
+        self.entry = entry = self.child
+        entry.set_completion(comp)
+        entry.set_text(str(field.get()))
+        entry.connect('activate', self._on_entry__activate)
+        entry.connect('changed', self._on_entry__changed)
+        # Select the field's current item.
         self.select_item_by_data(field.get())
         self.connect('changed', self._on_changed)
 
@@ -171,6 +174,12 @@ class EntityComboBox(gtk.ComboBox):
             return True
         return False
 
+    def select_item_by_text(self, text):
+        for row in self.model:
+            if row[0] == text:
+                self.set_active_iter(row.iter)
+                break
+    
     def select_item_by_data(self, data):
         for row in self.model:
             if row[1] == data:
@@ -180,11 +189,12 @@ class EntityComboBox(gtk.ComboBox):
     def _on_changed(self, widget):
         self.emit('value-changed')
 
-##     def _on_entry__activate(self, entry):
-##         self.emit('activate')
+    def _on_entry__activate(self, entry):
+        self.emit('activate')
 
-##     def _on_entry__changed(self, entry):
-##         self.emit('value-changed')
+    def _on_entry__changed(self, entry):
+        self.select_item_by_text(entry.get_text())
+        self.emit('value-changed')
 
     def _populate(self):
         db = self.db
