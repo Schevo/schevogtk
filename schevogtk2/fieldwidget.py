@@ -136,6 +136,7 @@ class EntityComboBox(gtk.ComboBoxEntry):
         # Set the column that the combo box entry will search for text
         # within.
         self.set_text_column(0)
+        # Set up the icon cell.
         cell = self.cell_pb = gtk.CellRendererPixbuf()
         self.pack_start(cell, False)
         self.set_cell_data_func(cell, self.cell_icon)
@@ -438,11 +439,16 @@ class FileChooser(gtk.EventBox):
 type_register(FileChooser)
 
 
-class ValueChooser(gtk.ComboBox):
+class ValueChooser(gtk.ComboBoxEntry):
 
     __gtype_name__ = 'ValueChooser'
 
     gsignal('value-changed')
+
+    # Label to use for UNASSIGNED values.  Useful if you want to make
+    # the combo box more visually descriptive in the face of such
+    # values.
+    unassigned_label = '<UNASSIGNED>'
 
     def __init__(self, db, field):
         super(ValueChooser, self).__init__()
@@ -452,26 +458,36 @@ class ValueChooser(gtk.ComboBox):
         self.set_row_separator_func(self.is_row_separator)
         self._populate()
         self.set_model(self.model)
-##         cell = self.cell_pb = gtk.CellRendererPixbuf()
-##         self.pack_start(cell, False)
-##         self.set_cell_data_func(cell, self.cell_icon)
-        cell = self.cell_text = gtk.CellRendererText()
-        self.pack_start(cell)
-        self.add_attribute(cell, 'text', 0)
+        # Set the column that the combo box entry will search for text
+        # within.
+        self.set_text_column(0)
+        # Set up the icon cell. XXX: This could be optimized in the
+        # future, but for now this makes the visual appearance
+        # correct.
+        cell = self.cell_pb = gtk.CellRendererPixbuf()
+        self.pack_start(cell, False)
+        self.set_cell_data_func(cell, self.cell_icon)
+        # Move the pixbuf cell to the zeroth column so it shows up in
+        # the correct location.
+        self.reorder(cell, 0)
+        # Set up the completion widget.
+        self.completion = comp = gtk.EntryCompletion()
+        comp.set_model(self.model)
+        comp.set_text_column(0)
+        self.entry = entry = self.child
+        entry.set_completion(comp)
+        entry.set_text(str(field.get()))
+        entry.connect_after('backspace', self._on_entry__backspace)
+        entry.connect_after('insert-text', self._on_entry__insert_text)
+        self._handling_insert_text = False
+        # Set the field's current item.
         self.select_item_by_data(field.get())
         self.connect('changed', self._on_changed)
 
-##     def cell_icon(self, layout, cell, model, row):
-##         entity = model[row][1]
-##         if entity in (UNASSIGNED, None):
-##             cell.set_property('stock_id', gtk.STOCK_NO)
-##             cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
-##             cell.set_property('visible', False)
-##         else:
-##             extent = entity.sys.extent
-##             pixbuf = icon.small_pixbuf(self, extent)
-##             cell.set_property('pixbuf', pixbuf)
-##             cell.set_property('visible', True)
+    def cell_icon(self, layout, cell, model, row):
+        cell.set_property('stock_id', gtk.STOCK_NO)
+        cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
+        cell.set_property('visible', False)
 
     def get_selected(self):
         iter = self.get_active_iter()
@@ -479,16 +495,26 @@ class ValueChooser(gtk.ComboBox):
             return self.model[iter][1]
 
     def is_row_separator(self, model, row):
-        text, entity = model[row]
-        if text is None and entity is None:
+        text, data = model[row]
+        if text is None and data is None:
             return True
         return False
 
+    def select_item_by_text(self, text):
+        for row in self.model:
+            if row[0] == text:
+                self.set_active_iter(row.iter)
+                return
+        # Not in the combo box, so select nothing
+        self.set_active(-1)
+    
     def select_item_by_data(self, data):
         for row in self.model:
             if row[1] == data:
                 self.set_active_iter(row.iter)
-                break
+                return
+        # Not in the combo box, so select nothing
+        self.set_active(-1)
 
     def _on_changed(self, widget):
         self.emit('value-changed')
@@ -496,8 +522,58 @@ class ValueChooser(gtk.ComboBox):
 ##     def _on_entry__activate(self, entry):
 ##         self.emit('activate')
 
-##     def _on_entry__changed(self, entry):
-##         self.emit('value-changed')
+    def _on_entry__backspace(self, entry):
+        # Just select an item by text if it's available; don't try to
+        # autocomplete unique items as with inserting text.
+        self.select_item_by_text(entry.get_text())
+        self.emit('value-changed')
+
+    def _on_entry__insert_text(self, entry, new_text, new_text_len, position):
+        if self._handling_insert_text:
+            return
+        # Get the full text of the Entry widget, and see if any
+        # strings in the model begin with that text.
+        entry_text = entry.get_text()
+        entry_text_lower = entry_text.lower()
+        matching_rows = [
+            # row,
+            ]
+        for row in self.model:
+            row_text = row[0]
+            if isinstance(row_text, basestring):
+                if row[0].lower().startswith(entry_text_lower):
+                    matching_rows.append(row)
+        # If there is one and only one such string,
+        if len(matching_rows) == 1:
+            row = matching_rows[0]
+            # Stop the insert-text signal from further emission until
+            # we're done. For some reason, storing the handler_id of
+            # the connect_after call in __init__ does not work
+            # properly to keep this from being called recursively, so
+            # we used a _handling_insert_text flag instead.
+            self._handling_insert_text = True
+            try:
+                # Set the entry's text to that string.
+                entry.set_text(row[0])
+                # Select the item associated with the string.
+                self.set_active_iter(row.iter)
+                # Select the portion of the string that the user
+                # didn't type.  Use a timeout, since select_region
+                # doesn't work properly within a signal handler.
+                def select_region():
+                    start = len(entry_text)
+                    entry.select_region(start, -1)
+                    # Destroy the timer immediately.
+                    return False
+                gobject.timeout_add(0, select_region)
+            finally:
+                # Done, so allow insert-text signal to be emitted again.
+                self._handling_insert_text = False
+        # If there is not,
+        else:
+            # Set no item as active.
+            self.set_active(-1)
+        self.emit('value-changed')
 
     def _populate(self):
         db = self.db
@@ -505,7 +581,7 @@ class ValueChooser(gtk.ComboBox):
         items = []
         values = []
         # Unassigned.
-        items.append((u'<UNASSIGNED>', UNASSIGNED))
+        items.append((self.unassigned_label, UNASSIGNED))
         values.append(UNASSIGNED)
         # Preferred values.
         preferred_values = field.preferred_values or []
