@@ -152,7 +152,7 @@ class EntityComboBox(gtk.ComboBoxEntry):
         self.entry = entry = self.child
         entry.set_completion(comp)
         entry.set_text(str(field.get()))
-        entry.connect('activate', self._on_entry__activate)
+#         entry.connect('activate', self._on_entry__activate)
         entry.connect_after('backspace', self._on_entry__backspace)
         entry.connect_after('insert-text', self._on_entry__insert_text)
         self._handling_insert_text = False
@@ -203,8 +203,8 @@ class EntityComboBox(gtk.ComboBoxEntry):
     def _on_changed(self, widget):
         self.emit('value-changed')
 
-    def _on_entry__activate(self, entry):
-        self.emit('activate')
+#     def _on_entry__activate(self, entry):
+#         self.emit('activate')
 
     def _on_entry__backspace(self, entry):
         # Just select an item by text if it's available; don't try to
