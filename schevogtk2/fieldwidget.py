@@ -115,6 +115,13 @@ class EntityComboBox(gtk.ComboBoxEntry):
 
     gsignal('value-changed')
 
+    # Function to create a label for an entity. By default, just use
+    # the unicode representation of the entity.
+    entity_label = unicode
+
+    # Label to use for UNASSIGNED values.  Useful if you want to make
+    # the combo box more visually descriptive in the face of such
+    # values.
     unassigned_label = '<UNASSIGNED>'
 
     def __init__(self, db, field):
@@ -200,6 +207,7 @@ class EntityComboBox(gtk.ComboBoxEntry):
         db = self.db
         field = self.field
         allow = field.allow
+        entity_label = self.entity_label
         if len(allow) > 1:
             allow_multiple = True
         else:
@@ -219,9 +227,9 @@ class EntityComboBox(gtk.ComboBoxEntry):
                     continue
                 if allow_multiple:
                     extent_text = label(entity.sys.extent)
-                    text = u'%s :: %s' % (entity, extent_text)
+                    text = u'%s :: %s' % (entity_label(entity), extent_text)
                 else:
-                    text = u'%s' % (entity, )
+                    text = u'%s' % (entity_label(entity), )
                 more.append((text, entity))
             items.extend(more)
             # Row separator.
@@ -239,9 +247,9 @@ class EntityComboBox(gtk.ComboBoxEntry):
                     continue
                 if allow_multiple:
                     extent_text = label(entity.sys.extent)
-                    text = u'%s :: %s' % (entity, extent_text)
+                    text = u'%s :: %s' % (entity_label(entity), extent_text)
                 else:
-                    text = u'%s' % (entity, )
+                    text = u'%s' % (entity_label(entity), )
                 more.append((text, entity))
         else:
             # Other allowed values.
@@ -253,9 +261,9 @@ class EntityComboBox(gtk.ComboBoxEntry):
                     values.append(entity)
                     if allow_multiple:
                         extent_text = label(extent)
-                        text = u'%s :: %s' % (entity, extent_text)
+                        text = u'%s :: %s' % (entity_label(entity), extent_text)
                     else:
-                        text = u'%s' % (entity, )
+                        text = u'%s' % (entity_label(entity), )
                     more.append((text, entity))
         items.extend(more)
         value = field.get()
@@ -266,9 +274,9 @@ class EntityComboBox(gtk.ComboBoxEntry):
             # Invalid, but current value.
             if allow_multiple:
                 extent_text = label(entity.sys.extent)
-                text = u'%s :: %s' % (entity, extent_text)
+                text = u'%s :: %s' % (entity_label(entity), extent_text)
             else:
-                text = u'%s' % (entity, )
+                text = u'%s' % (entity_label(entity), )
             items.append((text, entity))
         # Update the model.
         model = self.model
