@@ -185,13 +185,17 @@ class EntityComboBox(gtk.ComboBoxEntry):
         for row in self.model:
             if row[0] == text:
                 self.set_active_iter(row.iter)
-                break
+                return
+        # Not in the combo box, so select nothing
+        self.set_active(-1)
     
     def select_item_by_data(self, data):
         for row in self.model:
             if row[1] == data:
                 self.set_active_iter(row.iter)
-                break
+                return
+        # Not in the combo box, so select nothing
+        self.set_active(-1)
 
     def _on_changed(self, widget):
         self.emit('value-changed')
