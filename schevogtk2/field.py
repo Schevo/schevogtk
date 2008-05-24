@@ -67,7 +67,7 @@ class DynamicField(gtk.EventBox):
         value = field.get()
         change_cb = self._on_widget__value_changed
         for handler in self.set_field_handlers:
-            cont, widget, control = handler(db, field, value, change_cb)
+            cont, widget, control = handler(self, db, field, value, change_cb)
             if not cont:
                 if control is None:
                     control = widget
@@ -241,6 +241,7 @@ DEFAULT_GET_VALUE_HANDLERS = [
 
 # set_value handlers accept the following positional arguments:
 #
+#   container: The widget that will eventually contain the field widget.
 #   db:        The database the field is attached to.
 #   field:     The field to create a widget for.
 #   value:     The value of the field.
@@ -258,20 +259,7 @@ DEFAULT_GET_VALUE_HANDLERS = [
 # to insert custom handlers into custom handler lists.
 
 @optimize.do_not_optimize
-def _set_field_calculated(db, field, value, change_cb):
-    if field.fget:
-        if value is UNASSIGNED:
-            value = ''
-        else:
-            value = unicode(value)
-        widget = gtk.Entry()
-        widget.set_text(value)
-        return (False, widget, None)
-    else:
-        return (True, None, None)
-
-@optimize.do_not_optimize
-def _set_field_rw_boolean(db, field, value, change_cb):
+def _set_field_rw_boolean(container, db, field, value, change_cb):
     if isinstance(field, schevo.field.Boolean) and not field.readonly:
         widget = gtk.CheckButton()
         if value is UNASSIGNED:
@@ -287,7 +275,7 @@ def _set_field_rw_boolean(db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_rw_entity(db, field, value, change_cb):
+def _set_field_rw_entity(container, db, field, value, change_cb):
     if isinstance(field, schevo.field.Entity) and not field.readonly:
         widget = fieldwidget.EntityChooser(db, field)
         widget.connect('value-changed', change_cb, field)
@@ -296,7 +284,7 @@ def _set_field_rw_entity(db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_image(db, field, value, change_cb):
+def _set_field_image(container, db, field, value, change_cb):
     if isinstance(field, schevo.field.Image):
         widget = gtk.Image()
         if value is not UNASSIGNED:
@@ -310,9 +298,9 @@ def _set_field_image(db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_memo(db, field, value, change_cb):
-    if isinstance(field, schevo.field.Memo):
-        self.expand = True
+def _set_field_multiline_string(container, db, field, value, change_cb):
+    if isinstance(field, schevo.field.String) and field.multiline:
+        container.expand = True
         if value is UNASSIGNED:
             value = ''
         else:
@@ -335,7 +323,20 @@ def _set_field_memo(db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_rw_path(db, field, value, change_cb):
+def _set_field_calculated(container, db, field, value, change_cb):
+    if field.fget:
+        if value is UNASSIGNED:
+            value = ''
+        else:
+            value = unicode(value)
+        widget = gtk.Entry()
+        widget.set_text(value)
+        return (False, widget, None)
+    else:
+        return (True, None, None)
+
+@optimize.do_not_optimize
+def _set_field_rw_path(container, db, field, value, change_cb):
     if isinstance(field, schevo.field.Path) and not field.readonly:
         widget = fieldwidget.FileChooser(db, field)
         if value:
@@ -346,7 +347,7 @@ def _set_field_rw_path(db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_generic_valid_values(db, field, value, change_cb):
+def _set_field_generic_valid_values(container, db, field, value, change_cb):
     if field.valid_values is not None:
         widget = fieldwidget.ValueChooser(db, field)
         widget.connect('changed', change_cb, field)
@@ -355,7 +356,7 @@ def _set_field_generic_valid_values(db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_generic(db, field, value, change_cb):
+def _set_field_generic(container, db, field, value, change_cb):
     if value is UNASSIGNED:
         value = ''
     else:
@@ -366,11 +367,11 @@ def _set_field_generic(db, field, value, change_cb):
     return (False, widget, None)
     
 DEFAULT_SET_FIELD_HANDLERS = [
-    _set_field_calculated,
     _set_field_rw_boolean,
     _set_field_rw_entity,
     _set_field_image,
-    _set_field_memo,
+    _set_field_multiline_string,
+    _set_field_calculated,
     _set_field_rw_path,
     _set_field_generic_valid_values,
     _set_field_generic,
