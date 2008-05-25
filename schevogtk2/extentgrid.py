@@ -68,6 +68,13 @@ class ExtentGrid(grid.Grid):
             extents = db.extents()
         self.set_rows(extents)
 
+    def set_visible_func(self, fn):
+        """Create a new filter for the model, and set its visible_func to
+        `fn`."""
+        self._filter = self._model.filter_new()
+        self._filter.set_visible_func(fn)
+        self._sorter = gtk.TreeModelSort(self._filter)
+
     def _get_show_hidden_extents(self):
         return self._show_hidden_extents
 
