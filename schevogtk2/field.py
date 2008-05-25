@@ -98,10 +98,10 @@ class DynamicField(gtk.EventBox):
 
     def _on_widget__create_clicked(self, widget, allowed_extents):
         self.emit('create-clicked', allowed_extents)
-    
+
     def _on_widget__update_clicked(self, widget, entity_to_update):
         self.emit('update-clicked', entity_to_update)
-    
+
     def _on_widget__value_changed(self, widget, field):
         value = self.get_value()
 ##         print '%s changed to: %s %r:' % (field.name, value, value)
@@ -365,7 +365,7 @@ def _set_field_generic(container, db, field, value, change_cb):
     widget.set_text(value)
     widget.connect('activate', change_cb, field)
     return (False, widget, None)
-    
+
 DEFAULT_SET_FIELD_HANDLERS = [
     _set_field_rw_boolean,
     _set_field_rw_entity,
