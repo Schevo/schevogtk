@@ -42,7 +42,7 @@ class ExtentGrid(grid.Grid):
         self._sorter = gtk.TreeModelSort(self._filter)
         self._row_popup_menu = PopupMenu(self)
         self._set_bindings()
-        columns = []
+        columns = self._columns = []
         column = ExtentColumn('_plural', 'Name', str)
         columns.append(column)
         column = grid.Column('__len__', 'Qty', int, call=True)
@@ -67,6 +67,12 @@ class ExtentGrid(grid.Grid):
         else:
             extents = db.extents()
         self.set_rows(extents)
+
+    def set_quantity_visible(self, visible=True):
+        if visible:
+            self.set_columns(self._columns)
+        else:
+            self.set_columns(self._columns[:-1])
 
     def set_visible_func(self, fn):
         """Create a new filter for the model, and set its visible_func to
