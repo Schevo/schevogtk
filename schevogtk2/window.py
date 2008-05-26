@@ -386,10 +386,36 @@ class Window(BaseWindow):
         return methods
 
 
-class CustomWindow(BaseWindow):
+class EmptyWindow(BaseWindow):
+
+    def __init__(self):
+        super(EmptyWindow, self).__init__()
+
+    def hide(self):
+        self.toplevel.hide()
+
+    def run(self):
+        self.toplevel.show()
+        gtk.main()
+
+    def _set_bindings(self):
+        items = [
+            ('<Control>F4', self.hide),
+            ('Escape', self.hide),
+            ]
+        self._bindings = dict([(gtk.accelerator_parse(name), func)
+                               for name, func in items])
+        # Hack to support these with CapsLock on.
+        for name, func in items:
+            keyval, mod = gtk.accelerator_parse(name)
+            mod = mod | gtk.gdk.LOCK_MASK
+            self._bindings[(keyval, mod)] = func
+
+
+class CustomWindow(EmptyWindow):
 
     def __init__(self, db, tx):
-        BaseWindow.__init__(self)
+        super(CustomWindow, self).__init__()
         self._db = db
         self._tx = tx
         self.tx_result = None
@@ -419,26 +445,6 @@ class CustomWindow(BaseWindow):
             raise
         else:
             self.hide()
-
-    def hide(self):
-        self.toplevel.hide()
-
-    def run(self):
-        self.toplevel.show()
-        gtk.main()
-
-    def _set_bindings(self):
-        items = [
-            ('<Control>F4', self.hide),
-            ('Escape', self.hide),
-            ]
-        self._bindings = dict([(gtk.accelerator_parse(name), func)
-                               for name, func in items])
-        # Hack to support these with CapsLock on.
-        for name, func in items:
-            keyval, mod = gtk.accelerator_parse(name)
-            mod = mod | gtk.gdk.LOCK_MASK
-            self._bindings[(keyval, mod)] = func
 
     def _set_widgets(self):
         db = self._db

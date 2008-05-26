@@ -216,7 +216,7 @@ class ExtentChoiceWindow(gtk.Window):
     @property
     def selected_extent(self):
         return self.extent_choice_box.selected_extent
-        
+
     def on_cancel_button__clicked(self, widget):
         # If cancelled or closed, even if the user selected an extent,
         # ignore it.
@@ -233,9 +233,17 @@ class ExtentChoiceWindow(gtk.Window):
         self.show()
         gtk.main()
 
-        
+
 def get_custom_tx_dialog(WindowClass, parent, db, tx):
     dialog = WindowClass(db, tx)
+    window = dialog.toplevel
+    window.set_modal(True)
+    window.set_transient_for(parent)
+    window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+    return dialog
+
+def get_custom_view_dialog(WindowClass, parent, db, entity, action):
+    dialog = WindowClass(db, entity, action)
     window = dialog.toplevel
     window.set_modal(True)
     window.set_transient_for(parent)
@@ -255,6 +263,24 @@ def get_default_tx_dialog(parent, db, tx,
     fields = field_map.values()
     fields = [field for field in fields if not field.hidden]
     dialog = get_dialog(title, parent, text, db, tx, fields,
+                        get_value_handlers, set_field_handlers)
+    return dialog
+
+def get_default_view_dialog(parent, db, entity, action,
+                            get_value_handlers, set_field_handlers):
+    extent_text = label(entity.sys.extent)
+    title = u'View :: %s' % (extent_text, )
+    text = u'View :: %s :: %s' % (extent_text, entity)
+    def include(field):
+        if action.include_expensive:
+            return True
+        elif field.expensive:
+            return False
+        else:
+            return True
+    f_map = entity.sys.field_map(include)
+    fields = f_map.values()
+    dialog = get_dialog(title, parent, text, db, entity, fields,
                         get_value_handlers, set_field_handlers)
     return dialog
 
@@ -337,11 +363,11 @@ def get_table(db, fields, field_widgets,
               get_value_handlers, set_field_handlers):
     """Return a gtk.Table widget containing labels and dynamic field widgets
     for each field given.
-    
+
     - `db`: The database containing the fields.
-    
+
     - `fields`: Sequence of Schevo field instances to create widgets for.
-    
+
     - `field_widgets`: Dictionary that is updated to store
       field-name:field-widget pairs as the field widgets are created.
 
@@ -395,20 +421,15 @@ def get_tx_dialog(parent, db, tx, action,
 
 def get_view_dialog(parent, db, entity, action,
                     get_value_handlers, set_field_handlers):
-    extent_text = label(entity.sys.extent)
-    title = u'View :: %s' % (extent_text, )
-    text = u'View :: %s :: %s' % (extent_text, entity)
-    def include(field):
-        if action.include_expensive:
-            return True
-        elif field.expensive:
-            return False
-        else:
-            return True
-    f_map = entity.sys.field_map(include)
-    fields = f_map.values()
-    dialog = get_dialog(title, parent, text, db, entity, fields,
-                        get_value_handlers, set_field_handlers)
+    WindowClass = plugin.get_custom_view_dialog_class(db, action)
+    if WindowClass is None:
+        dialog = get_default_view_dialog(
+            parent, db, entity, action,
+            get_value_handlers, set_field_handlers,
+            )
+    else:
+        dialog = get_custom_view_dialog(
+            WindowClass, parent, db, entity, action)
     return dialog
 
 def show_error(parent, exception, e):
