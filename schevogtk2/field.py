@@ -341,7 +341,7 @@ def _set_field_rw_path(container, db, field, value, change_cb):
         widget = fieldwidget.FileChooser(db, field)
         if value:
             widget.set_filename(value)
-        widget.connect('value-cahnged', change_cb, field)
+        widget.connect('value-changed', change_cb, field)
         return (False, widget, None)
     else:
         return (True, None, None)

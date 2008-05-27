@@ -89,7 +89,7 @@ class EntityChooser(gtk.HBox):
     def _on_update_button__clicked(self, widget):
         entity_to_update = self.get_selected()
         self.emit('update-clicked', entity_to_update)
-    
+
     def _on_value_changed(self, widget):
         self.emit('value-changed')
         self._reset_update_button_sensitivity()
@@ -106,9 +106,9 @@ class EntityChooser(gtk.HBox):
             # Entity.
             elif isinstance(selected, Entity):
                 button.set_sensitive('update' in selected.t)
-        
+
 type_register(EntityChooser)
-        
+
 
 class EntityComboBox(gtk.ComboBoxEntry):
 
@@ -192,7 +192,7 @@ class EntityComboBox(gtk.ComboBoxEntry):
                 return
         # Not in the combo box, so select nothing
         self.set_active(-1)
-    
+
     def select_item_by_data(self, data):
         for row in self.model:
             if row[1] == data:
@@ -259,7 +259,7 @@ class EntityComboBox(gtk.ComboBoxEntry):
             # Set no item as active.
             self.set_active(-1)
         self.emit('value-changed')
-        
+
     def _populate(self):
         db = self.db
         field = self.field
@@ -349,7 +349,7 @@ class ExtentComboBox(gtk.ComboBoxEntry):
     # f.extent() field type in Schevo at this point. It is here so
     # those applications that wish to have an extent combo box may use
     # a central base class.
-    
+
     __gtype_name__ = 'ExtentComboBox'
 
     gsignal('value-changed')
@@ -405,7 +405,7 @@ class ExtentComboBox(gtk.ComboBoxEntry):
         than all extents in the database.
         """
         return self.db.extents()
-        
+
     def cell_icon(self, layout, cell, model, row):
         extent = model[row][1]
         if extent in (UNASSIGNED, None):
@@ -435,7 +435,7 @@ class ExtentComboBox(gtk.ComboBoxEntry):
                 return
         # Not in the combo box, so select nothing
         self.set_active(-1)
-    
+
     def select_item_by_data(self, data):
         for row in self.model:
             if row[1] == data:
@@ -499,7 +499,7 @@ class ExtentComboBox(gtk.ComboBoxEntry):
             # Set no item as active.
             self.set_active(-1)
         self.emit('value-changed')
-        
+
 type_register(ExtentComboBox)
 
 
@@ -534,7 +534,10 @@ class FileChooser(gtk.EventBox):
             entry.connect('activate', self._on_changed)
             self.add(hbox)
         else:
-            self._filechooser = chooser = gtk.FileChooserButton()
+            title = 'Choose %r file' % label(self.field)
+            self._filechooser = chooser = gtk.FileChooserButton(title)
+            if self.field.directory_only:
+                chooser.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
             chooser.show()
             chooser.connect('selection-changed', self._on_changed)
             self.add(chooser)
@@ -666,7 +669,7 @@ class ValueChooser(gtk.ComboBoxEntry):
                 return
         # Not in the combo box, so select nothing
         self.set_active(-1)
-    
+
     def select_item_by_data(self, data):
         for row in self.model:
             if row[1] == data:
