@@ -55,7 +55,7 @@ class BaseWindow(object):
     def after_tx(self, tx):
         pass
 
-    def before_tx(self, tx):
+    def before_tx(self, tx, action):
         pass
 
     def destroy(self, *args):
@@ -102,7 +102,7 @@ class BaseWindow(object):
                 if (field_name in tx.f and not tx.f[field_name].readonly and
                     getattr(tx, field_name) is UNASSIGNED):
                     setattr(tx, field_name, action.related.entity)
-            self.before_tx(tx)
+            self.before_tx(tx, action)
             tx_result = self.run_tx_dialog(tx, action)
             if tx.sys.executed:
                 widget.reflect_changes(tx_result, tx)
@@ -146,6 +146,8 @@ class BaseWindow(object):
         db = self._db
         parent = self.toplevel
         dialog = relationship.RelationshipWindow(db, entity)
+        dialog.after_tx = self.after_tx
+        dialog.before_tx = self.before_tx
         # Be sure to set the get_value and set_field handlers to match
         # this window.
         dialog.get_value_handlers = self.get_value_handlers

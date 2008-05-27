@@ -134,9 +134,10 @@ class PopupMenu(grid.PopupMenu):
 
     def get_actions(self):
         extent = self._extent
+        related = self._related_grid.get_selected()
         items = []
         # Get extent actions.
-        actions = action.get_tx_actions(extent)
+        actions = action.get_tx_actions(extent, related)
         if actions:
             items.extend(actions)
             items.append(None)
