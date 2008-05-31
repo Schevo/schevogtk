@@ -105,7 +105,9 @@ class BaseWindow(object):
             self.before_tx(tx, action)
             tx_result = self.run_tx_dialog(tx, action)
             if tx.sys.executed:
-                widget.reflect_changes(tx_result, tx)
+                reflect_changes = getattr(widget, 'reflect_changes', None)
+                if reflect_changes:
+                    reflect_changes(tx_result, tx)
                 self.reflect_changes(tx_result, tx)
             self.after_tx(tx)
         elif action.type == 'view':
