@@ -78,8 +78,6 @@ class DynamicField(gtk.EventBox):
                         control.props.can_focus = False
                     if hasattr(control.props, 'has-focus'):
                         control.props.has_focus = False
-                    if hasattr(control, 'set_sensitive'):
-                        control.set_sensitive(False)
 #                     if hasattr(control, 'set_selectable'):  # Label only.
 #                         control.set_selectable(True)
                 signal_names = gobject.signal_list_names(control.__class__)
