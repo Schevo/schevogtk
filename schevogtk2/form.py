@@ -322,12 +322,12 @@ def get_dialog(title, parent, text, db, model, fields,
                 action = get_method_action(extent, 't', 'create')
                 create_tx = action.method()
                 dialog = get_tx_dialog(
-                    parent = window,
-                    db = db,
-                    tx = create_tx,
-                    action = action,
-                    get_value_handlers = get_value_handlers,
-                    set_field_handlers = set_field_handlers,
+                    parent=window,
+                    db=db,
+                    tx=create_tx,
+                    action=action,
+                    get_value_handlers=get_value_handlers,
+                    set_field_handlers=set_field_handlers,
                     )
                 dialog.run()
                 tx_result = dialog.tx_result
@@ -342,12 +342,12 @@ def get_dialog(title, parent, text, db, model, fields,
             action = get_method_action(entity_to_update, 't', 'update')
             update_tx = action.method()
             dialog = get_tx_dialog(
-                parent = window,
-                db = db,
-                tx = update_tx,
-                action = action,
-                get_value_handlers = get_value_handlers,
-                set_field_handlers = set_field_handlers,
+                parent=window,
+                db=db,
+                tx=update_tx,
+                action=action,
+                get_value_handlers=get_value_handlers,
+                set_field_handlers=set_field_handlers,
                 )
             dialog.run()
             tx_result = dialog.tx_result
