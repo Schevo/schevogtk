@@ -72,8 +72,13 @@ class DynamicField(gtk.EventBox):
                 if control is None:
                     control = widget
                 if field.fget or field.readonly:
-                    if hasattr(control, 'set_editable'):
-                        control.set_editable(False)
+                    if hasattr(control.props, 'editable'):
+                        control.props.editable = False
+                        # Make it appear insensitive even though it's
+                        # just read-only.
+                        style = control.get_style()
+                        insensitive_bg = style.bg[gtk.STATE_INSENSITIVE]
+                        control.modify_base(gtk.STATE_NORMAL, insensitive_bg)
                     if hasattr(control.props, 'can-focus'):
                         control.props.can_focus = False
                     if hasattr(control.props, 'has-focus'):
