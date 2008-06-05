@@ -351,7 +351,7 @@ def _set_field_rw_path(container, db, field, value, change_cb):
 
 @optimize.do_not_optimize
 def _set_field_generic_valid_values(container, db, field, value, change_cb):
-    if field.valid_values is not None:
+    if field.valid_values is not None and not (field.readonly or field.fget):
         widget = fieldwidget.ValueChooser(db, field)
         widget.connect('changed', change_cb, field)
         return (False, widget, None)
