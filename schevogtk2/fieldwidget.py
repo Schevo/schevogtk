@@ -513,11 +513,11 @@ class FileChooser(gtk.EventBox):
         super(FileChooser, self).__init__()
         self.db = db
         self.field = field
-        if os.name == 'nt':
+        if os.name == 'nt' and not field.directory_only:
             if field.file_only:
                 stock_id = gtk.STOCK_FILE
-            elif field.directory_only:
-                stock_id = gtk.STOCK_DIRECTORY
+##             elif field.directory_only:
+##                 stock_id = gtk.STOCK_DIRECTORY
             self._hbox = hbox = gtk.HBox()
             hbox.show()
             self._entry = entry = gtk.Entry()
@@ -543,13 +543,13 @@ class FileChooser(gtk.EventBox):
             self.add(chooser)
 
     def get_filename(self):
-        if os.name == 'nt':
+        if os.name == 'nt' and not self.field.directory_only:
             return self._entry.get_text()
         else:
             return self._filechooser.get_filename()
 
     def set_filename(self, filename):
-        if os.name == 'nt':
+        if os.name == 'nt' and not self.field.directory_only:
             self._entry.set_text(filename)
         else:
             return self._filechooser.set_filename(filename)
