@@ -62,7 +62,11 @@ class DynamicField(gtk.EventBox):
     def set_field(self, db, field):
         self._db = db
         self._field = field
-        self.remove(self.child)
+        if self.child is not None:
+            self.remove(self.child)
+        if field.hidden:
+            # Do nothing for hidden fields.
+            return
         control = None
         value = field.get()
         change_cb = self._on_widget__value_changed
@@ -367,6 +371,7 @@ def _set_field_generic(container, db, field, value, change_cb):
     widget = gtk.Entry()
     widget.set_text(value)
     widget.connect('activate', change_cb, field)
+    widget.connect('changed', change_cb, field)
     return (False, widget, None)
 
 DEFAULT_SET_FIELD_HANDLERS = [

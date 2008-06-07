@@ -22,7 +22,6 @@ class FormBox(gtk.VBox):
 
     def __init__(self):
         super(FormBox, self).__init__()
-        self.field_widgets = {}
         self.set_border_width(10)
         self.set_spacing(10)
         self.header = gtk.Label()
@@ -34,8 +33,8 @@ class FormBox(gtk.VBox):
     def set_fields(self, db, fields, get_value_handlers, set_field_handlers):
         field_count = len(fields)
         if field_count > 0:
-            self.table = get_table(db, fields, self.field_widgets,
-                                   get_value_handlers, set_field_handlers)
+            self.table = get_table(
+                db, fields, get_value_handlers, set_field_handlers)
             self.table.show()
             self.pack_start(self.table, expand=True, fill=True, padding=0)
 
@@ -99,10 +98,11 @@ class FormWindow(gtk.Window):
 
     def on_ok_button__clicked(self, widget):
         tx = self._model
-        for name, widget in self.form_box.field_widgets.items():
+        for name in tx.f:
             field = tx.f[name]
-            if field.readonly:
+            if field.readonly or field.fget:
                 continue
+            widget = field.x.widget
             value = widget.get_value()
             try:
                 setattr(tx, name, value)
@@ -261,7 +261,6 @@ def get_default_tx_dialog(parent, db, tx,
         text = u'%s :: %s' % (label(tx), extent_name)
     field_map = tx.sys.field_map()
     fields = field_map.values()
-    fields = [field for field in fields if not field.hidden]
     dialog = get_dialog(title, parent, text, db, tx, fields,
                         get_value_handlers, set_field_handlers)
     return dialog
@@ -295,12 +294,12 @@ def get_dialog(title, parent, text, db, model, fields,
     window.set_title(title)
     window.set_header_text(text)
     # Populate its fields.
-    fields = [field for field in fields if not field.hidden]
     fields_dict = dict((field.name, field) for field in fields)
     window.set_fields(model, fields, get_value_handlers, set_field_handlers)
     # Attach create-clicked and update-clicked handlers to each of its
     # fields.
-    for name, widget in window.form_box.field_widgets.iteritems():
+    for name, field in fields_dict.iteritems():
+        widget = field.x.widget
         def on_create_clicked(dynamic_field, allowed_extents,
                               name=name, widget=widget):
             if len(allowed_extents) == 1:
@@ -359,17 +358,13 @@ def get_dialog(title, parent, text, db, model, fields,
         widget.connect('update-clicked', on_update_clicked)
     return window
 
-def get_table(db, fields, field_widgets,
-              get_value_handlers, set_field_handlers):
+def get_table(db, fields, get_value_handlers, set_field_handlers):
     """Return a gtk.Table widget containing labels and dynamic field widgets
     for each field given.
 
     - `db`: The database containing the fields.
 
     - `fields`: Sequence of Schevo field instances to create widgets for.
-
-    - `field_widgets`: Dictionary that is updated to store
-      field-name:field-widget pairs as the field widgets are created.
 
     - `get_value_handlers`: A list of handlers to use when calling the
       `get_value` method of a `DynamicField` widget.
@@ -383,17 +378,16 @@ def get_table(db, fields, field_widgets,
     table.set_col_spacings(5)
     row = 0
     for field in fields:
-        # Skip hidden fields.
-        if field.hidden:
-            continue
         # Label.
         label_box = FieldLabel()
         label_box.set_field(db, field)
-        label_box.show()
+        if not field.hidden:
+            label_box.show()
         # Widget.
         widget_box = DynamicField(get_value_handlers, set_field_handlers)
         widget_box.set_field(db, field)
-        widget_box.show()
+        if not field.hidden:
+            widget_box.show()
         # Attach to table.
         xoptions = gtk.FILL
         yoptions = gtk.FILL
@@ -403,7 +397,8 @@ def get_table(db, fields, field_widgets,
         if widget_box.expand:
             yoptions = gtk.EXPAND|gtk.FILL
         table.attach(widget_box, 1, 2, row, row+1, xoptions, yoptions)
-        field_widgets[field.name] = widget_box
+        field.x.label = label_box
+        field.x.widget = widget_box
         row += 1
     return table
 
