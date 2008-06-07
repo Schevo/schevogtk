@@ -601,9 +601,35 @@ class FileChooser(gtk.EventBox):
 type_register(FileChooser)
 
 
-class ValueChooser(gtk.ComboBoxEntry):
+class ValueChooser(gtk.HBox):
 
     __gtype_name__ = 'ValueChooser'
+
+    gsignal('value-changed')
+
+    def __init__(self, db, field):
+        super(ValueChooser, self).__init__()
+        self.db = db
+        self.field = field
+        # Always add the combobox.
+        combobox = self._value_combobox = ValueComboBox(db, field)
+        self.add(combobox)
+        combobox.show()
+        combobox.connect('value-changed', self._on_value_changed)
+
+    def get_selected(self):
+        """Return the currently selected Schevo object."""
+        return self._value_combobox.get_selected()
+
+    def _on_value_changed(self, widget):
+        self.emit('value-changed')
+
+type_register(ValueChooser)
+
+
+class ValueComboBox(gtk.ComboBoxEntry):
+
+    __gtype_name__ = 'ValueComboBox'
 
     gsignal('value-changed')
 
@@ -613,7 +639,7 @@ class ValueChooser(gtk.ComboBoxEntry):
     unassigned_label = '<UNASSIGNED>'
 
     def __init__(self, db, field):
-        super(ValueChooser, self).__init__()
+        super(ValueComboBox, self).__init__()
         self.db = db
         self.field = field
         self.model = gtk.ListStore(str, object)
@@ -780,7 +806,7 @@ class ValueChooser(gtk.ComboBoxEntry):
         for text, value in items:
             model.append((text, value))
 
-type_register(ValueChooser)
+type_register(ValueComboBox)
 
 
 optimize.bind_all(sys.modules[__name__])  # Last line of module.
