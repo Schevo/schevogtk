@@ -102,7 +102,7 @@ class FormWindow(gtk.Window):
             field = tx.f[name]
             if field.readonly or field.fget:
                 continue
-            widget = field.x.widget
+            widget = field.x.control_widget
             value = widget.get_value()
             try:
                 setattr(tx, name, value)
@@ -147,9 +147,40 @@ class FormWindow(gtk.Window):
         self.form_box.set_header_text(text)
 
     def set_fields(self, model, fields, get_value_handlers, set_field_handlers):
+        db = self._db
         self._model = model
         self.form_box.set_fields(self._db, fields,
                                  get_value_handlers, set_field_handlers)
+        # Set up handlers so that each field's widget will cause other
+        # widgets to update.
+        def on__changed(widget, field):
+            # Update the value of the field based on the widget, in
+            # case an fget field is updated.
+            setattr(model, field.name, widget.get_value())
+            # Look for handler in model.
+            handler_name = 'on_%s__changed' % field.name
+            if handler_name in model.x:
+                # Run handler.
+                handler_results = model.x[handler_name]()
+                # Process results.
+                if not isinstance(handler_results, list):
+                    handler_results = [handler_results]
+                field_names = [result.name for result in handler_results]
+                for name in field_names:
+                    field = model.f[name]
+                    # Hide or unhide.
+                    field.x.label_widget.props.visible = not field.hidden
+                    field.x.control_widget.props.visible = not field.hidden
+                    # Re-render.
+                field.x.control_widget.set_field(db, field)
+        for field in fields:
+            widget = field.x.control_widget
+            try:
+                # Prefer the 'value-changed' signal.
+                widget.connect('value-changed', on__changed, field)
+            except TypeError:
+                # Fall back to the 'changed' signal.
+                widget.connect('changed', on__changed, field)
         if isinstance(model, schevo.base.Transaction):
             self.ok_button.show()
             self.cancel_button.show()
@@ -299,7 +330,7 @@ def get_dialog(title, parent, text, db, model, fields,
     # Attach create-clicked and update-clicked handlers to each of its
     # fields.
     for name, field in fields_dict.iteritems():
-        widget = field.x.widget
+        widget = field.x.control_widget
         def on_create_clicked(dynamic_field, allowed_extents,
                               name=name, widget=widget):
             if len(allowed_extents) == 1:
@@ -397,8 +428,8 @@ def get_table(db, fields, get_value_handlers, set_field_handlers):
         if widget_box.expand:
             yoptions = gtk.EXPAND|gtk.FILL
         table.attach(widget_box, 1, 2, row, row+1, xoptions, yoptions)
-        field.x.label = label_box
-        field.x.widget = widget_box
+        field.x.label_widget = label_box
+        field.x.control_widget = widget_box
         row += 1
     return table
 
