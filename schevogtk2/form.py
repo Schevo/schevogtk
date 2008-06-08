@@ -100,7 +100,7 @@ class FormWindow(gtk.Window):
         tx = self._model
         for name in tx.f:
             field = tx.f[name]
-            if field.readonly or field.fget:
+            if field.readonly or field.fget or field.hidden:
                 continue
             widget = field.x.control_widget
             value = widget.get_value()
