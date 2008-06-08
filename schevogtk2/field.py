@@ -31,6 +31,7 @@ class DynamicField(gtk.EventBox):
 
     gsignal('create-clicked', object)
     gsignal('update-clicked', object)
+    gsignal('view-clicked', object)
     gsignal('value-changed')
 
     def __init__(self, get_value_handlers, set_field_handlers):
@@ -96,6 +97,9 @@ class DynamicField(gtk.EventBox):
                 if 'update-clicked' in signal_names:
                     control.connect(
                         'update-clicked', self._on_widget__update_clicked)
+                if 'view-clicked' in signal_names:
+                    control.connect(
+                        'view-clicked', self._on_widget__view_clicked)
                 widget.show()
                 self.add(widget)
                 return
@@ -113,6 +117,9 @@ class DynamicField(gtk.EventBox):
         value = self.get_value()
 ##         print '%s changed to: %s %r:' % (field.name, value, value)
         self.emit('value-changed')
+
+    def _on_widget__view_clicked(self, widget, entity_to_view):
+        self.emit('view-clicked', entity_to_view)
 
 type_register(DynamicField)
 

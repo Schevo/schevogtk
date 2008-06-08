@@ -12,7 +12,9 @@ from schevo.label import label, plural
 from schevo.constant import UNASSIGNED
 from schevo.error import EntityDoesNotExist
 
-from schevogtk2 import action
+from schevogtk2.action import (
+    get_method_action, get_relationship_actions,
+    get_tx_actions, get_view_action)
 from schevogtk2 import grid
 from schevogtk2 import icon
 from schevogtk2.utils import gsignal, type_register
@@ -144,8 +146,8 @@ class EntityGrid(grid.Grid):
         if extent is not None:
             method_name = 'create'
             if method_name in extent.t:
-                m_action = action.get_method_action(extent, 't', method_name,
-                                                    self._related)
+                m_action = get_method_action(extent, 't', method_name,
+                                             self._related)
                 self.select_action(m_action)
 
     def select_delete_action(self):
@@ -153,7 +155,7 @@ class EntityGrid(grid.Grid):
         if entity is not None:
             method_name = 'delete'
             if method_name in entity.t:
-                m_action = action.get_method_action(entity, 't', method_name)
+                m_action = get_method_action(entity, 't', method_name)
                 self.select_action(m_action)
 
     def select_update_action(self):
@@ -161,13 +163,13 @@ class EntityGrid(grid.Grid):
         if entity is not None:
             method_name = 'update'
             if method_name in entity.t:
-                m_action = action.get_method_action(entity, 't', method_name)
+                m_action = get_method_action(entity, 't', method_name)
                 self.select_action(m_action)
 
     def select_view_action(self):
         entity = self.get_selected()
         if entity is not None:
-            v_action = action.get_view_action(entity, include_expensive=False)
+            v_action = get_view_action(entity, include_expensive=False)
             self.select_action(v_action)
 
     def set_all_x(self, name, value):
@@ -288,25 +290,25 @@ class PopupMenu(grid.PopupMenu):
         entity = self._entity
         items = []
         # Extent tx actions.
-        actions = action.get_tx_actions(extent, self._entity_grid._related)
+        actions = get_tx_actions(extent, self._entity_grid._related)
         if actions:
             if items:
                 items.append(None)
             items.extend(actions)
         # Entity view actions.
-        actions = action.get_view_actions(entity)
+        actions = get_view_actions(entity)
         if actions:
             if items:
                 items.append(None)
             items.extend(actions)
         # Entity relationship actions.
-        actions = action.get_relationship_actions(entity)
+        actions = get_relationship_actions(entity)
         if actions:
             if items:
                 items.append(None)
             items.extend(actions)
         # Entity tx actions.
-        actions = action.get_tx_actions(entity)
+        actions = get_tx_actions(entity)
         if actions:
             if items:
                 items.append(None)

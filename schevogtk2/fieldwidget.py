@@ -32,21 +32,23 @@ class EntityChooser(gtk.HBox):
 
     gsignal('create-clicked', object) # 'object' is list of allowable extents
     gsignal('update-clicked', object) # 'object' is entity to update
+    gsignal('view-clicked', object) # 'object' is entity to view
     gsignal('value-changed')
 
     def __init__(self, db, field, show_buttons=True):
         super(EntityChooser, self).__init__()
         self.db = db
         self.field = field
-        # By default, there are no create and update buttons.
+        # By default, there are no create, update or view buttons.
         self._create_button = None
         self._update_button = None
+        self._view_button = None
         # Always add the combobox.
         combobox = self._entity_combobox = EntityComboBox(db, field)
         self.add(combobox)
         combobox.show()
         combobox.connect('value-changed', self._on_value_changed)
-        # Also create create/update buttons if the entity field allows.
+        # Add create/update/view buttons if the entity field allows.
         if show_buttons and isinstance(field, schevo.field.Entity):
             if field.allow_create:
                 # Determine the allowed extents.
@@ -67,15 +69,22 @@ class EntityChooser(gtk.HBox):
                 # allowed extent.
                 if allowed_extents:
                     button = self._create_button = gtk.Button(label='+')
-                    self.pack_end(button, expand=False, fill=False)
+##                     button = self._create_button = gtk.Button(stock='gtk-add')
+                    self.pack_start(button, expand=False, fill=False)
                     button.show()
                     button.connect('clicked', self._on_create_button__clicked)
             if field.allow_update:
-                button = self._update_button = gtk.Button(label='U')
-                self.pack_end(button, expand=False, fill=False)
+                button = self._update_button = gtk.Button(label='E')
+                self.pack_start(button, expand=False, fill=False)
                 button.show()
                 button.connect('clicked', self._on_update_button__clicked)
                 self._reset_update_button_sensitivity()
+            if field.allow_view:
+                button = self._view_button = gtk.Button(label='V')
+                self.pack_start(button, expand=False, fill=False)
+                button.show()
+                button.connect('clicked', self._on_view_button__clicked)
+                self._reset_view_button_sensitivity()
 
     def get_selected(self):
         """Return the currently selected Schevo object."""
@@ -93,11 +102,29 @@ class EntityChooser(gtk.HBox):
     def _on_value_changed(self, widget):
         self.emit('value-changed')
         self._reset_update_button_sensitivity()
+        self._reset_view_button_sensitivity()
+
+    def _on_view_button__clicked(self, widget):
+        entity_to_view = self.get_selected()
+        self.emit('view-clicked', entity_to_view)
 
     def _reset_update_button_sensitivity(self):
-        """Update the `_update_button` sensitivity based on whether or not the
-        current value of the combobox is alowed to be updated."""
+        """Update the `_update_button` sensitivity based on whether or
+        not the current value of the combobox allows updating."""
         button = self._update_button
+        if button is not None:
+            selected = self.get_selected()
+            # UNASSIGNED.
+            if selected is UNASSIGNED:
+                button.set_sensitive(False)
+            # Entity.
+            elif isinstance(selected, Entity):
+                button.set_sensitive('update' in selected.t)
+
+    def _reset_view_button_sensitivity(self):
+        """Update the `_view_button` sensitivity based on whether or
+        not the current value of the combobox allows viewing."""
+        button = self._view_button
         if button is not None:
             selected = self.get_selected()
             # UNASSIGNED.

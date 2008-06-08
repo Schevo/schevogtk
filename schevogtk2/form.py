@@ -12,7 +12,7 @@ from gtk import gdk
 import schevo.base
 from schevo.label import label
 
-from schevogtk2.action import get_method_action
+from schevogtk2.action import get_method_action, get_view_action
 from schevogtk2.field import FieldLabel, DynamicField
 from schevogtk2 import plugin
 from schevogtk2.utils import gsignal
@@ -327,8 +327,8 @@ def get_dialog(title, parent, text, db, model, fields,
     # Populate its fields.
     fields_dict = dict((field.name, field) for field in fields)
     window.set_fields(model, fields, get_value_handlers, set_field_handlers)
-    # Attach create-clicked and update-clicked handlers to each of its
-    # fields.
+    # Attach create-clicked, update-clicked and view_clicked handlers
+    # to each of its fields.
     for name, field in fields_dict.iteritems():
         widget = field.x.control_widget
         def on_create_clicked(dynamic_field, allowed_extents,
@@ -387,6 +387,20 @@ def get_dialog(title, parent, text, db, model, fields,
                 field.set(tx_result)
                 widget.set_field(db, field)
         widget.connect('update-clicked', on_update_clicked)
+        def on_view_clicked(dynamic_field, entity_to_view,
+                            name=name, widget=widget):
+            action = get_view_action(entity_to_view, include_expensive=False)
+            dialog = get_view_dialog(
+                parent=window,
+                db=db,
+                entity=entity_to_view,
+                action=action,
+                get_value_handlers=get_value_handlers,
+                set_field_handlers=set_field_handlers,
+                )
+            dialog.run()
+            dialog.destroy()
+        widget.connect('view-clicked', on_view_clicked)
     return window
 
 def get_table(db, fields, get_value_handlers, set_field_handlers):
