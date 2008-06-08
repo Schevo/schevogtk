@@ -39,6 +39,7 @@ class EntityChooser(gtk.HBox):
         super(EntityChooser, self).__init__()
         self.db = db
         self.field = field
+        self.props.spacing = 1
         # By default, there are no create, update or view buttons.
         self._create_button = None
         self._update_button = None
@@ -72,17 +73,20 @@ class EntityChooser(gtk.HBox):
 ##                     button = self._create_button = gtk.Button(stock='gtk-add')
                     self.pack_start(button, expand=False, fill=False)
                     button.show()
+                    button.props.width_request = button.size_request()[1] * 0.8
                     button.connect('clicked', self._on_create_button__clicked)
             if field.allow_update:
                 button = self._update_button = gtk.Button(label='E')
                 self.pack_start(button, expand=False, fill=False)
                 button.show()
+                button.props.width_request = button.size_request()[1] * 0.8
                 button.connect('clicked', self._on_update_button__clicked)
                 self._reset_update_button_sensitivity()
             if field.allow_view:
                 button = self._view_button = gtk.Button(label='V')
                 self.pack_start(button, expand=False, fill=False)
                 button.show()
+                button.props.width_request = button.size_request()[1] * 0.8
                 button.connect('clicked', self._on_view_button__clicked)
                 self._reset_view_button_sensitivity()
 
