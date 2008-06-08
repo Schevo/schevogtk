@@ -14,7 +14,7 @@ from schevo.error import EntityDoesNotExist
 
 from schevogtk2.action import (
     get_method_action, get_relationship_actions,
-    get_tx_actions, get_view_action)
+    get_tx_actions, get_view_action, get_view_actions)
 from schevogtk2 import grid
 from schevogtk2 import icon
 from schevogtk2.utils import gsignal, type_register
