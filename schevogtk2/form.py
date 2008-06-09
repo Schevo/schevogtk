@@ -108,12 +108,12 @@ class FormWindow(gtk.Window):
             try:
                 setattr(tx, name, value)
             except Exception, e:
-                show_error(self, Exception, e)
+                show_error(self, e)
                 return
         try:
             self.tx_result = self._db.execute(tx)
         except Exception, e:
-            show_error(self, Exception, e)
+            show_error(self, e)
             if not hasattr(sys, 'frozen'):
                 raise
         except:
@@ -472,32 +472,6 @@ def get_view_dialog(parent, db, entity, action,
         dialog = get_custom_view_dialog(
             WindowClass, parent, db, entity, action)
     return dialog
-
-def show_error(parent, exception, e):
-    flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
-    win = gtk.MessageDialog(parent=parent, flags=flags,
-                            type=gtk.MESSAGE_ERROR,
-                            buttons=gtk.BUTTONS_CLOSE,
-                            message_format=str(e))
-##     title = 'Error: %s' % (exception, )
-##     win.set_title(title)
-    win.run()
-    win.destroy()
-
-
-##         scrolled_window = gtk.ScrolledWindow()
-##         scrolled_window.show()
-##         vbox = gtk.VBox(spacing=4)
-##         vbox.set_border_width(4)
-##         vbox.show()
-##         table = gtk.Table(rows=3, columns=2, homogeneous=False)
-##         table.show()
-##         vbox.pack_start(table, expand=False, fill=True, padding=0)
-##         viewport = gtk.Viewport()
-##         viewport.show()
-##         viewport.set_shadow_type(gtk.SHADOW_NONE)
-##         viewport.add(vbox)
-##         scrolled_window.add(viewport)
 
 
 optimize.bind_all(sys.modules[__name__])  # Last line of module.

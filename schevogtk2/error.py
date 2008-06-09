@@ -8,13 +8,32 @@ from schevo.lib import optimize
 
 import gtk
 
+import schevo.error
 
-def show_error(parent, exception, e):
+
+BULLET = u'\u2022 '
+
+
+def show_error(parent, e):
+    # By default, just show the error message verbatim.
+    markup = str(e)
+    # Override for specific error types.
+    if isinstance(e, schevo.error.DeleteRestricted):
+        markup = [
+            u'You cannot delete this object from the database.\n'
+            u'It is referred to by the following objects:\n'
+            u'\n'
+            ]
+        for entity, referring_entity, referring_field_name in e.restrictions:
+            markup.append(BULLET + unicode(entity) + '\n')
+        markup = u''.join(markup)
+    # Show the dialog.
     flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
     win = gtk.MessageDialog(parent=parent, flags=flags,
                             type=gtk.MESSAGE_ERROR,
                             buttons=gtk.BUTTONS_CLOSE,
                             message_format=str(e))
+    win.set_markup(markup)
     win.run()
     win.destroy()
 

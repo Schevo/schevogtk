@@ -437,12 +437,12 @@ class CustomWindow(EmptyWindow):
             try:
                 setattr(tx, name, value)
             except Exception, e:
-                show_error(self.toplevel, Exception, e)
+                show_error(self.toplevel, e)
                 return
         try:
             self.result = self._db.execute(tx)
         except Exception, e:
-            show_error(self.toplevel, Exception, e)
+            show_error(self.toplevel, e)
             if not hasattr(sys, 'frozen'):
                 raise
         except:
