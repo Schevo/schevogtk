@@ -13,6 +13,7 @@ import schevo.base
 from schevo.label import label
 
 from schevogtk2.action import get_method_action, get_view_action
+from schevogtk2.error import show_error
 from schevogtk2.field import FieldLabel, DynamicField
 from schevogtk2 import plugin
 from schevogtk2.utils import gsignal
