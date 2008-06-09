@@ -21,7 +21,6 @@ def escape(s):
 def show_error(parent, e):
     # Override for specific error types.
     if isinstance(e, schevo.error.DeleteRestricted):
-        print 'DeleteRestricted'
         markup = [
             u'The object was not deleted from the database.\n'
             u'\n'
@@ -33,7 +32,6 @@ def show_error(parent, e):
         for entity, referring_entity, referring_field_name in e.restrictions:
             markup.append(BULLET + '<b>%s</b>\n' % escape(unicode(entity)))
     elif isinstance(e, schevo.error.KeyCollision):
-        print 'KeyCollision'
         markup = [
             u'Your changes were not saved.\n'
             u'\n'
@@ -45,7 +43,6 @@ def show_error(parent, e):
             markup.append(BULLET + '<b>%s</b>: %s'
                           % (escape(field_name), escape(field_value)))
     elif isinstance(e, schevo.error.TransactionRuleViolation):
-        print 'TransactionRuleViolation'
         markup = [
             u'Your changes were not saved.\n'
             u'\n'
@@ -54,6 +51,13 @@ def show_error(parent, e):
             u'\n'
             ]
         markup.append(BULLET + u'<b>%s</b>\n' % escape(e.message))
+    elif isinstance(e, schevo.error.TransactionFieldsNotChanged):
+        markup = [
+            u'No fields changed.\n'
+            u'\n'
+            u'Change at least one field to update this object,\n'
+            u'or click <b>Cancel</b> to leave it unchanged.\n'
+            ]
     else:
         # By default, just show the error message verbatim.
         markup = [escape(str(e))]
