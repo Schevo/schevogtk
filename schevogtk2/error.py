@@ -16,7 +16,7 @@ BULLET = u'\u2022 '
 
 def show_error(parent, e):
     # By default, just show the error message verbatim.
-    markup = str(e)
+    markup = [str(e)]
     # Override for specific error types.
     if isinstance(e, schevo.error.DeleteRestricted):
         markup = [
@@ -26,7 +26,17 @@ def show_error(parent, e):
             ]
         for entity, referring_entity, referring_field_name in e.restrictions:
             markup.append(BULLET + unicode(entity) + '\n')
-        markup = u''.join(markup)
+    elif isinstance(e, schevo.error.KeyCollision):
+        markup = [
+            u'You cannot save this object to the database.\n'
+            u'There is already an object of this type that has\n'
+            u'the following values, which must be unique:\n'
+            u'\n'
+            ]
+        for field_name, field_value in zip(e.key_spec, e.field_values):
+            markup.append(BULLET + '<b>%s</b>: %s'
+                          % (field_name, field_value))
+    markup = u''.join(markup)
     # Show the dialog.
     flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
     win = gtk.MessageDialog(parent=parent, flags=flags,
