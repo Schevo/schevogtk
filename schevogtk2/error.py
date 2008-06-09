@@ -19,8 +19,6 @@ def escape(s):
 
 
 def show_error(parent, e):
-    # By default, just show the error message verbatim.
-    markup = [str(e)]
     # Override for specific error types.
     if isinstance(e, schevo.error.DeleteRestricted):
         print 'DeleteRestricted'
@@ -56,6 +54,9 @@ def show_error(parent, e):
             u'\n'
             ]
         markup.append(BULLET + u'<b>%s</b>\n' % escape(e.message))
+    else:
+        # By default, just show the error message verbatim.
+        markup = [escape(str(e))]
     markup = u''.join(markup)
     # Show the dialog.
     flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
