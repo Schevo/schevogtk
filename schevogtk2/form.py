@@ -198,7 +198,16 @@ class FormWindow(gtk.Window):
 
     def _update_ok_button(self):
         button = self.ok_button
-        f = self._model.f
+        model = self._model
+        # First check for changed fields.
+        if (isinstance(model, schevo.base.Transaction)
+            and model.sys.requires_changes
+            and not model.sys.field_was_changed
+            ):
+            button.props.sensitive = False
+            return
+        # Check required fields.
+        f = model.f
         for name in f:
             field = f[name]
             if (field.required
@@ -207,7 +216,8 @@ class FormWindow(gtk.Window):
                 ):
                 button.props.sensitive = False
                 return
-        # All required fields were assigned values.
+        # All required fields were assigned values, and the
+        # transaction will allow execution attempt.
         button.props.sensitive = True
 
 
