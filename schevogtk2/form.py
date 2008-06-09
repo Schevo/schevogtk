@@ -176,7 +176,7 @@ class FormWindow(gtk.Window):
                     field.x.label_widget.props.visible = not field.hidden
                     field.x.control_widget.props.visible = not field.hidden
                     # Re-render.
-                field.x.control_widget.set_field(db, field)
+                field.x.control_widget.reset()
             self._update_ok_button()
         for field in fields:
             widget = field.x.control_widget

@@ -25,7 +25,7 @@ from schevogtk2.utils import gsignal, type_register
 MONO_FONT = pango.FontDescription('monospace normal')
 
 
-class DynamicField(gtk.EventBox):
+class DynamicField(gtk.HBox):
 
     __gtype_name__ = 'DynamicField'
 
@@ -36,11 +36,17 @@ class DynamicField(gtk.EventBox):
 
     def __init__(self, get_value_handlers, set_field_handlers):
         super(DynamicField, self).__init__()
+        self.props.spacing = 5
+        # Create the units label, hidden by default, packed to the end.
+        units_label = self._units_label = gtk.Label()
+        units_label.hide()
+        self.pack_end(units_label, expand=False)
         # Begin as a single-line text entry field, until later changed
         # to another widget type.
         widget = gtk.Entry()
         widget.show()
-        self.add(widget)
+        self.pack_start(widget)
+        self.child = widget
         self._db = None
         self._field = None
         self.expand = False
@@ -101,7 +107,14 @@ class DynamicField(gtk.EventBox):
                     control.connect(
                         'view-clicked', self._on_widget__view_clicked)
                 widget.show()
-                self.add(widget)
+                self.pack_start(widget)
+                self.child = widget
+                # Hide or show units label as appropriate.
+                if field.units:
+                    self._units_label.show()
+                    self._units_label.set_text(field.units)
+                else:
+                    self._units_label.hide()
                 return
         # We couldn't find an endpoint handler.
         raise ValueError(
