@@ -165,7 +165,9 @@ class FormWindow(gtk.Window):
                 # Run handler.
                 handler_results = model.x[handler_name]()
                 # Process results.
-                if not isinstance(handler_results, list):
+                if handler_results is None:
+                    handler_results = []
+                elif not isinstance(handler_results, list):
                     handler_results = [handler_results]
                 field_names = [result.name for result in handler_results]
                 for name in field_names:
