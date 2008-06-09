@@ -52,7 +52,7 @@ class BaseWindow(object):
         self._set_bindings()
         self._statusbar_context = self.statusbar.get_context_id('APP')
 
-    def after_tx(self, tx):
+    def after_tx(self, tx, tx_result):
         pass
 
     def before_tx(self, tx, action):
@@ -109,7 +109,7 @@ class BaseWindow(object):
                 if reflect_changes:
                     reflect_changes(tx_result, tx)
                 self.reflect_changes(tx_result, tx)
-            self.after_tx(tx)
+            self.after_tx(tx, tx_result)
         elif action.type == 'view':
             entity = action.instance
             self.run_view_dialog(entity, action)
