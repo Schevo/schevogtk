@@ -10,6 +10,7 @@ import gtk
 from gtk import gdk
 
 import schevo.base
+from schevo.constant import UNASSIGNED
 from schevo.label import label
 
 from schevogtk2.action import get_method_action, get_view_action
@@ -174,6 +175,7 @@ class FormWindow(gtk.Window):
                     field.x.control_widget.props.visible = not field.hidden
                     # Re-render.
                 field.x.control_widget.set_field(db, field)
+            self._update_ok_button()
         for field in fields:
             widget = field.x.control_widget
             try:
@@ -186,10 +188,25 @@ class FormWindow(gtk.Window):
             self.ok_button.show()
             self.cancel_button.show()
             self.close_button.hide()
+            self._update_ok_button()
         else:
             self.ok_button.hide()
             self.cancel_button.hide()
             self.close_button.show()
+
+    def _update_ok_button(self):
+        button = self.ok_button
+        f = self._model.f
+        for name in f:
+            field = f[name]
+            if (field.required
+                and not field.hidden
+                and field.value is UNASSIGNED
+                ):
+                button.props.sensitive = False
+                return
+        # All required fields were assigned values.
+        button.props.sensitive = True
 
 
 class ExtentChoiceBox(gtk.VButtonBox):
