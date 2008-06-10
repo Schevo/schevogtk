@@ -297,6 +297,7 @@ class Window(BaseWindow):
             title=self.file_new_title,
             parent=self.toplevel,
             patterns=self.file_ext_patterns,
+            description=self.file_ext_patterns_description,
             folder=self.file_location,
             default_extension=self.file_new_default_extension,
             )
@@ -308,6 +309,7 @@ class Window(BaseWindow):
             title=self.file_open_title,
             parent=self.toplevel,
             patterns=self.file_ext_patterns,
+            description=self.file_ext_patterns_description,
             folder=self.file_location,
             )
         if filename:
