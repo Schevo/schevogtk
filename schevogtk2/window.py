@@ -11,11 +11,6 @@ from gtk import gdk
 
 import os
 
-if os.name == 'nt':
-    import pywintypes
-    import win32con
-    import win32gui
-
 import schevo.database
 from schevo.constant import UNASSIGNED
 
@@ -230,13 +225,12 @@ class BaseWindow(object):
 
 class Window(BaseWindow):
 
-    if os.name == 'nt':
-        file_location = '.'
-        file_ext_filter = 'Schevo Database Files\0*.db;*.schevo\0'
-        file_custom_filter = 'All Files\0*.*\0'
-        file_new_default_extension = 'db'
-        file_new_title = 'New Schevo Database File'
-        file_open_title = 'Open Schevo Database File'
+    file_location = '.'
+    file_ext_patterns = ['*.db', '*.schevo']
+    file_ext_patterns_description = 'Schevo Database Files'
+    file_new_default_extension = 'db'
+    file_new_title = 'New Schevo Database File'
+    file_open_title = 'Open Schevo Database File'
 
     def __init__(self):
         BaseWindow.__init__(self)
@@ -299,48 +293,23 @@ class Window(BaseWindow):
         self.database_close()
 
     def on_New__activate(self, action):
-        filename = None
-        if os.name == 'nt':
-            try:
-                filename, custom_filter, flags = win32gui.GetSaveFileNameW(
-                    InitialDir=self.file_location,
-                    Flags=win32con.OFN_EXPLORER|win32con.OFN_OVERWRITEPROMPT,
-                    File='',
-                    DefExt=self.file_new_default_extension,
-                    Title=self.file_new_title,
-                    Filter=self.file_ext_filter,
-                    CustomFilter=self.file_custom_filter,
-                    FilterIndex=1)
-            except pywintypes.error:
-                # Cancel button raises an exception.
-                pass
-##         else:
-##             filename = dialog.open(title='Select a database file to open',
-##                                    parent=self.toplevel,
-##                                    patterns=['*.db', '*.schevo', '*.*'])
+        filename = dialog.save(
+            title=self.file_new_title,
+            parent=self.toplevel,
+            patterns=self.file_ext_patterns,
+            folder=self.file_location,
+            default_extension=self.file_new_default_extension,
+            )
         if filename:
             self.database_new(filename)
 
     def on_Open__activate(self, action):
-        filename = None
-        if os.name == 'nt':
-            try:
-                filename, custom_filter, flags = win32gui.GetOpenFileNameW(
-                    InitialDir=self.file_location,
-                    Flags=win32con.OFN_EXPLORER|win32con.OFN_FILEMUSTEXIST,
-                    File='',
-                    DefExt='',
-                    Title=self.file_open_title,
-                    Filter=self.file_ext_filter,
-                    CustomFilter=self.file_custom_filter,
-                    FilterIndex=1)
-            except pywintypes.error:
-                # Cancel button raises an exception.
-                pass
-        else:
-            filename = dialog.open(title='Select a database file to open',
-                                   parent=self.toplevel,
-                                   patterns=['*.db', '*.schevo', '*.*'])
+        filename = dialog.open(
+            title=self.file_open_title,
+            parent=self.toplevel,
+            patterns=self.file_ext_patterns,
+            folder=self.file_location,
+            )
         if filename:
             self.database_open(filename)
 
