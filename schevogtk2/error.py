@@ -10,6 +10,7 @@ import gtk
 
 from schevo.placeholder import Placeholder
 import schevo.error
+from schevo.label import label
 
 
 BULLET = u'\u2022 '
@@ -62,6 +63,16 @@ def show_error(parent, e):
             ]
         for entity, referring_entity, referring_field_name in e.restrictions:
             markup.append(BULLET + '<b>%s</b>\n' % escape(dereference(entity)))
+    elif isinstance(e, schevo.error.FieldReadonly):
+        markup = [
+            u'The <b>%s</b> field is readonly and cannot be changed.'
+            % escape(label(e.field))
+            ]
+    elif isinstance(e, schevo.error.FieldRequired):
+        markup = [
+            u'The <b>%s</b> field is required. Please provide a value.'
+            % escape(label(e.field))
+            ]
     elif isinstance(e, schevo.error.KeyCollision):
         markup = [
             u'Your changes were not saved.\n'
