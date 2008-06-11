@@ -158,7 +158,12 @@ class FormWindow(gtk.Window):
         def on__changed(widget, field):
             # Update the value of the field based on the widget, in
             # case an fget field is updated.
-            setattr(model, field.name, widget.get_value())
+            try:
+                setattr(model, field.name, widget.get_value())
+            except ValueError:
+                # When converting from one type to another, bad input
+                # might generate an error. Ignore it here.
+                pass
             # Look for handler in model.
             handler_name = 'on_%s__changed' % field.name
             if handler_name in model.x:
