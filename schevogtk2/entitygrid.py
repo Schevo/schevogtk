@@ -52,6 +52,10 @@ class EntityGrid(grid.Grid):
 
     gsignal('action-selected', object)
 
+    # Set to False if 'Relationships' option should not show up in
+    # popup menus.
+    show_relationships_in_menu = True
+
     def __init__(self):
         super(EntityGrid, self).__init__()
         self._hidden = []  # List of fieldnames of columns to hide.
@@ -302,11 +306,12 @@ class PopupMenu(grid.PopupMenu):
                 items.append(None)
             items.extend(actions)
         # Entity relationship actions.
-        actions = get_relationship_actions(entity)
-        if actions:
-            if items:
-                items.append(None)
-            items.extend(actions)
+        if self._entity_grid.show_relationships_in_menu:
+            actions = get_relationship_actions(entity)
+            if actions:
+                if items:
+                    items.append(None)
+                items.extend(actions)
         # Entity tx actions.
         actions = get_tx_actions(entity)
         if actions:
