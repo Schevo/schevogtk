@@ -103,10 +103,14 @@ class EntityChooser(gtk.HBox):
         db = self.db
         field = self.field
         self.emit('create-clicked', self._create_button_allowed_extents)
+        # New field value may have side-effects.
+        self._on_value_changed(self)
 
     def _on_update_button__clicked(self, widget):
         entity_to_update = self.get_selected()
         self.emit('update-clicked', entity_to_update)
+        # New field value may have side-effects.
+        self._on_value_changed(self)
 
     def _on_value_changed(self, widget):
         self.emit('value-changed')
