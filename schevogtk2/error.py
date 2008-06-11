@@ -14,8 +14,31 @@ import schevo.error
 BULLET = u'\u2022 '
 
 
+class FriendlyErrorDialog(object):
+
+    def __init__(self, parent):
+        self.parent = parent
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            show_error(self.parent, exc_val)
+        if hasattr(sys, 'frozen'):
+            # Ignore exception if running in py2exe environment.
+            return True
+        else:
+            return False
+
+
 def escape(s):
-    return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    s = (unicode(s)
+         .replace('&', '&amp;')
+         .replace('<', '&lt;')
+         .replace('>', '&gt;')
+         )
+    return s
 
 
 def show_error(parent, e):
@@ -30,7 +53,7 @@ def show_error(parent, e):
             u'\n'
             ]
         for entity, referring_entity, referring_field_name in e.restrictions:
-            markup.append(BULLET + '<b>%s</b>\n' % escape(unicode(entity)))
+            markup.append(BULLET + '<b>%s</b>\n' % escape(entity))
     elif isinstance(e, schevo.error.KeyCollision):
         markup = [
             u'Your changes were not saved.\n'

@@ -3,6 +3,8 @@
 For copyright, license, and warranty, see bottom of file.
 """
 
+from __future__ import with_statement
+
 import sys
 from schevo.lib import optimize
 
@@ -14,7 +16,7 @@ from schevo.constant import UNASSIGNED
 from schevo.label import label
 
 from schevogtk2.action import get_method_action, get_view_action
-from schevogtk2.error import show_error
+from schevogtk2.error import FriendlyErrorDialog
 from schevogtk2.field import FieldLabel, DynamicField
 from schevogtk2 import plugin
 from schevogtk2.utils import gsignal
@@ -99,27 +101,16 @@ class FormWindow(gtk.Window):
             func()
 
     def on_ok_button__clicked(self, widget):
-        tx = self._model
-        for name in tx.f:
-            field = tx.f[name]
-            if field.readonly or field.fget or field.hidden:
-                continue
-            widget = field.x.control_widget
-            value = widget.get_value()
-            try:
+        with FriendlyErrorDialog(self):
+            tx = self._model
+            for name in tx.f:
+                field = tx.f[name]
+                if field.readonly or field.fget or field.hidden:
+                    continue
+                widget = field.x.control_widget
+                value = widget.get_value()
                 setattr(tx, name, value)
-            except Exception, e:
-                show_error(self, e)
-                return
-        try:
             self.tx_result = self._db.execute(tx)
-        except Exception, e:
-            show_error(self, e)
-            if not hasattr(sys, 'frozen'):
-                raise
-        except:
-            raise
-        else:
             self.hide()
 
     def quit(self, *args):

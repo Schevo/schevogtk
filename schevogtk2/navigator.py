@@ -3,6 +3,8 @@
 For copyright, license, and warranty, see bottom of file.
 """
 
+from __future__ import with_statement
+
 import sys
 from schevo.lib import optimize
 
@@ -13,6 +15,7 @@ import os
 from schevo import database
 from schevo.label import label, plural
 
+from schevogtk2.cursor import TemporaryCursor
 from schevogtk2 import icon
 from schevogtk2.window import Window
 
@@ -59,12 +62,13 @@ class NavigatorWindow(Window):
 
     def on_extent_grid__selection_changed(self, widget, extent):
         if extent is not None:
-            icon_set = icon.iconset(widget, extent)
-            size = gtk.ICON_SIZE_LARGE_TOOLBAR
-            self.entity_grid_image.set_from_icon_set(icon_set, size)
-            text = u'List of %s:' % plural(extent)
-            self.entity_grid_label.set_text(text)
-            self.entity_grid.set_extent(extent)
+            with TemporaryCursor(self):
+                icon_set = icon.iconset(widget, extent)
+                size = gtk.ICON_SIZE_LARGE_TOOLBAR
+                self.entity_grid_image.set_from_icon_set(icon_set, size)
+                text = u'List of %s:' % plural(extent)
+                self.entity_grid_label.set_text(text)
+                self.entity_grid.set_extent(extent)
 
     def update_title(self):
         """Add or remove the database label from the end of the title."""

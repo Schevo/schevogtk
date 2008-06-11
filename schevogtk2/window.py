@@ -3,6 +3,8 @@
 For copyright, license, and warranty, see bottom of file.
 """
 
+from __future__ import with_statement
+
 import sys
 from schevo.lib import optimize
 
@@ -14,7 +16,9 @@ import os
 import schevo.database
 from schevo.constant import UNASSIGNED
 
+from schevogtk2.cursor import TemporaryCursor
 from schevogtk2 import dialog
+from schevogtk2.error import FriendlyErrorDialog
 from schevogtk2.field import (
     DEFAULT_GET_VALUE_HANDLERS, DEFAULT_SET_FIELD_HANDLERS)
 from schevogtk2 import form
@@ -146,47 +150,44 @@ class BaseWindow(object):
 
     def run_relationship_dialog(self, entity):
         from schevogtk2 import relationship
-        self.set_cursor(WATCH)
-        db = self._db
-        parent = self.toplevel
-        dialog = relationship.RelationshipWindow(db, entity)
-        dialog.after_tx = self.after_tx
-        dialog.before_tx = self.before_tx
-        # Be sure to set the get_value and set_field handlers to match
-        # this window.
-        dialog.get_value_handlers = self.get_value_handlers
-        dialog.set_field_handlers = self.set_field_handlers
-        window = dialog.toplevel
-        window.set_modal(True)
-        window.set_transient_for(parent)
-        window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
-        self.set_cursor()
+        with TemporaryCursor(self):
+            db = self._db
+            parent = self.toplevel
+            dialog = relationship.RelationshipWindow(db, entity)
+            dialog.after_tx = self.after_tx
+            dialog.before_tx = self.before_tx
+            # Be sure to set the get_value and set_field handlers to match
+            # this window.
+            dialog.get_value_handlers = self.get_value_handlers
+            dialog.set_field_handlers = self.set_field_handlers
+            window = dialog.toplevel
+            window.set_modal(True)
+            window.set_transient_for(parent)
+            window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
         dialog.run()
         dialog.destroy()
 
     def run_tx_dialog(self, tx, action):
-        self.set_cursor(WATCH)
-        db = self._db
-        parent = self.toplevel
-        dialog = form.get_tx_dialog(
-            parent, db, tx, action,
-            self.get_value_handlers, self.set_field_handlers,
-            )
-        self.set_cursor()
+        with TemporaryCursor(self):
+            db = self._db
+            parent = self.toplevel
+            dialog = form.get_tx_dialog(
+                parent, db, tx, action,
+                self.get_value_handlers, self.set_field_handlers,
+                )
         dialog.run()
         tx_result = dialog.tx_result
         dialog.destroy()
         return tx_result
 
     def run_view_dialog(self, entity, action):
-        self.set_cursor(WATCH)
-        db = self._db
-        parent = self.toplevel
-        dialog = form.get_view_dialog(
-            parent, db, entity, action,
-            self.get_value_handlers, self.set_field_handlers,
-            )
-        self.set_cursor()
+        with TemporaryCursor(self):
+            db = self._db
+            parent = self.toplevel
+            dialog = form.get_view_dialog(
+                parent, db, entity, action,
+                self.get_value_handlers, self.set_field_handlers,
+                )
         dialog.run()
         dialog.destroy()
 
@@ -264,12 +265,11 @@ class Window(BaseWindow):
     def database_close(self):
         """Close an existing database file."""
         if self._db is not None:
-            self.set_cursor(WATCH)
-            self._db.close()
-            self._db = None
-            self._db_filename = None
-            self.update_ui()
-            self.set_cursor()
+            with TemporaryCursor(self):
+                self._db.close()
+                self._db = None
+                self._db_filename = None
+                self.update_ui()
 
     def database_new(self, filename):
         """Create a new database file."""
@@ -278,23 +278,21 @@ class Window(BaseWindow):
     def database_open(self, filename):
         """Open a database file."""
         self.database_close()
-        self.set_cursor(WATCH)
-        try:
-            self._db = schevo.database.open(filename)
-        except:
-            msg = 'Unable to open %s' % filename
-            self.message(msg)
-        else:
-            self._db_filename = filename
-            self.update_ui()
-        self.set_cursor()
+        with TemporaryCursor(self):
+            try:
+                self._db = schevo.database.open(filename)
+            except:
+                msg = 'Unable to open %s' % filename
+                self.message(msg)
+            else:
+                self._db_filename = filename
+                self.update_ui()
 
     def database_pack(self):
         """Pack the currently open database file."""
         if self._db is not None:
-            self.set_cursor(WATCH)
-            self._db.pack()
-            self.set_cursor()
+            with TemporaryCursor(self):
+                self._db.pack()
 
     def on_Close__activate(self, action):
         self.database_close()
@@ -392,54 +390,6 @@ class EmptyWindow(BaseWindow):
             keyval, mod = gtk.accelerator_parse(name)
             mod = mod | gtk.gdk.LOCK_MASK
             self._bindings[(keyval, mod)] = func
-
-
-class CustomWindow(EmptyWindow):
-
-    def __init__(self, db, tx):
-        super(CustomWindow, self).__init__()
-        self._db = db
-        self._tx = tx
-        self.tx_result = None
-        self.toplevel.connect('hide', self.quit)
-        self._set_widgets()
-
-    def execute_tx(self):
-        tx = self._tx
-        for name in tx.f:
-            field = tx.f[name]
-            if field.readonly:
-                continue
-            widget = getattr(self, name)
-            value = widget.get_value()
-            try:
-                setattr(tx, name, value)
-            except Exception, e:
-                show_error(self.toplevel, e)
-                return
-        try:
-            self.result = self._db.execute(tx)
-        except Exception, e:
-            show_error(self.toplevel, e)
-            if not hasattr(sys, 'frozen'):
-                raise
-        except:
-            raise
-        else:
-            self.hide()
-
-    def _set_widgets(self):
-        db = self._db
-        tx = self._tx
-        for name in tx.f:
-            field = tx.f[name]
-            # Skip hidden fields.
-            if field.hidden:
-                continue
-            label = getattr(self, name + '__label')
-            label.set_field(db, field)
-            widget = getattr(self, name)
-            widget.set_field(db, field)
 
 
 class _StatusbarContextManager(object):
