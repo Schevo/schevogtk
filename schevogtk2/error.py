@@ -8,6 +8,7 @@ from schevo.lib import optimize
 
 import gtk
 
+from schevo.placeholder import Placeholder
 import schevo.error
 
 
@@ -32,6 +33,13 @@ class FriendlyErrorDialog(object):
             return False
 
 
+def dereference(obj):
+    if isinstance(obj, Placeholder) and obj.entity is not None:
+        return obj.entity
+    else:
+        return obj
+
+
 def escape(s):
     s = (unicode(s)
          .replace('&', '&amp;')
@@ -53,7 +61,7 @@ def show_error(parent, e):
             u'\n'
             ]
         for entity, referring_entity, referring_field_name in e.restrictions:
-            markup.append(BULLET + '<b>%s</b>\n' % escape(entity))
+            markup.append(BULLET + '<b>%s</b>\n' % escape(dereference(entity)))
     elif isinstance(e, schevo.error.KeyCollision):
         markup = [
             u'Your changes were not saved.\n'
@@ -63,8 +71,9 @@ def show_error(parent, e):
             u'\n'
             ]
         for field_name, field_value in zip(e.key_spec, e.field_values):
-            markup.append(BULLET + '<b>%s</b>: %s'
-                          % (escape(field_name), escape(field_value)))
+            markup.append(BULLET + '<b>%s</b>: %s\n'
+                          % (escape(field_name),
+                             escape(dereference(field_value))))
     elif isinstance(e, schevo.error.TransactionRuleViolation):
         markup = [
             u'Your changes were not saved.\n'
