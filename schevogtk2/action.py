@@ -6,7 +6,11 @@ For copyright, license, and warranty, see bottom of file.
 import sys
 from schevo.lib import optimize
 
+from schevo.base import Entity, Extent, View
 from schevo.label import label
+
+
+DEFAULT_T_METHODS = ['clone', 'create', 'delete', 'update']
 
 
 class Action(object):
@@ -31,7 +35,18 @@ def get_method_action(instance, namespace_id, method_name, related=None):
     method_label = label(method)
     action = Action()
     action.instance = instance
+    # Default label.
     action.label = u'%s...' % method_label
+    if namespace_id == 't' and method_name in DEFAULT_T_METHODS:
+        # Custom labels for default transactions.
+        if isinstance(instance, Entity):
+            action.label = u'%s %s...' % (
+                method_label, label(instance.sys.extent))
+        elif isinstance(instance, Extent):
+            action.label = u'%s %s...' % (method_label, label(instance))
+        elif isinstance(instance, View):
+            action.label = u'%s %s...' % (
+                method_label, label(instance.sys.entity.sys.extent))
     action.method = method
     action.name = method_name
     action.related = related
@@ -63,7 +78,6 @@ def get_tx_actions(instance, related=None):
     """Return list of actions for an extent or entity instance."""
     actions = []
     if instance is not None:
-        instance_label = label(instance)
         for method_name in instance.t:
             action = get_method_action(instance, 't', method_name, related)
             actions.append(action)
@@ -85,9 +99,10 @@ def get_view_actions(entity):
 
 def get_view_action(entity, include_expensive):
     if include_expensive:
-        text = u'View (including expensive fields)...'
+        text = u'View %s (including expensive fields)...' % label(
+            entity.sys.extent)
     else:
-        text = u'View...'
+        text = u'View %s...' % label(entity.sys.extent)
     action = Action()
     action.include_expensive = include_expensive
     action.instance = entity
