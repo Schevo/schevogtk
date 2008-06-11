@@ -70,15 +70,16 @@ class EntityChooser(gtk.HBox):
                 # allowed extent.
                 if allowed_extents:
                     button = self._create_button = gtk.Button(label='+')
-##                     button = self._create_button = gtk.Button(stock='gtk-add')
                     self.pack_start(button, expand=False, fill=False)
                     button.show()
+                    button.props.can_focus = False
                     button.props.width_request = button.size_request()[1] * 0.8
                     button.connect('clicked', self._on_create_button__clicked)
             if field.allow_update:
                 button = self._update_button = gtk.Button(label='E')
                 self.pack_start(button, expand=False, fill=False)
                 button.show()
+                button.props.can_focus = False
                 button.props.width_request = button.size_request()[1] * 0.8
                 button.connect('clicked', self._on_update_button__clicked)
                 self._reset_update_button_sensitivity()
@@ -86,6 +87,7 @@ class EntityChooser(gtk.HBox):
                 button = self._view_button = gtk.Button(label='V')
                 self.pack_start(button, expand=False, fill=False)
                 button.show()
+                button.props.can_focus = False
                 button.props.width_request = button.size_request()[1] * 0.8
                 button.connect('clicked', self._on_view_button__clicked)
                 self._reset_view_button_sensitivity()
@@ -93,6 +95,9 @@ class EntityChooser(gtk.HBox):
     def get_selected(self):
         """Return the currently selected Schevo object."""
         return self._entity_combobox.get_selected()
+
+    def select_item_by_data(self, data):
+        return self._entity_combobox.select_item_by_data(data)
 
     def _on_create_button__clicked(self, widget):
         db = self.db
