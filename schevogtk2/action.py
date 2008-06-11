@@ -18,6 +18,12 @@ class Action(object):
     related = None
     type = ''
 
+    def __cmp__(self, other):
+        try:
+            return cmp(self.label, other.label)
+        except AttributeError:
+            return cmp(hash(self), hash(other))
+
 def get_method_action(instance, namespace_id, method_name, related=None):
     """Return action for method name."""
     namespace = getattr(instance, namespace_id)
@@ -51,7 +57,7 @@ def get_relationship_actions(entity):
             action.name = 'relationship'
             action.type = 'relationship'
             actions.append(action)
-    return actions
+    return sorted(actions)
 
 def get_tx_actions(instance, related=None):
     """Return list of actions for an extent or entity instance."""
@@ -61,7 +67,7 @@ def get_tx_actions(instance, related=None):
         for method_name in instance.t:
             action = get_method_action(instance, 't', method_name, related)
             actions.append(action)
-    return actions
+    return sorted(actions)
 
 def get_view_actions(entity):
     """Return list of view actions for an entity instance."""
@@ -75,7 +81,7 @@ def get_view_actions(entity):
         for include_expensive in options:
             action = get_view_action(entity, include_expensive)
             actions.append(action)
-    return actions
+    return sorted(actions)
 
 def get_view_action(entity, include_expensive):
     if include_expensive:
