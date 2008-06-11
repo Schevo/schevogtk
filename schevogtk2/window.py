@@ -63,10 +63,17 @@ class BaseWindow(object):
         return self.toplevel.set_focus(widget)
 
     def status(self, text=None):
+        statusbar = self.statusbar
+        context = self._statusbar_context
         if text is None:
-            self.statusbar.pop(self._statusbar_context)
+            statusbar.pop(context)
+            while gtk.events_pending():
+                gtk.main_iteration()
         else:
-            self.statusbar.push(self._statusbar_context, ' ' + text)
+            statusbar.push(context, ' ' + text)
+            while gtk.events_pending():
+                gtk.main_iteration()
+            return _StatusbarContextManager(statusbar, context)
 
     def get_title(self):
         return self.toplevel.get_title()
@@ -433,6 +440,23 @@ class CustomWindow(EmptyWindow):
             label.set_field(db, field)
             widget = getattr(self, name)
             widget.set_field(db, field)
+
+
+class _StatusbarContextManager(object):
+
+    def __init__(self, statusbar, context):
+        self.statusbar = statusbar
+        self.context = context
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.statusbar.pop(self.context)
+        while gtk.events_pending():
+            gtk.main_iteration()
+        # Do not ignore exception.
+        return False
 
 
 optimize.bind_all(sys.modules[__name__])  # Last line of module.
