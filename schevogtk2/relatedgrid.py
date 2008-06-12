@@ -27,8 +27,8 @@ class Related(object):
 
     def __cmp__(self, other):
         if other.__class__ is self.__class__:
-            return cmp((self.plural, self.field_label),
-                       (other.plural, other.field_label))
+            return cmp((self.entity, self.plural, self.field_label),
+                       (other.entity, other.plural, other.field_label))
         else:
             return cmp(hash(self), hash(other))
 
