@@ -78,7 +78,11 @@ def get_tx_actions(instance, related=None):
     """Return list of actions for an extent or entity instance."""
     actions = []
     if instance is not None:
-        for method_name in instance.t:
+        if 'valid_t_methods' in instance.x:
+            t_methods = instance.x.valid_t_methods()
+        else:
+            t_methods = instance.t
+        for method_name in t_methods:
             action = get_method_action(instance, 't', method_name, related)
             actions.append(action)
     return sorted(actions)
