@@ -35,6 +35,8 @@ class FormBox(gtk.VBox):
         self.table = None
 
     def set_fields(self, db, fields, get_value_handlers, set_field_handlers):
+        if self.table is not None:
+            self.remove(self.table)
         field_count = len(fields)
         if field_count > 0:
             self.table = get_table(
@@ -69,12 +71,19 @@ class FormWindow(gtk.Window):
         bbox.set_layout(gtk.BUTTONBOX_END)
         bbox.set_spacing(5)
         bbox.show()
+        # OK
         self.ok_button = button = gtk.Button(stock=gtk.STOCK_OK)
         button.connect('clicked', self.on_ok_button__clicked)
         self.button_box.add(button)
+        # Cancel
         self.cancel_button = button = gtk.Button(stock=gtk.STOCK_CANCEL)
         button.connect('clicked', self.on_cancel_button__clicked)
         self.button_box.add(button)
+        # Edit
+        self.edit_button = button = gtk.Button(stock=gtk.STOCK_EDIT)
+        button.connect('clicked', self.on_edit_button__clicked)
+        self.button_box.add(button)
+        # Close
         self.close_button = button = gtk.Button(stock=gtk.STOCK_CLOSE)
         button.connect('clicked', self.on_close_button__clicked)
         self.button_box.add(button)
@@ -91,6 +100,31 @@ class FormWindow(gtk.Window):
 
     def on_close_button__clicked(self, widget):
         self.hide()
+
+    def on_edit_button__clicked(self, widget):
+        model = self._model
+        action = get_method_action(model, 't', 'update')
+        update_tx = action.method()
+        dialog = get_tx_dialog(
+            parent=self,
+            db=self._db,
+            tx=update_tx,
+            action=action,
+            get_value_handlers=self._get_value_handlers,
+            set_field_handlers=self._set_field_handlers,
+            )
+        dialog.run()
+        tx_result = dialog.tx_result
+        dialog.destroy()
+        # Only update field widgets if what we're viewing was what was
+        # updated.
+        if tx_result == model:
+            self.set_fields(
+                tx_result,
+                tx_result.sys.field_map().values(),
+                self._get_value_handlers,
+                self._set_field_handlers,
+                )
 
     def _on_key_press_event(self, window, event):
         keyval = event.keyval
@@ -142,6 +176,8 @@ class FormWindow(gtk.Window):
     def set_fields(self, model, fields, get_value_handlers, set_field_handlers):
         db = self._db
         self._model = model
+        self._get_value_handlers = get_value_handlers
+        self._set_field_handlers = set_field_handlers
         self.form_box.set_fields(self._db, fields,
                                  get_value_handlers, set_field_handlers)
         # Set up handlers so that each field's widget will cause other
@@ -185,11 +221,16 @@ class FormWindow(gtk.Window):
         if isinstance(model, schevo.base.Transaction):
             self.ok_button.show()
             self.cancel_button.show()
+            self.edit_button.hide()
             self.close_button.hide()
             self._update_ok_button()
         else:
             self.ok_button.hide()
             self.cancel_button.hide()
+            if hasattr(model, 't') and 'update' in list(model.t):
+                self.edit_button.show()
+            else:
+                self.edit_button.hide()
             self.close_button.show()
 
     def _update_ok_button(self):
