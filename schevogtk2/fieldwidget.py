@@ -30,9 +30,9 @@ class EntityChooser(gtk.HBox):
 
     __gtype_name__ = 'EntityChooser'
 
-    gsignal('create-clicked', object) # 'object' is list of allowable extents
-    gsignal('update-clicked', object) # 'object' is entity to update
-    gsignal('view-clicked', object) # 'object' is entity to view
+    gsignal('create-clicked', object, object) # allowable extent list, done_cb
+    gsignal('update-clicked', object, object) # entity to update, done_cb
+    gsignal('view-clicked', object) # entitiy to view
     gsignal('value-changed')
 
     def __init__(self, db, field, show_buttons=True):
@@ -102,13 +102,13 @@ class EntityChooser(gtk.HBox):
     def _on_create_button__clicked(self, widget):
         db = self.db
         field = self.field
-        self.emit('create-clicked', self._create_button_allowed_extents)
+        self.emit('create-clicked', self._create_button_allowed_extents, None)
         # New field value may have side-effects.
         self._on_value_changed(self)
 
     def _on_update_button__clicked(self, widget):
         entity_to_update = self.get_selected()
-        self.emit('update-clicked', entity_to_update)
+        self.emit('update-clicked', entity_to_update, None)
         # New field value may have side-effects.
         self._on_value_changed(self)
 

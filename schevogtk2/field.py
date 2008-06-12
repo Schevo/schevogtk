@@ -29,8 +29,8 @@ class DynamicField(gtk.HBox):
 
     __gtype_name__ = 'DynamicField'
 
-    gsignal('create-clicked', object)
-    gsignal('update-clicked', object)
+    gsignal('create-clicked', object, object)
+    gsignal('update-clicked', object, object)
     gsignal('view-clicked', object)
     gsignal('value-changed')
 
@@ -120,11 +120,11 @@ class DynamicField(gtk.HBox):
         raise ValueError(
             'Could not find an endpoint set_field handler for %r' % self.child)
 
-    def _on_widget__create_clicked(self, widget, allowed_extents):
-        self.emit('create-clicked', allowed_extents)
+    def _on_widget__create_clicked(self, widget, allowed_extents, done_cb):
+        self.emit('create-clicked', allowed_extents, done_cb)
 
-    def _on_widget__update_clicked(self, widget, entity_to_update):
-        self.emit('update-clicked', entity_to_update)
+    def _on_widget__update_clicked(self, widget, entity_to_update, done_cb):
+        self.emit('update-clicked', entity_to_update, done_cb)
 
     def _on_widget__value_changed(self, widget, field):
         value = self.get_value()

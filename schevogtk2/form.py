@@ -357,7 +357,7 @@ def get_dialog(title, parent, text, db, model, fields,
     # to each of its fields.
     for name, field in fields_dict.iteritems():
         widget = field.x.control_widget
-        def on_create_clicked(dynamic_field, allowed_extents,
+        def on_create_clicked(dynamic_field, allowed_extents, done_cb=None,
                               name=name, widget=widget):
             if len(allowed_extents) == 1:
                 # If only one extent, simply use that extent.
@@ -389,11 +389,14 @@ def get_dialog(title, parent, text, db, model, fields,
                 tx_result = dialog.tx_result
                 dialog.destroy()
                 if tx_result is not None:
-                    field = fields_dict[name]
-                    field.set(tx_result)
-                    widget.set_field(db, field)
+                    if done_cb is not None:
+                        done_cb(tx_result)
+                    else:
+                        field = fields_dict[name]
+                        field.set(tx_result)
+                        widget.set_field(db, field)
         widget.connect('create-clicked', on_create_clicked)
-        def on_update_clicked(dynamic_field, entity_to_update,
+        def on_update_clicked(dynamic_field, entity_to_update, done_cb=None,
                               name=name, widget=widget):
             action = get_method_action(entity_to_update, 't', 'update')
             update_tx = action.method()
@@ -409,9 +412,12 @@ def get_dialog(title, parent, text, db, model, fields,
             tx_result = dialog.tx_result
             dialog.destroy()
             if tx_result is not None:
-                field = fields_dict[name]
-                field.set(tx_result)
-                widget.set_field(db, field)
+                if done_cb is not None:
+                    done_cb(tx_result)
+                else:
+                    field = fields_dict[name]
+                    field.set(tx_result)
+                    widget.set_field(db, field)
         widget.connect('update-clicked', on_update_clicked)
         def on_view_clicked(dynamic_field, entity_to_view,
                             name=name, widget=widget):
