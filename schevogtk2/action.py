@@ -38,15 +38,26 @@ def get_method_action(instance, namespace_id, method_name, related=None):
     # Default label.
     action.label = u'%s...' % method_label
     if namespace_id == 't' and method_name in DEFAULT_T_METHODS:
-        # Custom labels for default transactions.
-        if isinstance(instance, Entity):
-            action.label = u'%s %s...' % (
-                method_label, label(instance.sys.extent))
-        elif isinstance(instance, Extent):
-            action.label = u'%s %s...' % (method_label, label(instance))
-        elif isinstance(instance, View):
-            action.label = u'%s %s...' % (
-                method_label, label(instance.sys.entity.sys.extent))
+        # Determine if there are any custom methods whose labels start
+        # with the same string.
+        t = action.instance.t
+        other_found = False
+        for other_name in t:
+            if other_name not in DEFAULT_T_METHODS:
+                other_label = label(t[other_name])
+                if other_label.startswith(method_label):
+                    other_found = True
+        if other_found:
+            # Custom labels, since there are custom methods that share
+            # prefixes.
+            if isinstance(instance, Entity):
+                action.label = u'%s %s...' % (
+                    method_label, label(instance.sys.extent))
+            elif isinstance(instance, Extent):
+                action.label = u'%s %s...' % (method_label, label(instance))
+            elif isinstance(instance, View):
+                action.label = u'%s %s...' % (
+                    method_label, label(instance.sys.entity.sys.extent))
     action.method = method
     action.name = method_name
     action.related = related
@@ -103,10 +114,9 @@ def get_view_actions(entity):
 
 def get_view_action(entity, include_expensive):
     if include_expensive:
-        text = u'View %s (including expensive fields)...' % label(
-            entity.sys.extent)
+        text = u'View (including expensive fields)...'
     else:
-        text = u'View %s...' % label(entity.sys.extent)
+        text = u'View...'
     action = Action()
     action.include_expensive = include_expensive
     action.instance = entity
