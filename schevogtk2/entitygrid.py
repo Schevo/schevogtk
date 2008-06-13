@@ -77,9 +77,19 @@ class EntityGrid(grid.Grid):
         related = self._related
         oids = []
         if query is not None:
+            # Get current selection identity so we can reselect it.
+            selected = self.get_selected()
+            if selected is not None:
+                identity = self.identify(selected)
+            else:
+                identity = None
+            # Refresh query.
             results = query()
             self.set_rows([])
             self.set_rows(results)
+            # Reselect the identity.
+            if identity is not None:
+                self.select_row(identity)
         elif related is not None:
             if related.entity.sys.exists:
                 if extent is not None:
@@ -139,8 +149,9 @@ class EntityGrid(grid.Grid):
         self.set_columns([])
 
     def select_row(self, oid):
-        row_iter = self._row_map[oid]
-        self.select_and_focus_row(row_iter)
+        row_iter = self._row_map.get(oid, None)
+        if row_iter is not None:
+            self.select_and_focus_row(row_iter)
 
     def select_action(self, action):
         self.emit('action-selected', action)
