@@ -151,7 +151,12 @@ class FieldLabel(gtk.EventBox):
         label.show()
         self.add(label)
 
+    def reset(self):
+        self.set_field(self._db, self._field)
+
     def set_field(self, db, field):
+        self._db = db
+        self._field = field
         label = self.child
         text = field.label
         if field.readonly:
