@@ -383,70 +383,32 @@ def get_default_view_dialog(parent, db, entity, action,
                         get_value_handlers, set_field_handlers)
     return dialog
 
-def get_dialog(title, parent, text, db, model, fields,
-               get_value_handlers, set_field_handlers):
-    # Create the form window and set its basic properties.
-    window = FormWindow()
-    window.set_db(db)
-    window.set_modal(True)
-    window.set_transient_for(parent)
-    window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
-    window.set_title(title)
-    window.set_header_text(text)
-    # Populate its fields.
-    fields_dict = dict((field.name, field) for field in fields)
-    window.set_fields(model, fields, get_value_handlers, set_field_handlers)
+def attach_create_update_view_handlers(window, field):
     # Attach create-clicked, update-clicked and view_clicked handlers
     # to each of its fields.
-    for name, field in fields_dict.iteritems():
-        widget = field.x.control_widget
-        def on_create_clicked(dynamic_field, allowed_extents, done_cb=None,
-                              name=name, widget=widget):
-            if len(allowed_extents) == 1:
-                # If only one extent, simply use that extent.
-                extent = allowed_extents[0]
-            else:
-                # If >1 extent, ask the user for an extent first.
-                dialog = ExtentChoiceWindow(allowed_extents)
-                dialog.set_modal(True)
-                dialog.set_transient_for(window)
-                dialog.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
-                dialog.set_title('Select type to create')
-                dialog.run()
-                extent = dialog.selected_extent
-                dialog.destroy()
-            # User may not have chosen an extent.  Only continue if
-            # they have. Otherwise do nothing.
-            if extent is not None:
-                action = get_method_action(extent, 't', 'create')
-                create_tx = action.method()
-                dialog = get_tx_dialog(
-                    parent=window,
-                    db=db,
-                    tx=create_tx,
-                    action=action,
-                    get_value_handlers=get_value_handlers,
-                    set_field_handlers=set_field_handlers,
-                    )
-                dialog.run()
-                tx_result = dialog.tx_result
-                dialog.destroy()
-                if tx_result is not None:
-                    if done_cb is not None:
-                        done_cb(tx_result)
-                    else:
-                        field = fields_dict[name]
-                        field.set(tx_result)
-                        widget.set_field(db, field)
-        widget.connect('create-clicked', on_create_clicked)
-        def on_update_clicked(dynamic_field, entity_to_update, done_cb=None,
-                              name=name, widget=widget):
-            action = get_method_action(entity_to_update, 't', 'update')
-            update_tx = action.method()
+    def on_create_clicked(dynamic_field, allowed_extents, done_cb=None):
+        if len(allowed_extents) == 1:
+            # If only one extent, simply use that extent.
+            extent = allowed_extents[0]
+        else:
+            # If >1 extent, ask the user for an extent first.
+            dialog = ExtentChoiceWindow(allowed_extents)
+            dialog.set_modal(True)
+            dialog.set_transient_for(window)
+            dialog.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+            dialog.set_title('Select type to create')
+            dialog.run()
+            extent = dialog.selected_extent
+            dialog.destroy()
+        # User may not have chosen an extent.  Only continue if
+        # they have. Otherwise do nothing.
+        if extent is not None:
+            action = get_method_action(extent, 't', 'create')
+            create_tx = action.method()
             dialog = get_tx_dialog(
                 parent=window,
                 db=db,
-                tx=update_tx,
+                tx=create_tx,
                 action=action,
                 get_value_handlers=get_value_handlers,
                 set_field_handlers=set_field_handlers,
@@ -458,24 +420,64 @@ def get_dialog(title, parent, text, db, model, fields,
                 if done_cb is not None:
                     done_cb(tx_result)
                 else:
-                    field = fields_dict[name]
                     field.set(tx_result)
-                    widget.set_field(db, field)
-        widget.connect('update-clicked', on_update_clicked)
-        def on_view_clicked(dynamic_field, entity_to_view,
-                            name=name, widget=widget):
-            action = get_view_action(entity_to_view, include_expensive=False)
-            dialog = get_view_dialog(
-                parent=window,
-                db=db,
-                entity=entity_to_view,
-                action=action,
-                get_value_handlers=get_value_handlers,
-                set_field_handlers=set_field_handlers,
-                )
-            dialog.run()
-            dialog.destroy()
-        widget.connect('view-clicked', on_view_clicked)
+                    field.x.control_widget.set_field(db, field)
+                    reconnect()
+    def on_update_clicked(dynamic_field, entity_to_update, done_cb=None):
+        action = get_method_action(entity_to_update, 't', 'update')
+        update_tx = action.method()
+        dialog = get_tx_dialog(
+            parent=window,
+            db=db,
+            tx=update_tx,
+            action=action,
+            get_value_handlers=get_value_handlers,
+            set_field_handlers=set_field_handlers,
+            )
+        dialog.run()
+        tx_result = dialog.tx_result
+        dialog.destroy()
+        if tx_result is not None:
+            if done_cb is not None:
+                done_cb(tx_result)
+            else:
+                field.set(tx_result)
+                field.x.control_widget.set_field(db, field)
+                reconnect()
+    def on_view_clicked(dynamic_field, entity_to_view):
+        action = get_view_action(entity_to_view, include_expensive=False)
+        dialog = get_view_dialog(
+            parent=window,
+            db=db,
+            entity=entity_to_view,
+            action=action,
+            get_value_handlers=get_value_handlers,
+            set_field_handlers=set_field_handlers,
+            )
+        dialog.run()
+        dialog.destroy()
+    def reconnect():
+        field.x.control_widget.connect('create-clicked', on_create_clicked)
+        field.x.control_widget.connect('update-clicked', on_update_clicked)
+        field.x.control_widget.connect('view-clicked', on_view_clicked)
+    # Connect signal handlers for the first time.
+    reconnect()
+
+def get_dialog(title, parent, text, db, model, fields,
+               get_value_handlers, set_field_handlers):
+    # Create the form window and set its basic properties.
+    window = FormWindow()
+    window.set_db(db)
+    window.set_modal(True)
+    window.set_transient_for(parent)
+    window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+    window.set_title(title)
+    window.set_header_text(text)
+    # Populate its fields.
+    window.set_fields(model, fields, get_value_handlers, set_field_handlers)
+    # Attach handlers for entity fields.
+    for field in fields:
+        attach_create_update_view_handlers(window, field)
     return window
 
 def get_table(db, fields, get_value_handlers, set_field_handlers):
