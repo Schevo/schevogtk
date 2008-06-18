@@ -94,16 +94,13 @@ class DynamicField(gtk.HBox):
                         control.props.can_focus = False
                     if hasattr(control.props, 'has-focus'):
                         control.props.has_focus = False
-#                     if hasattr(control, 'set_selectable'):  # Label only.
-#                         control.set_selectable(True)
-                signal_names = gobject.signal_list_names(control.__class__)
-                if 'create-clicked' in signal_names:
+                if gobject.signal_lookup('create-clicked', control):
                     control.connect(
                         'create-clicked', self._on_widget__create_clicked)
-                if 'update-clicked' in signal_names:
+                if gobject.signal_lookup('update-clicked', control):
                     control.connect(
                         'update-clicked', self._on_widget__update_clicked)
-                if 'view-clicked' in signal_names:
+                if gobject.signal_lookup('view-clicked', control):
                     control.connect(
                         'view-clicked', self._on_widget__view_clicked)
                 widget.show()
