@@ -44,8 +44,11 @@ class EntityChooser(gtk.HBox):
         self._create_button = None
         self._update_button = None
         self._view_button = None
-        # Always add the combobox.
-        combobox = self._entity_combobox = EntityComboBox(db, field)
+        # Always add the combobox, allowing subclasses to specify an
+        # alternate class.
+        if not hasattr(self, 'EntityComboBox'):
+            self.EntityComboBox = EntityComboBox
+        combobox = self._entity_combobox = self.EntityComboBox(db, field)
         self.add(combobox)
         combobox.show()
         combobox.connect('value-changed', self._on_value_changed)
