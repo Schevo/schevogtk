@@ -383,8 +383,10 @@ def get_default_view_dialog(parent, db, entity, action,
                         get_value_handlers, set_field_handlers)
     return dialog
 
-def attach_create_update_view_handlers(window, field):
-    # Attach create-clicked, update-clicked and view_clicked handlers
+def attach_create_update_view_handlers(
+    window, db, field, get_value_handlers, set_field_handlers,
+    ):
+    # Attach create-clicked, update-clicked and view-clicked handlers
     # to each of its fields.
     def on_create_clicked(dynamic_field, allowed_extents, done_cb=None):
         if len(allowed_extents) == 1:
@@ -422,7 +424,6 @@ def attach_create_update_view_handlers(window, field):
                 else:
                     field.set(tx_result)
                     field.x.control_widget.set_field(db, field)
-                    reconnect()
     def on_update_clicked(dynamic_field, entity_to_update, done_cb=None):
         action = get_method_action(entity_to_update, 't', 'update')
         update_tx = action.method()
@@ -443,7 +444,6 @@ def attach_create_update_view_handlers(window, field):
             else:
                 field.set(tx_result)
                 field.x.control_widget.set_field(db, field)
-                reconnect()
     def on_view_clicked(dynamic_field, entity_to_view):
         action = get_view_action(entity_to_view, include_expensive=False)
         dialog = get_view_dialog(
@@ -456,12 +456,9 @@ def attach_create_update_view_handlers(window, field):
             )
         dialog.run()
         dialog.destroy()
-    def reconnect():
-        field.x.control_widget.connect('create-clicked', on_create_clicked)
-        field.x.control_widget.connect('update-clicked', on_update_clicked)
-        field.x.control_widget.connect('view-clicked', on_view_clicked)
-    # Connect signal handlers for the first time.
-    reconnect()
+    field.x.control_widget.connect('create-clicked', on_create_clicked)
+    field.x.control_widget.connect('update-clicked', on_update_clicked)
+    field.x.control_widget.connect('view-clicked', on_view_clicked)
 
 def get_dialog(title, parent, text, db, model, fields,
                get_value_handlers, set_field_handlers):
@@ -477,7 +474,8 @@ def get_dialog(title, parent, text, db, model, fields,
     window.set_fields(model, fields, get_value_handlers, set_field_handlers)
     # Attach handlers for entity fields.
     for field in fields:
-        attach_create_update_view_handlers(window, field)
+        attach_create_update_view_handlers(
+            window, db, field, get_value_handlers, set_field_handlers)
     return window
 
 def get_table(db, fields, get_value_handlers, set_field_handlers):
