@@ -182,35 +182,26 @@ class FormWindow(gtk.Window):
                                  get_value_handlers, set_field_handlers)
         # Set up handlers so that each field's widget will cause other
         # widgets to update.
-        def on__changed(widget, field):
+        def on__changed(widget, changed_field):
             # Update the value of the field based on the widget, in
             # case an fget field is updated.
             try:
-                setattr(model, field.name, widget.get_value())
+                setattr(model, changed_field.name, widget.get_value())
             except ValueError:
                 # When converting from one type to another, bad input
                 # might generate an error. Ignore it here.
                 pass
-            # Look for handler in model.
-            handler_name = 'on_%s__changed' % field.name
-            if handler_name in model.x:
-                # Run handler.
-                handler_results = model.x[handler_name]()
-                # Process results.
-                if handler_results is None:
-                    handler_results = []
-                elif not isinstance(handler_results, list):
-                    handler_results = [handler_results]
-                field_names = [result.name for result in handler_results]
-                for name in field_names:
-                    field = model.f[name]
-                    # Hide or unhide.
-                    field.x.label_widget.props.visible = not field.hidden
-                    field.x.control_widget.props.visible = not field.hidden
-                    # Re-render field.
-                    field.x.control_widget.reset()
-                    # Relabel label.
-                    field.x.label_widget.reset()
+            for name in model.f:
+                field = model.f[name]
+                if field == changed_field:
+                    continue
+                # Hide or unhide.
+                field.x.label_widget.props.visible = not field.hidden
+                field.x.control_widget.props.visible = not field.hidden
+                # Re-render field.
+                field.x.control_widget.reset()
+                # Re-render label.
+                field.x.label_widget.reset()
             self._update_ok_button()
         for field in fields:
             widget = field.x.control_widget
