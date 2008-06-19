@@ -69,7 +69,7 @@ class DynamicField(gtk.HBox):
     def set_field(self, db, field):
         self._db = db
         self._field = field
-        if self.child is not None:
+        if self.child is not None and self.child.get_parent() is self:
             self.remove(self.child)
         if field.hidden:
             # Do nothing for hidden fields.
