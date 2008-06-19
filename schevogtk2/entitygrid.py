@@ -126,7 +126,9 @@ class EntityGrid(grid.Grid):
                 self.select_row(result.sys.oid)
 
     def remove_row(self, oid):
-        model = self._model
+        if oid not in self._row_map:
+            return
+        model = self._model 
         row_iter = self._row_map.pop(oid)
         # Get the current position.
         pos = model[row_iter].path[0]
