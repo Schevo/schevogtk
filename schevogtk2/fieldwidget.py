@@ -193,6 +193,7 @@ class EntityComboBox(gtk.ComboBoxEntry):
         comp.pack_start(cell, False)
         comp.set_cell_data_func(cell, self.cell_icon)
         comp.set_text_column(0)
+        comp.connect('match-selected', self._on_completion__match_selected)
         self.entry = entry = self.child
         entry.set_completion(comp)
         entry.set_text(str(field.get()))
@@ -249,6 +250,9 @@ class EntityComboBox(gtk.ComboBoxEntry):
 
 #     def _on_entry__activate(self, entry):
 #         self.emit('activate')
+
+    def _on_completion__match_selected(self, completion, model, iter):
+        self.select_item_by_text(model[iter][0])
 
     def _on_entry__backspace(self, entry):
         # Just select an item by text if it's available; don't try to
