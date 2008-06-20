@@ -432,6 +432,7 @@ class ExtentComboBox(gtk.ComboBoxEntry):
         comp.pack_start(cell, False)
         comp.set_cell_data_func(cell, self.cell_icon)
         comp.set_text_column(0)
+        comp.connect('match-selected', self._on_completion__match_selected)
         self.entry = entry = self.child
         entry.set_completion(comp)
 #         entry.set_text(str(field.get()))
@@ -493,6 +494,9 @@ class ExtentComboBox(gtk.ComboBoxEntry):
     def _on_changed(self, widget):
         self.emit('value-changed')
 
+    def _on_completion__match_selected(self, completion, model, iter):
+        self.select_item_by_text(model[iter][0])
+
     def _on_entry__backspace(self, entry):
         # Just select an item by text if it's available; don't try to
         # autocomplete unique items as with inserting text.
@@ -505,14 +509,13 @@ class ExtentComboBox(gtk.ComboBoxEntry):
         # Get the full text of the Entry widget, and see if any
         # strings in the model begin with that text.
         entry_text = entry.get_text()
-        entry_text_lower = entry_text.lower()
         matching_rows = [
             # row,
             ]
         for row in self.model:
             row_text = row[0]
             if isinstance(row_text, basestring):
-                if row[0].lower().startswith(entry_text_lower):
+                if row[0].startswith(entry_text):
                     matching_rows.append(row)
         # If there is one and only one such string,
         if len(matching_rows) == 1:
@@ -708,6 +711,7 @@ class ValueComboBox(gtk.ComboBoxEntry):
         self.completion = comp = gtk.EntryCompletion()
         comp.set_model(self.model)
         comp.set_text_column(0)
+        comp.connect('match-selected', self._on_completion__match_selected)
         self.entry = entry = self.child
         entry.set_completion(comp)
         entry.set_text(str(field.get()))
@@ -752,6 +756,9 @@ class ValueComboBox(gtk.ComboBoxEntry):
 
     def _on_changed(self, widget):
         self.emit('value-changed')
+
+    def _on_completion__match_selected(self, completion, model, iter):
+        self.select_item_by_text(model[iter][0])
 
 ##     def _on_entry__activate(self, entry):
 ##         self.emit('activate')
