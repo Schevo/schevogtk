@@ -775,14 +775,13 @@ class ValueComboBox(gtk.ComboBoxEntry):
         # Get the full text of the Entry widget, and see if any
         # strings in the model begin with that text.
         entry_text = entry.get_text()
-        entry_text_lower = entry_text.lower()
         matching_rows = [
             # row,
             ]
         for row in self.model:
             row_text = row[0]
             if isinstance(row_text, basestring):
-                if row[0].lower().startswith(entry_text_lower):
+                if row[0].startswith(entry_text):
                     matching_rows.append(row)
         # If there is one and only one such string,
         if len(matching_rows) == 1:
