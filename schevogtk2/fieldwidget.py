@@ -153,33 +153,26 @@ class EntityChooser(gtk.HBox):
 type_register(EntityChooser)
 
 
-class EntityComboBox(gtk.ComboBoxEntry):
-
-    __gtype_name__ = 'EntityComboBox'
+class BaseComboBox(gtk.ComboBoxEntry):
+    """Base class for common behavior."""
 
     gsignal('value-changed')
-
-    # Function to create a label for an entity. By default, just use
-    # the unicode representation of the entity.
-    entity_label = unicode
 
     # Label to use for UNASSIGNED values.  Useful if you want to make
     # the combo box more visually descriptive in the face of such
     # values.
     unassigned_label = '<UNASSIGNED>'
 
-    def __init__(self, db, field):
-        super(EntityComboBox, self).__init__()
-        self.db = db
-        self.field = field
+    def __init__(self):
+        super(BaseComboBox, self).__init__()
         self.model = gtk.ListStore(str, object)
-        self.set_row_separator_func(self.is_row_separator)
         self._populate()
         self.set_model(self.model)
         # Set the column that the combo box entry will search for text
         # within.
         self.set_text_column(0)
-        # Set up the icon cell.
+        self.set_row_separator_func(self.is_row_separator)
+        # Set renderers.
         cell = self.cell_pb = gtk.CellRendererPixbuf()
         self.pack_start(cell, False)
         self.set_cell_data_func(cell, self.cell_icon)
@@ -192,30 +185,16 @@ class EntityComboBox(gtk.ComboBoxEntry):
         cell = self.comp_pb = gtk.CellRendererPixbuf()
         comp.pack_start(cell, False)
         comp.set_cell_data_func(cell, self.cell_icon)
+        comp.set_inline_selection(True)
         comp.set_text_column(0)
         comp.connect('match-selected', self._on_completion__match_selected)
         self.entry = entry = self.child
         entry.set_completion(comp)
-        entry.set_text(str(field.get()))
 #         entry.connect('activate', self._on_entry__activate)
         entry.connect_after('backspace', self._on_entry__backspace)
         entry.connect_after('insert-text', self._on_entry__insert_text)
         self._handling_insert_text = False
-        # Select the field's current item.
-        self.select_item_by_data(field.get())
         self.connect('changed', self._on_changed)
-
-    def cell_icon(self, layout, cell, model, row):
-        entity = model[row][1]
-        if entity in (UNASSIGNED, None):
-            cell.set_property('stock_id', gtk.STOCK_NO)
-            cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
-            cell.set_property('visible', False)
-        else:
-            extent = entity.sys.extent
-            pixbuf = icon.small_pixbuf(self, extent)
-            cell.set_property('pixbuf', pixbuf)
-            cell.set_property('visible', True)
 
     def get_selected(self):
         """Return the currently selected Schevo object."""
@@ -248,11 +227,11 @@ class EntityComboBox(gtk.ComboBoxEntry):
     def _on_changed(self, widget):
         self.emit('value-changed')
 
-#     def _on_entry__activate(self, entry):
-#         self.emit('activate')
-
     def _on_completion__match_selected(self, completion, model, iter):
         self.select_item_by_text(model[iter][0])
+
+#     def _on_entry__activate(self, entry):
+#         self.emit('activate')
 
     def _on_entry__backspace(self, entry):
         # Just select an item by text if it's available; don't try to
@@ -266,13 +245,14 @@ class EntityComboBox(gtk.ComboBoxEntry):
         # Get the full text of the Entry widget, and see if any
         # strings in the model begin with that text.
         entry_text = entry.get_text()
+        entry_text_lower = entry_text.lower()
         matching_rows = [
             # row,
             ]
         for row in self.model:
             row_text = row[0]
             if isinstance(row_text, basestring):
-                if row[0].startswith(entry_text):
+                if row[0].lower().startswith(entry_text_lower):
                     matching_rows.append(row)
         # If there is one and only one such string,
         if len(matching_rows) == 1:
@@ -305,6 +285,36 @@ class EntityComboBox(gtk.ComboBoxEntry):
             # Set no item as active.
             self.set_active(-1)
         self.emit('value-changed')
+
+
+class EntityComboBox(BaseComboBox):
+    """ComboBoxEntry for displaying entities allowed by a field."""
+
+    __gtype_name__ = 'EntityComboBox'
+
+    # Function to create a label for an entity. By default, just use
+    # the unicode representation of the entity.
+    entity_label = unicode
+
+    def __init__(self, db, field):
+        self.db = db
+        self.field = field
+        super(EntityComboBox, self).__init__()
+        self.entry.set_text(str(field.get()))
+        # Select the field's current item.
+        self.select_item_by_data(field.get())
+
+    def cell_icon(self, layout, cell, model, row):
+        entity = model[row][1]
+        if entity in (UNASSIGNED, None):
+            cell.set_property('stock_id', gtk.STOCK_NO)
+            cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
+            cell.set_property('visible', False)
+        else:
+            extent = entity.sys.extent
+            pixbuf = icon.small_pixbuf(self, extent)
+            cell.set_property('pixbuf', pixbuf)
+            cell.set_property('visible', True)
 
     def _populate(self):
         db = self.db
@@ -390,7 +400,9 @@ class EntityComboBox(gtk.ComboBoxEntry):
 type_register(EntityComboBox)
 
 
-class ExtentComboBox(gtk.ComboBoxEntry):
+class ExtentComboBox(BaseComboBox):
+    """ComboBoxEntry for displaying one or more extents."""
+
     # XXX: This is not used by DynamicField, since there is no
     # f.extent() field type in Schevo at this point. It is here so
     # those applications that wish to have an extent combo box may use
@@ -398,52 +410,13 @@ class ExtentComboBox(gtk.ComboBoxEntry):
 
     __gtype_name__ = 'ExtentComboBox'
 
-    gsignal('value-changed')
-
-    unassigned_label = '<UNASSIGNED>'
-
     def __init__(self, db, field):
+        self.db = db
         # XXX: Field is currently unused.
         super(ExtentComboBox, self).__init__()
-        self.db = db
-        self.set_row_separator_func(self.is_row_separator)
-        # Populate model.
-        model = self.model = gtk.ListStore(str, object)
-        model.append((self.unassigned_label, UNASSIGNED))
-        model.append((None, None))
-        for extent_name in sorted(self.allowed_extents()):
-            extent = db.extent(extent_name)
-            model.append((label(extent), extent))
-        self.set_model(self.model)
-        # Set the column that the combo box entry will search for text
-        # within.
-        self.set_text_column(0)
-        # Set renderers.
-        cell = self.cell_pb = gtk.CellRendererPixbuf()
-        self.pack_start(cell, False)
-        self.set_cell_data_func(cell, self.cell_icon)
-        # Move the pixbuf cell to the zeroth column so it shows up in
-        # the correct location.
-        self.reorder(cell, 0)
-        # Set up the completion widget.
-        self.completion = comp = gtk.EntryCompletion()
-        comp.set_model(self.model)
-        cell = self.comp_pb = gtk.CellRendererPixbuf()
-        comp.pack_start(cell, False)
-        comp.set_cell_data_func(cell, self.cell_icon)
-        comp.set_text_column(0)
-        comp.connect('match-selected', self._on_completion__match_selected)
-        self.entry = entry = self.child
-        entry.set_completion(comp)
-#         entry.set_text(str(field.get()))
-        entry.set_text(self.unassigned_label)
-#         entry.connect('activate', self._on_entry__activate)
-        entry.connect_after('backspace', self._on_entry__backspace)
-        entry.connect_after('insert-text', self._on_entry__insert_text)
-        self._handling_insert_text = False
+        self.entry.set_text(self.unassigned_label)
         # Initially, select no extent.
         self.select_item_by_data(UNASSIGNED)
-        self.connect('changed', self._on_changed)
 
     def allowed_extents(self):
         """Return the allowed extents.
@@ -464,90 +437,15 @@ class ExtentComboBox(gtk.ComboBoxEntry):
             cell.set_property('pixbuf', pixbuf)
             cell.set_property('visible', True)
 
-    def get_selected(self):
-        iter = self.get_active_iter()
-        if iter:
-            return self.model[iter][1]
-
-    def is_row_separator(self, model, row):
-        text, entity = model[row]
-        if text is None and entity is None:
-            return True
-        return False
-
-    def select_item_by_text(self, text):
-        for row in self.model:
-            if row[0] == text:
-                self.set_active_iter(row.iter)
-                return
-        # Not in the combo box, so select nothing
-        self.set_active(-1)
-
-    def select_item_by_data(self, data):
-        for row in self.model:
-            if row[1] == data:
-                self.set_active_iter(row.iter)
-                return
-        # Not in the combo box, so select nothing
-        self.set_active(-1)
-
-    def _on_changed(self, widget):
-        self.emit('value-changed')
-
-    def _on_completion__match_selected(self, completion, model, iter):
-        self.select_item_by_text(model[iter][0])
-
-    def _on_entry__backspace(self, entry):
-        # Just select an item by text if it's available; don't try to
-        # autocomplete unique items as with inserting text.
-        self.select_item_by_text(entry.get_text())
-        self.emit('value-changed')
-
-    def _on_entry__insert_text(self, entry, new_text, new_text_len, position):
-        if self._handling_insert_text:
-            return
-        # Get the full text of the Entry widget, and see if any
-        # strings in the model begin with that text.
-        entry_text = entry.get_text()
-        matching_rows = [
-            # row,
-            ]
-        for row in self.model:
-            row_text = row[0]
-            if isinstance(row_text, basestring):
-                if row[0].startswith(entry_text):
-                    matching_rows.append(row)
-        # If there is one and only one such string,
-        if len(matching_rows) == 1:
-            row = matching_rows[0]
-            # Stop the insert-text signal from further emission until
-            # we're done. For some reason, storing the handler_id of
-            # the connect_after call in __init__ does not work
-            # properly to keep this from being called recursively, so
-            # we used a _handling_insert_text flag instead.
-            self._handling_insert_text = True
-            try:
-                # Set the entry's text to that string.
-                entry.set_text(row[0])
-                # Select the item associated with the string.
-                self.set_active_iter(row.iter)
-                # Select the portion of the string that the user
-                # didn't type.  Use a timeout, since select_region
-                # doesn't work properly within a signal handler.
-                def select_region():
-                    start = len(entry_text)
-                    entry.select_region(start, -1)
-                    # Destroy the timer immediately.
-                    return False
-                gobject.timeout_add(0, select_region)
-            finally:
-                # Done, so allow insert-text signal to be emitted again.
-                self._handling_insert_text = False
-        # If there is not,
-        else:
-            # Set no item as active.
-            self.set_active(-1)
-        self.emit('value-changed')
+    def _populate(self):
+        db = self.db
+        model = self.model
+        model.clear()
+        model.append((self.unassigned_label, UNASSIGNED))
+        model.append((None, None))
+        for extent_name in sorted(self.allowed_extents()):
+            extent = db.extent(extent_name)
+            model.append((label(extent), extent))
 
 type_register(ExtentComboBox)
 
