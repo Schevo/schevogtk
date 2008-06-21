@@ -300,7 +300,6 @@ class EntityComboBox(BaseComboBox):
         self.db = db
         self.field = field
         super(EntityComboBox, self).__init__()
-        self.entry.set_text(str(field.get()))
         # Select the field's current item.
         self.select_item_by_data(field.get())
 
@@ -414,7 +413,6 @@ class ExtentComboBox(BaseComboBox):
         self.db = db
         # XXX: Field is currently unused.
         super(ExtentComboBox, self).__init__()
-        self.entry.set_text(self.unassigned_label)
         # Initially, select no extent.
         self.select_item_by_data(UNASSIGNED)
 
