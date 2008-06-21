@@ -168,10 +168,10 @@ class BaseComboBox(gtk.ComboBoxEntry):
         self.model = gtk.ListStore(str, object)
         self._populate()
         self.set_model(self.model)
+        self.set_row_separator_func(self.is_row_separator)
         # Set the column that the combo box entry will search for text
         # within.
         self.set_text_column(0)
-        self.set_row_separator_func(self.is_row_separator)
         # Set renderers.
         cell = self.cell_pb = gtk.CellRendererPixbuf()
         self.pack_start(cell, False)
@@ -186,15 +186,17 @@ class BaseComboBox(gtk.ComboBoxEntry):
         comp.pack_start(cell, False)
         comp.set_cell_data_func(cell, self.cell_icon)
         comp.set_inline_selection(True)
+##         comp.set_match_func(self._on_completion__is_match)
         comp.set_text_column(0)
-        comp.connect('match-selected', self._on_completion__match_selected)
         self.entry = entry = self.child
         entry.set_completion(comp)
-#         entry.connect('activate', self._on_entry__activate)
-        entry.connect_after('backspace', self._on_entry__backspace)
+##         entry.connect('activate', self._on_entry__activate)
+        self.connect('changed', self._on_entry__changed)
+        # Prevent the changed handler from being called recursively.
+        self._handling_changed = False
         entry.connect_after('insert-text', self._on_entry__insert_text)
+        # Prevent the insert-text handler from being called recursively.
         self._handling_insert_text = False
-        self.connect('changed', self._on_changed)
 
     def get_selected(self):
         """Return the currently selected Schevo object."""
@@ -211,7 +213,9 @@ class BaseComboBox(gtk.ComboBoxEntry):
     def select_item_by_text(self, text):
         for row in self.model:
             if row[0] == text:
+                self._handling_changed = True
                 self.set_active_iter(row.iter)
+                self._handling_changed = False
                 return
         # Not in the combo box, so select nothing
         self.set_active(-1)
@@ -219,28 +223,42 @@ class BaseComboBox(gtk.ComboBoxEntry):
     def select_item_by_data(self, data):
         for row in self.model:
             if row[1] == data:
+                self._handling_changed = True
                 self.set_active_iter(row.iter)
+                self._handling_changed = False
                 return
         # Not in the combo box, so select nothing
         self.set_active(-1)
 
-    def _on_changed(self, widget):
-        self.emit('value-changed')
+##     def _on_completion__is_match(self, completion, key, iter):
+##         key = key.lower()
+##         model = self.model
+##         text = model[iter][0].lower()
+##         if text.startswith(key):
+##             return True
+##         if key in text:
+##             return True
+##         return False
 
-    def _on_completion__match_selected(self, completion, model, iter):
-        self.select_item_by_text(model[iter][0])
+##     def _on_entry__activate(self, entry):
+##         self.emit('activate')
 
-#     def _on_entry__activate(self, entry):
-#         self.emit('activate')
-
-    def _on_entry__backspace(self, entry):
-        # Just select an item by text if it's available; don't try to
-        # autocomplete unique items as with inserting text.
-        self.select_item_by_text(entry.get_text())
+    def _on_entry__changed(self, widget):
+        if self._handling_changed:
+            return
+        entry = self.entry
+        entry_text = entry.get_text()
+        self._handling_changed = True
+        self.select_item_by_text(entry_text)
+        self._handling_changed = False
         self.emit('value-changed')
 
     def _on_entry__insert_text(self, entry, new_text, new_text_len, position):
+        if self._handling_changed:
+            return
         if self._handling_insert_text:
+            return
+        if self.get_selected() is not None:
             return
         # Get the full text of the Entry widget, and see if any
         # strings in the model begin with that text.
@@ -266,8 +284,6 @@ class BaseComboBox(gtk.ComboBoxEntry):
             try:
                 # Set the entry's text to that string.
                 entry.set_text(row[0])
-                # Select the item associated with the string.
-                self.set_active_iter(row.iter)
                 # Select the portion of the string that the user
                 # didn't type.  Use a timeout, since select_region
                 # doesn't work properly within a signal handler.
@@ -280,11 +296,6 @@ class BaseComboBox(gtk.ComboBoxEntry):
             finally:
                 # Done, so allow insert-text signal to be emitted again.
                 self._handling_insert_text = False
-        # If there is not,
-        else:
-            # Set no item as active.
-            self.set_active(-1)
-        self.emit('value-changed')
 
 
 class EntityComboBox(BaseComboBox):
