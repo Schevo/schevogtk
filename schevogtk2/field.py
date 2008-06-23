@@ -64,6 +64,15 @@ class DynamicField(gtk.HBox):
             'Could not find an endpoint get_value handler for %r' % self.child)
 
     def reset(self):
+        if self._field.hidden:
+            return
+        field_value = self._field.get()
+        widget_value = self.get_value()
+##         field_name = self._field.name
+##         print '%s value %r  widget_value %r  equal %s' % (
+##             field_name, field_value, widget_value, widget_value == field_value)
+        if widget_value == field_value:
+            return
         self.set_field(self._db, self._field)
 
     def set_field(self, db, field):
@@ -74,8 +83,8 @@ class DynamicField(gtk.HBox):
         if field.hidden:
             # Do nothing for hidden fields.
             return
-        control = None
         value = field.get()
+        control = None
         change_cb = self._on_widget__value_changed
         for handler in self.set_field_handlers:
             cont, widget, control = handler(self, db, field, value, change_cb)
