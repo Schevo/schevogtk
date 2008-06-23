@@ -68,7 +68,8 @@ def show_error(parent, exc_type, exc_val, exc_tb):
                 u'deleting this object.\n'
                 u'\n'
                 ]
-            for entity, ref_entity, ref_field_name in exc_val.restrictions:
+            restrictions = sorted(exc_val.restrictions)
+            for entity, ref_entity, ref_field_name in restrictions:
                 markup.append(BULLET + '<b>%s</b>\n'
                               % escape(dereference(entity)))
         elif issubclass(exc_type, schevo.error.FieldReadonly):
