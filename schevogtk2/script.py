@@ -4,11 +4,16 @@ For copyright, license, and warranty, see bottom of file.
 """
 
 import os
+import sys
 import thread
 
 ## import louie
 
-from schevogtk2.application import Application
+if sys.platform == 'win32' or os.environ.get('DISPLAY', '') != '':
+    from schevogtk2.application import Application
+    GTK_AVAILABLE = True
+else:
+    GTK_AVAILABLE = False
 
 from schevo.script.command import Command
 from schevo.script import opt
@@ -54,30 +59,32 @@ class Navigator(Command):
     def main(self, arg0, args):
         print
         print
-        parser = _parser()
-        options, args = parser.parse_args(list(args))
-        if args:
-            db_filename = args.pop(0)
-            if not os.path.isfile(db_filename):
-                print 'File %r must already exist' % db_filename
-                return 1
+        if GTK_AVAILABLE:
+            parser = _parser()
+            options, args = parser.parse_args(list(args))
+            if args:
+                db_filename = args.pop(0)
+                if not os.path.isfile(db_filename):
+                    print 'File %r must already exist' % db_filename
+                    return 1
+            else:
+                db_filename = None
+            # Create PyGTK application.
+            app = Application()
+            # Open the database.
+            if db_filename:
+                print 'Opened database', db_filename
+                app.database_open(db_filename)
+            # Start PyCrust if requested.
+            if options.pycrust:
+                start_pycrust(app=app)
+                print 'PyCrust started.'
+            # Start PyGtk event loop.
+            print 'Starting Navigator UI...'
+            app.run()
         else:
-            db_filename = None
-        # Create PyGTK application.
-        app = Application()
-##         # Install Louie plugin.
-##         louie.install_plugin(louie.QtWidgetPlugin())
-        # Open the database.
-        if db_filename:
-            print 'Opened database', db_filename
-            app.database_open(db_filename)
-        # Start PyCrust if requested.
-        if options.pycrust:
-            start_pycrust(app=app)
-            print 'PyCrust started.'
-        # Start PyGtk event loop.
-        print 'Starting Navigator UI...'
-        app.run()
+            print 'GTK is not available.'
+            return 1
 
 
 start = Navigator
