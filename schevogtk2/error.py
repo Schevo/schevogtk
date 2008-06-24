@@ -95,6 +95,17 @@ def show_error(parent, exc_type, exc_val, exc_tb):
                 markup.append(BULLET + '<b>%s</b>: %s\n'
                               % (escape(field_name),
                                  escape(dereference(field_value))))
+        elif issubclass(exc_type, schevo.error.TransactionExpired):
+            markup = [
+                u'The transaction has expired.\n'
+                u'\n'
+                u'The most common reason for this is performing\n'
+                u'another transaction that results in this object\n'
+                u'being updated.\n'
+                u'\n'
+                u'Cancel this transaction, then re-open it, to\n'
+                u'complete the desired operation.'
+                ]
         elif issubclass(exc_type, schevo.error.TransactionRuleViolation):
             markup = [
                 u'Your changes were not saved.\n'
@@ -109,7 +120,7 @@ def show_error(parent, exc_type, exc_val, exc_tb):
                 u'No fields changed.\n'
                 u'\n'
                 u'Change at least one field to update this object,\n'
-                u'or click <b>Cancel</b> to leave it unchanged.\n'
+                u'or click <b>Cancel</b> to leave it unchanged.'
                 ]
         else:
             # By default, just show the error message verbatim.
