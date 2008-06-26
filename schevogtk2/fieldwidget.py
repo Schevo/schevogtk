@@ -109,7 +109,9 @@ class EntityChooser(gtk.HBox):
                 button.props.can_focus = False
                 button.props.width_request = button.size_request()[1] * 0.8
                 button.connect('clicked', self._on_update_button__clicked)
-                self._reset_update_button_sensitivity()
+                # Wait before resetting sensitivity, so that the call
+                # to get_selected() gets the correct selected value.
+                gobject.timeout_add(0, self._reset_update_button_sensitivity)
             if field.allow_view:
                 button = self._view_button = gtk.Button(label='V')
                 self.pack_start(button, expand=False, fill=False)
@@ -117,7 +119,9 @@ class EntityChooser(gtk.HBox):
                 button.props.can_focus = False
                 button.props.width_request = button.size_request()[1] * 0.8
                 button.connect('clicked', self._on_view_button__clicked)
-                self._reset_view_button_sensitivity()
+                # Wait before resetting sensitivity, so that the call
+                # to get_selected() gets the correct selected value.
+                gobject.timeout_add(0, self._reset_view_button_sensitivity)
 
     def get_selected(self):
         """Return the currently selected Schevo object."""
