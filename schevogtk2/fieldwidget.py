@@ -26,28 +26,28 @@ from schevogtk2 import icon
 from schevogtk2.utils import gsignal, type_register
 
 
-def skip_next_widget_on_tab(widget, event):
-    if (event.type == gtk.gdk.KEY_PRESS
-        and event.state == 0
-        and event.keyval == 65289
-        ):
-        # Make a key release event, identical to the key press event,
-        # to prevent key repeat.
-        e2 = gtk.gdk.Event(gtk.gdk.KEY_RELEASE)
-        e2.window = event.window
-        e2.send_event = event.send_event
-        e2.state = event.state
-        e2.keyval = event.keyval
-        e2.string = event.string
-        e2.hardware_keycode = event.hardware_keycode
-        e2.group = event.group
-        # Place the key release into the event loop.
-        e2.put()
-        # Place a copy of the key press event back into the event
-        # loop, which effectively doubles the key press.  The key
-        # release event associated with the keyboard event is
-        # triggered as usual.
-        event.put()
+## def skip_next_widget_on_tab(widget, event):
+##     if (event.type == gtk.gdk.KEY_PRESS
+##         and event.state == 0
+##         and event.keyval == 65289
+##         ):
+##         # Make a key release event, identical to the key press event,
+##         # to prevent key repeat.
+##         e2 = gtk.gdk.Event(gtk.gdk.KEY_RELEASE)
+##         e2.window = event.window
+##         e2.send_event = event.send_event
+##         e2.state = event.state
+##         e2.keyval = event.keyval
+##         e2.string = event.string
+##         e2.hardware_keycode = event.hardware_keycode
+##         e2.group = event.group
+##         # Place the key release into the event loop.
+##         e2.put()
+##         # Place a copy of the key press event back into the event
+##         # loop, which effectively doubles the key press.  The key
+##         # release event associated with the keyboard event is
+##         # triggered as usual.
+##         event.put()
 
 
 class EntityChooser(gtk.HBox):
@@ -188,8 +188,7 @@ class BaseComboBox(gtk.ComboBoxEntry):
     unassigned_label = '<UNASSIGNED>'
 
     def __init__(self):
-        super(BaseComboBox, self).__init__()
-        self.child.connect('key-press-event', skip_next_widget_on_tab)
+        gtk.ComboBoxEntry.__init__(self)
         self.model = gtk.ListStore(str, object)
         self._populate()
         self.set_model(self.model)
@@ -222,6 +221,15 @@ class BaseComboBox(gtk.ComboBoxEntry):
         entry.connect_after('insert-text', self._on_entry__insert_text)
         # Prevent the insert-text handler from being called recursively.
         self._handling_insert_text = False
+##         # Keep the arrow button from having focus.
+##         self.forall(self._disable_focus)
+
+##     def _disable_focus(self, widget):
+##         if isinstance(widget, gtk.ToggleButton):
+##             self.arrow = widget
+##             self.arrow.props.can_focus = False
+##             self.arrow.props.visible = False
+##             print self.arrow, self.arrow.props.can_focus
 
     def get_selected(self):
         """Return the currently selected Schevo object."""
@@ -254,16 +262,6 @@ class BaseComboBox(gtk.ComboBoxEntry):
                 return
         # Not in the combo box, so select nothing
         self.set_active(-1)
-
-##     def _on_completion__is_match(self, completion, key, iter):
-##         key = key.lower()
-##         model = self.model
-##         text = model[iter][0].lower()
-##         if text.startswith(key):
-##             return True
-##         if key in text:
-##             return True
-##         return False
 
 ##     def _on_entry__activate(self, entry):
 ##         self.emit('activate')
@@ -608,145 +606,21 @@ class ValueChooser(gtk.HBox):
 type_register(ValueChooser)
 
 
-class ValueComboBox(gtk.ComboBoxEntry):
+class ValueComboBox(BaseComboBox):
 
     __gtype_name__ = 'ValueComboBox'
 
-    gsignal('value-changed')
-
-    # Label to use for UNASSIGNED values.  Useful if you want to make
-    # the combo box more visually descriptive in the face of such
-    # values.
-    unassigned_label = '<UNASSIGNED>'
-
     def __init__(self, db, field):
-        super(ValueComboBox, self).__init__()
-        self.child.connect('key-press-event', skip_next_widget_on_tab)
         self.db = db
         self.field = field
-        self.model = gtk.ListStore(str, object)
-        self.set_row_separator_func(self.is_row_separator)
-        self._populate()
-        self.set_model(self.model)
-        # Set the column that the combo box entry will search for text
-        # within.
-        self.set_text_column(0)
-        # Set up the icon cell. XXX: This could be optimized in the
-        # future, but for now this makes the visual appearance
-        # correct.
-        cell = self.cell_pb = gtk.CellRendererPixbuf()
-        self.pack_start(cell, False)
-        self.set_cell_data_func(cell, self.cell_icon)
-        # Move the pixbuf cell to the zeroth column so it shows up in
-        # the correct location.
-        self.reorder(cell, 0)
-        # Set up the completion widget.
-        self.completion = comp = gtk.EntryCompletion()
-        comp.set_model(self.model)
-        comp.set_text_column(0)
-        comp.connect('match-selected', self._on_completion__match_selected)
-        self.entry = entry = self.child
-        entry.set_completion(comp)
-        entry.set_text(str(field.get()))
-        entry.connect_after('backspace', self._on_entry__backspace)
-        entry.connect_after('insert-text', self._on_entry__insert_text)
-        self._handling_insert_text = False
-        # Set the field's current item.
+        super(ValueComboBox, self).__init__()
+        # Select the field's current item.
         self.select_item_by_data(field.get())
-        self.connect('changed', self._on_changed)
 
     def cell_icon(self, layout, cell, model, row):
         cell.set_property('stock_id', gtk.STOCK_NO)
         cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
         cell.set_property('visible', False)
-
-    def get_selected(self):
-        iter = self.get_active_iter()
-        if iter:
-            return self.model[iter][1]
-
-    def is_row_separator(self, model, row):
-        text, data = model[row]
-        if text is None and data is None:
-            return True
-        return False
-
-    def select_item_by_text(self, text):
-        for row in self.model:
-            if row[0] == text:
-                self.set_active_iter(row.iter)
-                return
-        # Not in the combo box, so select nothing
-        self.set_active(-1)
-
-    def select_item_by_data(self, data):
-        for row in self.model:
-            if row[1] == data:
-                self.set_active_iter(row.iter)
-                return
-        # Not in the combo box, so select nothing
-        self.set_active(-1)
-
-    def _on_changed(self, widget):
-        self.emit('value-changed')
-
-    def _on_completion__match_selected(self, completion, model, iter):
-        self.select_item_by_text(model[iter][0])
-
-##     def _on_entry__activate(self, entry):
-##         self.emit('activate')
-
-    def _on_entry__backspace(self, entry):
-        # Just select an item by text if it's available; don't try to
-        # autocomplete unique items as with inserting text.
-        self.select_item_by_text(entry.get_text())
-        self.emit('value-changed')
-
-    def _on_entry__insert_text(self, entry, new_text, new_text_len, position):
-        if self._handling_insert_text:
-            return
-        # Get the full text of the Entry widget, and see if any
-        # strings in the model begin with that text.
-        entry_text = entry.get_text()
-        matching_rows = [
-            # row,
-            ]
-        for row in self.model:
-            row_text = row[0]
-            if isinstance(row_text, basestring):
-                if row[0].startswith(entry_text):
-                    matching_rows.append(row)
-        # If there is one and only one such string,
-        if len(matching_rows) == 1:
-            row = matching_rows[0]
-            # Stop the insert-text signal from further emission until
-            # we're done. For some reason, storing the handler_id of
-            # the connect_after call in __init__ does not work
-            # properly to keep this from being called recursively, so
-            # we used a _handling_insert_text flag instead.
-            self._handling_insert_text = True
-            try:
-                # Set the entry's text to that string.
-                entry.set_text(row[0])
-                # Select the item associated with the string.
-                self.set_active_iter(row.iter)
-                # Select the portion of the string that the user
-                # didn't type.  Use a timeout, since select_region
-                # doesn't work properly within a signal handler.
-                def select_region():
-                    start = len(entry_text)
-                    entry.select_region(start, -1)
-                    # Destroy the timer immediately.
-                    return False
-                gobject.timeout_add(0, select_region)
-            finally:
-                # Done, so allow insert-text signal to be emitted again.
-                self._handling_insert_text = False
-        # If there is not,
-        else:
-            # Set no item as active.
-            self.set_active(-1)
-        self.emit('value-changed')
 
     def _populate(self):
         db = self.db
