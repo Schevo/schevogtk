@@ -26,6 +26,30 @@ from schevogtk2 import icon
 from schevogtk2.utils import gsignal, type_register
 
 
+def skip_next_widget_on_tab(widget, event):
+    if (event.type == gtk.gdk.KEY_PRESS
+        and event.state == 0
+        and event.keyval == 65289
+        ):
+        # Make a key release event, identical to the key press event,
+        # to prevent key repeat.
+        e2 = gtk.gdk.Event(gtk.gdk.KEY_RELEASE)
+        e2.window = event.window
+        e2.send_event = event.send_event
+        e2.state = event.state
+        e2.keyval = event.keyval
+        e2.string = event.string
+        e2.hardware_keycode = event.hardware_keycode
+        e2.group = event.group
+        # Place the key release into the event loop.
+        e2.put()
+        # Place a copy of the key press event back into the event
+        # loop, which effectively doubles the key press.  The key
+        # release event associated with the keyboard event is
+        # triggered as usual.
+        event.put()
+
+
 class EntityChooser(gtk.HBox):
 
     __gtype_name__ = 'EntityChooser'
@@ -165,6 +189,7 @@ class BaseComboBox(gtk.ComboBoxEntry):
 
     def __init__(self):
         super(BaseComboBox, self).__init__()
+        self.child.connect('key-press-event', skip_next_widget_on_tab)
         self.model = gtk.ListStore(str, object)
         self._populate()
         self.set_model(self.model)
@@ -596,6 +621,7 @@ class ValueComboBox(gtk.ComboBoxEntry):
 
     def __init__(self, db, field):
         super(ValueComboBox, self).__init__()
+        self.child.connect('key-press-event', skip_next_widget_on_tab)
         self.db = db
         self.field = field
         self.model = gtk.ListStore(str, object)
