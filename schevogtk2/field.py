@@ -82,11 +82,10 @@ class DynamicField(gtk.HBox):
         if field.hidden:
             # Do nothing for hidden fields.
             return
-        value = field.get()
         control = None
         change_cb = self._on_widget__value_changed
         for handler in self.set_field_handlers:
-            cont, widget, control = handler(self, db, field, value, change_cb)
+            cont, widget, control = handler(self, db, field, change_cb)
             if not cont:
                 if control is None:
                     control = widget
@@ -296,8 +295,9 @@ DEFAULT_GET_VALUE_HANDLERS = [
 # to insert custom handlers into custom handler lists.
 
 @optimize.do_not_optimize
-def _set_field_rw_boolean(container, db, field, value, change_cb):
+def _set_field_rw_boolean(container, db, field, change_cb):
     if isinstance(field, schevo.field.Boolean) and not field.readonly:
+        value = field.value
         widget = gtk.CheckButton()
         if value is UNASSIGNED:
             value = False
@@ -312,7 +312,7 @@ def _set_field_rw_boolean(container, db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_rw_entity(container, db, field, value, change_cb):
+def _set_field_rw_entity(container, db, field, change_cb):
     if isinstance(field, schevo.field.Entity) and not field.readonly:
         widget = fieldwidget.EntityChooser(db, field)
         widget.connect('value-changed', change_cb, field)
@@ -321,8 +321,9 @@ def _set_field_rw_entity(container, db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_image(container, db, field, value, change_cb):
+def _set_field_image(container, db, field, change_cb):
     if isinstance(field, schevo.field.Image):
+        value = field.value
         widget = gtk.Image()
         if value is not UNASSIGNED:
             loader = gtk.gdk.PixbufLoader()
@@ -335,8 +336,9 @@ def _set_field_image(container, db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_multiline_string(container, db, field, value, change_cb):
+def _set_field_multiline_string(container, db, field, change_cb):
     if isinstance(field, schevo.field.String) and field.multiline:
+        value = field.value
         container.expand = True
         if value is UNASSIGNED:
             value = ''
@@ -360,8 +362,9 @@ def _set_field_multiline_string(container, db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_calculated(container, db, field, value, change_cb):
+def _set_field_calculated(container, db, field, change_cb):
     if field.fget:
+        value = field.value
         if value is UNASSIGNED:
             value = ''
         else:
@@ -373,8 +376,9 @@ def _set_field_calculated(container, db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_rw_path(container, db, field, value, change_cb):
+def _set_field_rw_path(container, db, field, change_cb):
     if isinstance(field, schevo.field.Path) and not field.readonly:
+        value = field.value
         widget = fieldwidget.FileChooser(db, field)
         if value:
             widget.set_filename(value)
@@ -384,7 +388,7 @@ def _set_field_rw_path(container, db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_generic_valid_values(container, db, field, value, change_cb):
+def _set_field_generic_valid_values(container, db, field, change_cb):
     if field.valid_values is not None and not (field.readonly or field.fget):
         widget = fieldwidget.ValueChooser(db, field)
         widget.connect('value-changed', change_cb, field)
@@ -393,7 +397,8 @@ def _set_field_generic_valid_values(container, db, field, value, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
-def _set_field_generic(container, db, field, value, change_cb):
+def _set_field_generic(container, db, field, change_cb):
+    value = field.value
     if value is UNASSIGNED:
         value = ''
     else:
