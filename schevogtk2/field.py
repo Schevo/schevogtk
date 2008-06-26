@@ -347,6 +347,7 @@ def _set_field_multiline_string(container, db, field, change_cb):
         widget = gtk.ScrolledWindow()
         widget.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
         widget.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+        widget.props.sensitive = False
         textview = gtk.TextView()
         if field.monospace:
             textview.modify_font(MONO_FONT)
