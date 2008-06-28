@@ -473,6 +473,9 @@ class ExtentComboBox(BaseComboBox):
             cell.set_property('pixbuf', pixbuf)
             cell.set_property('visible', True)
 
+    def extent_label(self, extent):
+        return label(extent)
+
     def _populate(self):
         db = self.db
         model = self.model
@@ -481,7 +484,7 @@ class ExtentComboBox(BaseComboBox):
         model.append((None, None))
         for extent_name in sorted(self.allowed_extents()):
             extent = db.extent(extent_name)
-            model.append((label(extent), extent))
+            model.append((self.extent_label(extent), extent))
 
 type_register(ExtentComboBox)
 
