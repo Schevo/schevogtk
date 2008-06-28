@@ -218,6 +218,8 @@ class BaseComboBox(gtk.ComboBoxEntry):
         comp.set_text_column(0)
         self.entry = entry = self.child
         entry.set_completion(comp)
+        # Only set focus on the entry, skipping past the arrow button.
+        self.set_focus_chain([entry])
 ##         entry.connect('activate', self._on_entry__activate)
         self.connect('changed', self._on_entry__changed)
         # Prevent the changed handler from being called recursively.
