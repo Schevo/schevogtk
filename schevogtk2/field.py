@@ -147,6 +147,7 @@ class FieldLabel(gtk.EventBox):
 
     def __init__(self):
         super(FieldLabel, self).__init__()
+        self.set_visible_window(False)
         text = u'Field label:'
         label = gtk.Label()
         label.set_text(text)

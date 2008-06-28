@@ -497,6 +497,7 @@ class FileChooser(gtk.EventBox):
 
     def __init__(self, db, field):
         super(FileChooser, self).__init__()
+        self.set_visible_window(False)
         self.db = db
         self.field = field
         if os.name == 'nt' and not field.directory_only:
