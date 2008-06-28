@@ -58,8 +58,13 @@ def escape(s):
 
 def show_error(parent, exc_type, exc_val, exc_tb):
     try:
-        # Override for specific error types.
-        if issubclass(exc_type, schevo.error.DeleteRestricted):
+        if issubclass(exc_type, schevo.error.DatabaseFileLocked):
+            markup = [
+                u'The file or library you are trying to open is already\n'
+                u'in use by another application.  Please close the file\n'
+                u'in the other application to open it here.\n'
+                ]
+        elif issubclass(exc_type, schevo.error.DeleteRestricted):
             markup = [
                 u'The object was not deleted from the database.\n'
                 u'\n'
