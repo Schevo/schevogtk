@@ -146,7 +146,8 @@ class EntityGrid(grid.Grid):
         self._extent = None
         self._query = None
         self._related = None
-        self._row_popup_menu.set_extent(None)
+        if self._row_popup_menu is not None:
+            self._row_popup_menu.set_extent(None)
         self.set_rows([])
         self.set_columns([])
 
