@@ -77,19 +77,26 @@ class EntityGrid(grid.Grid):
         related = self._related
         oids = []
         if query is not None:
-            # Get current selection identity so we can reselect it.
-            selected = self.get_selected()
-            if selected is not None:
-                identity = self.identify(selected)
+            if len(self._columns) == 0:
+                # We do not yet know the columns, which means that we
+                # do not yet have any query results, so we can reset the
+                # grid as if we have a new query.
+                self.set_query(None)
+                self.set_query(query)
             else:
-                identity = None
-            # Refresh query.
-            results = query()
-            self.set_rows([])
-            self.set_rows(results)
-            # Reselect the identity.
-            if identity is not None:
-                self.select_row(identity)
+                # Get current selection identity so we can reselect it.
+                selected = self.get_selected()
+                if selected is not None:
+                    identity = self.identify(selected)
+                else:
+                    identity = None
+                # Refresh query.
+                results = query()
+                self.set_rows([])
+                self.set_rows(results)
+                # Reselect the identity.
+                if identity is not None:
+                    self.select_row(identity)
         elif related is not None:
             if related.entity.sys.exists:
                 if extent is not None:
