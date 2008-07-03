@@ -288,6 +288,7 @@ class EntityGrid(grid.Grid):
     def _set_bindings(self):
         items = [
             ('Insert', self.select_create_action),
+            ('<Control><Shift>Return', self.select_create_action),
             ('<Control>Return', self.select_update_action),
             ('Delete', self.select_delete_action),
             ]
