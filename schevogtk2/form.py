@@ -13,7 +13,7 @@ from gtk import gdk
 
 import schevo.base
 from schevo.constant import UNASSIGNED
-from schevo.label import label
+from schevo.label import label, label_from_name
 
 from schevogtk2.action import get_method_action, get_view_action
 from schevogtk2.error import FriendlyErrorDialog
@@ -343,7 +343,7 @@ def get_custom_view_dialog(WindowClass, parent, db, entity, action):
 
 def get_default_tx_dialog(parent, db, tx,
                           get_value_handlers, set_field_handlers):
-    extent_name = tx.sys.extent_name
+    extent_name = label_from_name(tx.sys.extent_name)
     if extent_name is None:
         title = u'%s' % label(tx)
         text = u'%s' % label(tx)
