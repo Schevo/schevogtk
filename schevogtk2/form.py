@@ -221,13 +221,7 @@ class FormWindow(gtk.Window):
             self.ok_button.hide()
             self.cancel_button.hide()
             if hasattr(model, 't') and 'update' in model.t:
-                if (hasattr(model, 'x')
-                    and 'valid_t_methods' in model.x
-                    and 'update' not in model.x.valid_t_methods()
-                    ):
-                    self.edit_button.hide()
-                else:
-                    self.edit_button.show()
+                self.edit_button.show()
             else:
                 self.edit_button.hide()
             self.close_button.show()

@@ -90,9 +90,6 @@ def get_tx_actions(instance, related=None):
     actions = []
     if instance is not None:
         t_methods = set(instance.t)
-        if 'valid_t_methods' in instance.x:
-            # Intersect with visible t methods.
-            t_methods &= instance.x.valid_t_methods()
         for method_name in sorted(t_methods):
             action = get_method_action(instance, 't', method_name, related)
             actions.append(action)
