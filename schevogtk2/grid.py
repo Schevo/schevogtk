@@ -144,10 +144,18 @@ class Grid(gtk.VBox):
 
     def __init__(self, columns=[]):
         gtk.VBox.__init__(self)
+        self.props.spacing = 5
         # Create find text entry.  Hide it at first.
+        find_entry_box = self._find_entry_box = gtk.HBox()
+        find_entry_box.props.spacing = 5
+        find_entry_box.hide()
+        self.pack_start(find_entry_box, expand=False)
+        find_entry_label = gtk.Label('Find:')
+        find_entry_label.show()
+        find_entry_box.pack_start(find_entry_label, expand=False)
         find_entry = self._find_entry = gtk.Entry()
-        find_entry.hide()
-        self.pack_start(find_entry, expand=False)
+        find_entry.show()
+        find_entry_box.pack_start(find_entry)
         # Create scrolled window and rest of grid.
         scrolled = gtk.ScrolledWindow()
         scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -302,12 +310,14 @@ class Grid(gtk.VBox):
 
     def set_search_equal_func(self, search_equal_func):
         view = self._view
+        entry_box = self._find_entry_box
+        entry = self._find_entry
         view.set_search_equal_func(search_equal_func)
         view.props.enable_search = True
         view.set_search_equal_func(search_equal_func)
-        view.set_search_entry(self._find_entry)
-        view.connect('start-interactive-search',
-                     self._on_view__start_interactive_search)
+        view.set_search_entry(entry)
+        entry_box.show()
+        entry.grab_focus()
 
     def set_visible_func(self, func, data=None):
         self._filter = self._model.filter_new()
