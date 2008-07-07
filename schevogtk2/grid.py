@@ -132,7 +132,7 @@ class Column(object):
         column.set_cell_data_func(cell, self.cell_data)
 
 
-class Grid(gtk.ScrolledWindow):
+class Grid(gtk.VBox):
 
     __gtype_name__ = 'Grid'
 
@@ -140,10 +140,20 @@ class Grid(gtk.ScrolledWindow):
 
     gsignal('selection-changed', object)
 
+    search_equal_func = None
+
     def __init__(self, columns=[]):
-        gtk.ScrolledWindow.__init__(self)
-        self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+        gtk.VBox.__init__(self)
+        # Create find text entry.  Hide it at first.
+        find_entry = self._find_entry = gtk.Entry()
+        find_entry.hide()
+        self.pack_start(find_entry, expand=False)
+        # Create scrolled window and rest of grid.
+        scrolled = gtk.ScrolledWindow()
+        scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+        scrolled.show()
+        self.pack_start(scrolled)
         self._bindings = {}
         self._columns = []
         self._filter = None
@@ -161,7 +171,7 @@ class Grid(gtk.ScrolledWindow):
         view.connect_after('row-activated', self._after_view__row_activated)
         view.set_rules_hint(True)
         view.show()
-        self.add(view)
+        scrolled.add(view)
         self.set_columns(columns)
         selection = view.get_selection()
         selection.set_mode(gtk.SELECTION_BROWSE)
@@ -290,6 +300,15 @@ class Grid(gtk.ScrolledWindow):
         view.thaw_notify()
         self.set_cursor()
 
+    def set_search_equal_func(self, search_equal_func):
+        view = self._view
+        view.set_search_equal_func(search_equal_func)
+        view.props.enable_search = True
+        view.set_search_equal_func(search_equal_func)
+        view.set_search_entry(self._find_entry)
+        view.connect('start-interactive-search',
+                     self._on_view__start_interactive_search)
+
     def set_visible_func(self, func, data=None):
         self._filter = self._model.filter_new()
         if data is None:
@@ -334,6 +353,10 @@ class Grid(gtk.ScrolledWindow):
             instance = self.get_selected()
             self._row_popup_menu.popup(event, instance)
             return True
+
+    def _on_view__start_interactive_search(self, view):
+        self._find_entry.show()
+        self._find_entry.grab_focus()
 
 
 type_register(Grid)
