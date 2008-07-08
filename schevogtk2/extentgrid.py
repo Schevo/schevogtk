@@ -102,6 +102,7 @@ class ExtentGrid(grid.Grid):
     def _set_bindings(self):
         items = [
             ('Insert', self.select_create_action),
+            ('<Control><Shift>Return', self.select_create_action),
             ]
         self._bindings = dict([(gtk.accelerator_parse(name), func)
                                for name, func in items])
