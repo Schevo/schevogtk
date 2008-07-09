@@ -110,6 +110,13 @@ class EntityGrid(grid.Grid):
             oids = extent.find_oids()
             self.refresh_add_delete(oids)
         self.refilter()
+        self.columns_autosize_if_needed()
+
+    def columns_autosize_if_needed(self):
+        # Resize columns if 25 or fewer rows.
+        model = self._model
+        if len(model) <= 25:
+            self._view.columns_autosize()
 
     def refresh_add_delete(self, oids):
         row_map = self._row_map
@@ -131,6 +138,7 @@ class EntityGrid(grid.Grid):
                 self.add_row(oid)
             if isinstance(result, self._extent._EntityClass):
                 self.select_row(result.sys.oid)
+            self.columns_autosize_if_needed()
 
     def remove_row(self, oid):
         if oid not in self._row_map:
