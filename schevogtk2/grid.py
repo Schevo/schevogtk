@@ -235,10 +235,11 @@ class Grid(gtk.VBox):
         selection = view.get_selection()
         inst_id = self.identify(instance)
         row_iter = self._row_map[inst_id]
-        selection.select_iter(row_iter)
-        if scroll:
-            self.select_and_focus_row(row_iter)
-##             view.scroll_to_cell(model[row_iter].path, None, True, 0.5, 0)
+        if row_iter in model:
+            selection.select_iter(row_iter)
+            if scroll:
+                self.select_and_focus_row(row_iter)
+##                 view.scroll_to_cell(model[row_iter].path, None, True, 0.5, 0)
 
     def select_and_focus_row(self, row_iter):
         self._view.set_cursor(self._model[row_iter].path)
