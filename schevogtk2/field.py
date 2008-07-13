@@ -305,7 +305,10 @@ def _set_field_rw_boolean(container, db, field, change_cb):
         widget.set_active(value)
         widget.set_label(unicode(value))
         def on_toggled(widget):
-            widget.set_label(unicode(widget.get_active()))
+            if value:
+                widget.set_label(field.true_label)
+            else:
+                widget.set_label(field.false_label)
         widget.connect('toggled', on_toggled)
         widget.connect('toggled', change_cb, field)
         return (False, widget, None)
