@@ -24,6 +24,9 @@ from schevogtk2.utils import gsignal, type_register
 
 MONO_FONT = pango.FontDescription('monospace normal')
 
+# Set the standard height equal to that of an ComboBoxEntry widget.
+width, STANDARD_HEIGHT = gtk.ComboBoxEntry().size_request()
+
 
 class DynamicField(gtk.HBox):
 
@@ -47,8 +50,7 @@ class DynamicField(gtk.HBox):
         widget.show()
         self.pack_start(widget)
         self.child = widget
-        width, height = widget.size_request()
-        self.props.height_request = height
+        self.props.height_request = STANDARD_HEIGHT
         self._db = None
         self._field = None
         self.expand = False
@@ -113,6 +115,10 @@ class DynamicField(gtk.HBox):
                     control.connect(
                         'view-clicked', self._on_widget__view_clicked)
                 widget.show()
+                width, height = widget.size_request()
+                # Restore normal height to large widgets.
+                if height > self.props.height_request:
+                    self.props.height_request = -1
                 self.pack_start(widget)
                 self.child = widget
                 # Hide or show units label as appropriate.
@@ -156,6 +162,7 @@ class FieldLabel(gtk.EventBox):
         label.set_alignment(1.0, 0.5)
         label.set_padding(5, 0)
         label.show()
+        label.props.height_request = STANDARD_HEIGHT
         self.add(label)
 
     def reset(self):
@@ -380,6 +387,7 @@ def _set_field_calculated(container, db, field, change_cb):
             value = unicode(value)
         widget = gtk.Entry()
         widget.set_text(value)
+        widget.props.height_request = STANDARD_HEIGHT
         return (False, widget, None)
     else:
         return (True, None, None)
@@ -416,6 +424,7 @@ def _set_field_generic(container, db, field, change_cb):
     widget.set_text(value)
     widget.connect('activate', change_cb, field)
     widget.connect('changed', change_cb, field)
+    widget.props.height_request = STANDARD_HEIGHT
     return (False, widget, None)
 
 DEFAULT_SET_FIELD_HANDLERS = [
