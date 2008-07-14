@@ -41,12 +41,14 @@ class DynamicField(gtk.HBox):
         units_label = self._units_label = gtk.Label()
         units_label.hide()
         self.pack_end(units_label, expand=False)
-        # Begin as a single-line text entry field, until later changed
-        # to another widget type.
+        # Begin as an entry field, until later changed to another
+        # widget type.
         widget = gtk.Entry()
         widget.show()
         self.pack_start(widget)
         self.child = widget
+        width, height = widget.size_request()
+        self.props.height_request = height
         self._db = None
         self._field = None
         self.expand = False
