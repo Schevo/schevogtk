@@ -156,6 +156,7 @@ class ErrorMessage(gtk.Dialog):
         self.vbox.pack_start(notebook)
         # Message.
         message = gtk.Label()
+        message.props.selectable = True
         message.set_markup(markup)
         message.show()
         notebook.append_page(message, gtk.Label('Message'))
