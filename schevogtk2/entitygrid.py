@@ -201,7 +201,9 @@ class EntityGrid(grid.Grid):
 
     def select_view_action(self):
         entity = self.get_selected()
-        if 'default' not in entity._hidden_views:
+        if (entity._hidden_views is None
+            or 'default' not in entity._hidden_views
+            ):
             if entity is not None:
                 v_action = get_view_action(entity, include_expensive=False)
                 self.select_action(v_action)

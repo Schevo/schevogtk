@@ -98,7 +98,7 @@ def get_tx_actions(instance, related=None):
 def get_view_actions(entity):
     """Return list of view actions for an entity instance."""
     actions = []
-    if 'default' in entity._hidden_views:
+    if entity._hidden_views is not None and 'default' in entity._hidden_views:
         return actions
     if entity is not None:
         options = [False]
