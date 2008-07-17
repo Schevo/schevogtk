@@ -21,6 +21,14 @@ from atfg.gtk.constants import MONO_FONT
 BULLET = u'\u2022 '
 
 
+# List of functions of signature fn(exc_type, exc_val, exc_tb) that
+# handle an error and return a list of string in marked-up form to
+# join together in the dialog, or skip handling of an error and return
+# None.
+ERROR_HANDLERS = [
+    ]
+
+
 class FriendlyErrorDialog(object):
 
     def __init__(self, parent, always_ignore=True):
@@ -58,78 +66,84 @@ def escape(s):
 
 def show_error(parent, exc_type, exc_val, exc_tb):
     try:
-        if issubclass(exc_type, schevo.error.DatabaseFileLocked):
-            markup = [
-                u'The file or library you are trying to open is already\n'
-                u'in use by another application.  Please close the file\n'
-                u'in the other application to open it here.\n'
-                ]
-        elif issubclass(exc_type, schevo.error.DeleteRestricted):
-            markup = [
-                u'The object was not deleted from the database.\n'
-                u'\n'
-                u'It is referred to by the following objects,\n'
-                u'which require you to delete them first before\n'
-                u'deleting this object.\n'
-                u'\n'
-                ]
-            restrictions = sorted(exc_val.restrictions)
-            for entity, ref_entity, ref_field_name in restrictions:
-                markup.append(BULLET + '<b>%s</b>\n'
-                              % escape(dereference(entity)))
-        elif issubclass(exc_type, schevo.error.FieldReadonly):
-            markup = [
-                u'The <b>%s</b> field is readonly and cannot be changed.'
-                % escape(label(exc_val.field))
-                ]
-        elif issubclass(exc_type, schevo.error.FieldRequired):
-            markup = [
-                u'The <b>%s</b> field is required. Please provide a value.'
-                % escape(label(exc_val.field))
-                ]
-        elif issubclass(exc_type, schevo.error.KeyCollision):
-            markup = [
-                u'Your changes were not saved.\n'
-                u'\n'
-                u'There is already an object of this type that has\n'
-                u'the following values, which must be unique:\n'
-                u'\n'
-                ]
-            for field_name, field_value in zip(exc_val.key_spec,
-                                               exc_val.field_values):
-                markup.append(BULLET + '<b>%s</b>: %s\n'
-                              % (escape(field_name),
-                                 escape(dereference(field_value))))
-        elif issubclass(exc_type, schevo.error.TransactionExpired):
-            markup = [
-                u'The transaction has expired.\n'
-                u'\n'
-                u'The most common reason for this is performing\n'
-                u'another transaction that results in this object\n'
-                u'being updated.\n'
-                u'\n'
-                u'Cancel this transaction, then re-open it, to\n'
-                u'complete the desired operation.'
-                ]
-        elif issubclass(exc_type, schevo.error.TransactionRuleViolation):
-            markup = [
-                u'Your changes were not saved.\n'
-                u'\n'
-                u'The following transaction rule was violated when\n'
-                u'attempting to save:\n'
-                u'\n'
-                ]
-            markup.append(BULLET + u'<b>%s</b>\n' % escape(exc_val.message))
-        elif issubclass(exc_type, schevo.error.TransactionFieldsNotChanged):
-            markup = [
-                u'No fields changed.\n'
-                u'\n'
-                u'Change at least one field to update this object,\n'
-                u'or click <b>Cancel</b> to leave it unchanged.'
-                ]
-        else:
-            # By default, just show the error message verbatim.
-            markup = [escape(str(exc_val))]
+        markup = None
+        for handler in ERROR_HANDLERS:
+            markup = handler(exc_type, exc_val, exc_tb)
+            if markup is not None:
+                break
+        if markup is None:
+            if issubclass(exc_type, schevo.error.DatabaseFileLocked):
+                markup = [
+                    u'The file or library you are trying to open is already\n'
+                    u'in use by another application.  Please close the file\n'
+                    u'in the other application to open it here.\n'
+                    ]
+            elif issubclass(exc_type, schevo.error.DeleteRestricted):
+                markup = [
+                    u'The object was not deleted from the database.\n'
+                    u'\n'
+                    u'It is referred to by the following objects,\n'
+                    u'which require you to delete them first before\n'
+                    u'deleting this object.\n'
+                    u'\n'
+                    ]
+                restrictions = sorted(exc_val.restrictions)
+                for entity, ref_entity, ref_field_name in restrictions:
+                    markup.append(BULLET + '<b>%s</b>\n'
+                                  % escape(dereference(entity)))
+            elif issubclass(exc_type, schevo.error.FieldReadonly):
+                markup = [
+                    u'The <b>%s</b> field is readonly and cannot be changed.'
+                    % escape(label(exc_val.field))
+                    ]
+            elif issubclass(exc_type, schevo.error.FieldRequired):
+                markup = [
+                    u'The <b>%s</b> field is required. Please provide a value.'
+                    % escape(label(exc_val.field))
+                    ]
+            elif issubclass(exc_type, schevo.error.KeyCollision):
+                markup = [
+                    u'Your changes were not saved.\n'
+                    u'\n'
+                    u'There is already an object of this type that has\n'
+                    u'the following values, which must be unique:\n'
+                    u'\n'
+                    ]
+                for field_name, field_value in zip(exc_val.key_spec,
+                                                   exc_val.field_values):
+                    markup.append(BULLET + '<b>%s</b>: %s\n'
+                                  % (escape(field_name),
+                                     escape(dereference(field_value))))
+            elif issubclass(exc_type, schevo.error.TransactionExpired):
+                markup = [
+                    u'The transaction has expired.\n'
+                    u'\n'
+                    u'The most common reason for this is performing\n'
+                    u'another transaction that results in this object\n'
+                    u'being updated.\n'
+                    u'\n'
+                    u'Cancel this transaction, then re-open it, to\n'
+                    u'complete the desired operation.'
+                    ]
+            elif issubclass(exc_type, schevo.error.TransactionRuleViolation):
+                markup = [
+                    u'Your changes were not saved.\n'
+                    u'\n'
+                    u'The following transaction rule was violated when\n'
+                    u'attempting to save:\n'
+                    u'\n'
+                    ]
+                markup.append(BULLET + u'<b>%s</b>\n' % escape(exc_val.message))
+            elif issubclass(exc_type, schevo.error.TransactionFieldsNotChanged):
+                markup = [
+                    u'No fields changed.\n'
+                    u'\n'
+                    u'Change at least one field to update this object,\n'
+                    u'or click <b>Cancel</b> to leave it unchanged.'
+                    ]
+            else:
+                # By default, just show the error message verbatim.
+                markup = [escape(str(exc_val))]
         markup = u''.join(markup)
     except:
         markup = 'See "Diagnostics" tab for information.'
