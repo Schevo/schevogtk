@@ -201,9 +201,10 @@ class EntityGrid(grid.Grid):
 
     def select_view_action(self):
         entity = self.get_selected()
-        if entity is not None:
-            v_action = get_view_action(entity, include_expensive=False)
-            self.select_action(v_action)
+        if 'default' not in entity._hidden_views:
+            if entity is not None:
+                v_action = get_view_action(entity, include_expensive=False)
+                self.select_action(v_action)
 
     def set_all_x(self, name, value):
         """Set x.name to value for all entities."""
