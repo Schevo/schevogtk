@@ -98,9 +98,11 @@ def get_tx_actions(instance, related=None):
 def get_view_actions(entity):
     """Return list of view actions for an entity instance."""
     actions = []
-    if entity._hidden_views is not None and 'default' in entity._hidden_views:
-        return actions
     if entity is not None:
+        if (entity._hidden_views is not None
+            and 'default' in entity._hidden_views
+            ):
+            return actions
         options = [False]
         for name, FieldClass in entity._field_spec.iteritems():
             if FieldClass.expensive:
