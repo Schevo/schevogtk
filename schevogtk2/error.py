@@ -13,7 +13,7 @@ import gtk
 
 from schevo.placeholder import Placeholder
 import schevo.error
-from schevo.label import label
+from schevo.label import label, plural
 
 from atfg.gtk.constants import MONO_FONT
 
@@ -82,15 +82,16 @@ def show_error(parent, exc_type, exc_val, exc_tb):
                 markup = [
                     u'The object was not deleted from the database.\n'
                     u'\n'
-                    u'It is referred to by the following objects,\n'
-                    u'which require you to delete them first before\n'
-                    u'deleting this object.\n'
+                    u'It is referred to by the following types of objects.\n'
+                    u'Delete them first before deleting this object.\n'
                     u'\n'
                     ]
                 restrictions = sorted(exc_val.restrictions)
+                ref_extents = set()
                 for entity, ref_entity, ref_field_name in restrictions:
-                    markup.append(BULLET + '<b>%s</b>\n'
-                                  % escape(dereference(entity)))
+                    ref_extents.add(ref_entity.sys.extent)
+                for extent in sorted(ref_extents):
+                    markup.append(BULLET + '<b>%s</b>\n' % plural(extent))
             elif issubclass(exc_type, schevo.error.FieldReadonly):
                 markup = [
                     u'The <b>%s</b> field is readonly and cannot be changed.'
