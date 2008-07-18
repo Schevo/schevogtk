@@ -416,6 +416,7 @@ def attach_create_update_view_handlers(
                 else:
                     field.set(tx_result)
                     field.x.control_widget.set_field(db, field)
+                    field.x.control_widget.grab_focus()
     def on_update_clicked(dynamic_field, entity_to_update, done_cb=None):
         action = get_method_action(entity_to_update, 't', 'update')
         update_tx = action.method()
@@ -436,6 +437,7 @@ def attach_create_update_view_handlers(
             else:
                 field.set(tx_result)
                 field.x.control_widget.set_field(db, field)
+                field.x.control_widget.grab_focus()
     def on_view_clicked(dynamic_field, entity_to_view):
         action = get_view_action(entity_to_view, include_expensive=False)
         dialog = get_view_dialog(

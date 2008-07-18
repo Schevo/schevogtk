@@ -99,6 +99,9 @@ class EntityChooser(gtk.HBox):
                 # to get_selected() gets the correct selected value.
                 gobject.timeout_add(0, self._reset_view_button_sensitivity)
 
+    def grab_focus(self):
+        self._entity_combobox.child.grab_focus()
+
     def get_selected(self):
         """Return the currently selected Schevo object."""
         return self._entity_combobox.get_selected()

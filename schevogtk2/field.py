@@ -67,6 +67,9 @@ class DynamicField(gtk.HBox):
         raise ValueError(
             'Could not find an endpoint get_value handler for %r' % self.child)
 
+    def grab_focus(self):
+        self.child.grab_focus()
+
     def reset(self):
         field = self._field
         if field.hidden:
