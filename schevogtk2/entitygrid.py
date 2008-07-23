@@ -201,12 +201,13 @@ class EntityGrid(grid.Grid):
 
     def select_view_action(self):
         entity = self.get_selected()
-        if (entity._hidden_views is None
-            or 'default' not in entity._hidden_views
+        if (entity is not None
+            and (entity._hidden_views is None
+                 or 'default' not in entity._hidden_views
+                 )
             ):
-            if entity is not None:
-                v_action = get_view_action(entity, include_expensive=False)
-                self.select_action(v_action)
+            v_action = get_view_action(entity, include_expensive=False)
+            self.select_action(v_action)
 
     def set_all_x(self, name, value):
         """Set x.name to value for all entities."""
@@ -267,6 +268,16 @@ class EntityGrid(grid.Grid):
                                                    related.field_name)
                 self.set_columns(columns)
                 self.set_rows(results)
+
+    def _after_view__row_activated(self, view, path, column):
+        row = self._model[path]
+        entity = row[OBJECT_COLUMN]
+        if (entity is not None
+            and (entity._hidden_views is None
+                 or 'default' not in entity._hidden_views
+                 )
+            ):
+            self.emit('row-activated', entity)
 
     def _get_columns_for_field_spec(self, field_spec):
         columns = []
