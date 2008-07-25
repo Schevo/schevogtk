@@ -12,6 +12,15 @@ from schevo.label import label
 
 DEFAULT_T_METHODS = ['clone', 'create', 'delete', 'update']
 
+LABELS_WITH_SHORTCUTS = {
+    # 'Label': '_Label',
+    'Clone...': '_Clone...',
+    'Delete...': '_Delete...',
+    'Edit...': '_Edit...',
+    'New...': '_New...',
+    'View...': '_View...',
+    }
+
 
 class Action(object):
 
@@ -21,6 +30,13 @@ class Action(object):
     name = ''
     related = None
     type = ''
+
+    @property
+    def label_with_shortcut(self):
+        if self.label in LABELS_WITH_SHORTCUTS:
+            return LABELS_WITH_SHORTCUTS[self.label]
+        else:
+            return self.label
 
     def __cmp__(self, other):
         try:

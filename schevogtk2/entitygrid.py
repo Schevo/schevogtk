@@ -377,7 +377,7 @@ class PopupMenu(grid.PopupMenu):
             if action is None:
                 menuitem = gtk.SeparatorMenuItem()
             else:
-                menuitem = gtk.MenuItem(action.label)
+                menuitem = gtk.MenuItem(action.label_with_shortcut)
                 signal_id = menuitem.connect('activate',
                                              self._on_menuitem__activate,
                                              action)
