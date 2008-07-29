@@ -317,6 +317,8 @@ class EntityComboBox(BaseComboBox):
             # Select the field's current item.
             value = field.get()
         self.select_item_by_data(value)
+        if value != field.get():
+            gobject.timeout_add(0, self.emit, 'value-changed')
 
     def cell_icon(self, layout, cell, model, row):
         entity = model[row][1]
