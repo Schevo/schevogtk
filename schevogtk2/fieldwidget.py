@@ -310,8 +310,13 @@ class EntityComboBox(BaseComboBox):
         self.db = db
         self.field = field
         super(EntityComboBox, self).__init__()
-        # Select the field's current item.
-        self.select_item_by_data(field.get())
+        if field.valid_values is not None and len(field.valid_values) == 1:
+            # If the field has exactly one valid value, choose that.
+            value = iter(field.valid_values).next()
+        else:
+            # Select the field's current item.
+            value = field.get()
+        self.select_item_by_data(value)
 
     def cell_icon(self, layout, cell, model, row):
         entity = model[row][1]
