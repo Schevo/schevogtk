@@ -306,11 +306,19 @@ class EntityComboBox(BaseComboBox):
     # the unicode representation of the entity.
     entity_label = unicode
 
+    # True if the presence of a single valid_value should indicate
+    # that the value of the widget should be set to that value.  False
+    # if the current value should be presented.
+    autoselect_single_valid_value = True
+
     def __init__(self, db, field):
         self.db = db
         self.field = field
         super(EntityComboBox, self).__init__()
-        if field.valid_values is not None and len(field.valid_values) == 1:
+        if (self.autoselect_single_valid_value
+            and field.valid_values is not None
+            and len(field.valid_values) == 1
+            ):
             # If the field has exactly one valid value, choose that.
             value = iter(field.valid_values).next()
         else:
