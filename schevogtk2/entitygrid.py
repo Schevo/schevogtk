@@ -56,12 +56,26 @@ class EntityGrid(grid.Grid):
     # popup menus.
     show_relationships_in_menu = True
 
-    def __init__(self):
-        super(EntityGrid, self).__init__()
+    def __init__(self, model_info=None):
+        grid.Grid.__init__(self)
         self._hidden = []  # List of fieldnames of columns to hide.
         self._row_popup_menu = PopupMenu(self)
         self._set_bindings()
         self.reset()
+        if model_info is not None:
+            (self._model,
+             self._sorter,
+             self._extent,
+             self._query,
+             self._related,
+             self._hidden,
+             columns,
+             ) = model_info
+            if self._sorter is not None:
+                self._view.set_model(self._sorter)
+            else:
+                self._view.set_model(self._model)
+            self.set_columns(columns)
 
     def add_row(self, oid):
         instance = self._extent[oid]
@@ -76,6 +90,17 @@ class EntityGrid(grid.Grid):
 
     def identify(self, instance):
         return instance._oid
+
+    def model_info(self):
+        return (
+            self._model,
+            self._sorter,
+            self._extent,
+            self._query,
+            self._related,
+            self._hidden[:],
+            self._columns[:],
+            )
 
     def reflect_changes(self, result, tx):
         if self._extent is not None:
