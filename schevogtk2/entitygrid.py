@@ -68,8 +68,25 @@ class EntityGrid(grid.Grid):
         row_iter = super(EntityGrid, self).add_row(instance)
         self._row_map[oid] = row_iter
 
+    def columns_autosize_if_needed(self):
+        # Resize columns if 25 or fewer rows.
+        model = self._model
+        if len(model) <= 25:
+            self._view.columns_autosize()
+
     def identify(self, instance):
         return instance._oid
+
+    def reflect_changes(self, result, tx):
+        if self._extent is not None:
+            summary = tx.sys.summarize()
+            for oid in summary.deletes.get(self._extent.name, []):
+                self.remove_row(oid)
+            for oid in summary.creates.get(self._extent.name, []):
+                self.add_row(oid)
+            if isinstance(result, self._extent._EntityClass):
+                self.select_row(result.sys.oid)
+            self.columns_autosize_if_needed()
 
     def refresh(self):
         extent = self._extent
@@ -112,12 +129,6 @@ class EntityGrid(grid.Grid):
         self.refilter()
         self.columns_autosize_if_needed()
 
-    def columns_autosize_if_needed(self):
-        # Resize columns if 25 or fewer rows.
-        model = self._model
-        if len(model) <= 25:
-            self._view.columns_autosize()
-
     def refresh_add_delete(self, oids):
         row_map = self._row_map
         # Delete entities that no longer exist.
@@ -128,17 +139,6 @@ class EntityGrid(grid.Grid):
         for oid in oids:
             if oid not in row_map:
                 self.add_row(oid)
-
-    def reflect_changes(self, result, tx):
-        if self._extent is not None:
-            summary = tx.sys.summarize()
-            for oid in summary.deletes.get(self._extent.name, []):
-                self.remove_row(oid)
-            for oid in summary.creates.get(self._extent.name, []):
-                self.add_row(oid)
-            if isinstance(result, self._extent._EntityClass):
-                self.select_row(result.sys.oid)
-            self.columns_autosize_if_needed()
 
     def remove_row(self, oid):
         if oid not in self._row_map:
@@ -165,11 +165,6 @@ class EntityGrid(grid.Grid):
             self._row_popup_menu.set_extent(None)
         self.set_rows([])
         self.set_columns([])
-
-    def select_row(self, oid):
-        row_iter = self._row_map.get(oid, None)
-        if row_iter is not None:
-            self.select_and_focus_row(row_iter)
 
     def select_action(self, action):
         self.emit('action-selected', action)
@@ -208,6 +203,11 @@ class EntityGrid(grid.Grid):
             ):
             v_action = get_view_action(entity, include_expensive=False)
             self.select_action(v_action)
+
+    def select_row(self, oid):
+        row_iter = self._row_map.get(oid, None)
+        if row_iter is not None:
+            self.select_and_focus_row(row_iter)
 
     def set_all_x(self, name, value):
         """Set x.name to value for all entities."""
