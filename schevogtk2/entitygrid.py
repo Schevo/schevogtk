@@ -266,6 +266,10 @@ class EntityGrid(grid.Grid):
             # field_spec of the first result.
             field_spec = None
             results = query()
+            if not isinstance(results, list):
+                # Work around the fact that queries may return
+                # iterators by returning non-lists into lists.
+                results = list(results)
             for result in results:
                 if field_spec is not None:
                     break
