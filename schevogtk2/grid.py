@@ -197,11 +197,18 @@ class Grid(gtk.VBox):
         self._row_map.clear()
 
     def get_selected(self):
-        """Return the currently selected object or None if none selected."""
+        """If in multiple selection mode, return a list of the
+        currently selected objects.  If not, return the currently
+        selected object or None if none selected."""
         selection = self._view.get_selection()
-        model, row_iter = selection.get_selected()
-        if row_iter:
-            return model[row_iter][OBJECT_COLUMN]
+        if selection.get_mode() != gtk.SELECTION_MULTIPLE:
+            model, row_iter = selection.get_selected()
+            if row_iter:
+                return model[row_iter][OBJECT_COLUMN]
+        else:
+            selection = self._view.get_selection()
+            model, rows = selection.get_selected_rows()
+            return [model[row][OBJECT_COLUMN] for row in rows]
 
     def is_row_strikethrough(self, instance):
         return False

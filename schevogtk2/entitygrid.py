@@ -128,7 +128,7 @@ class EntityGrid(grid.Grid):
             else:
                 # Get current selection identity so we can reselect it.
                 selected = self.get_selected()
-                if selected is not None:
+                if selected is not None and not isinstance(selected, list):
                     identity = self.identify(selected)
                 else:
                     identity = None
