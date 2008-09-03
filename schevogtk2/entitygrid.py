@@ -128,16 +128,22 @@ class EntityGrid(grid.Grid):
             else:
                 # Get current selection identity so we can reselect it.
                 selected = self.get_selected()
-                if selected is not None and not isinstance(selected, list):
-                    identity = self.identify(selected)
-                else:
+                if selected is None:
                     identity = None
+                elif isinstance(selected, list):
+                    identity = [self.identify(entity) for entity in selected]
+                else:
+                    identity = self.identify(selected)
                 # Refresh query.
                 results = query()
                 self.set_rows([])
                 self.set_rows(results)
                 # Reselect the identity.
-                if identity is not None:
+                if identity is None:
+                    pass
+                elif isinstance(identity, list):
+                    self.select_rows(identity)
+                else:
                     self.select_row(identity)
         elif related is not None:
             if related.entity.sys.exists:
@@ -233,6 +239,13 @@ class EntityGrid(grid.Grid):
         row_iter = self._row_map.get(oid, None)
         if row_iter is not None:
             self.select_and_focus_row(row_iter)
+
+    def select_rows(self, oids):
+        selection = self._view.get_selection()
+        for oid in oids:
+            row_iter = self._row_map.get(oid, None)
+            if row_iter is not None:
+                selection.select_iter(row_iter)
 
     def set_all_x(self, name, value):
         """Set x.name to value for all entities."""
