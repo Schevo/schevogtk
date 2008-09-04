@@ -38,7 +38,7 @@ class DynamicField(gtk.HBox):
     gsignal('value-changed')
 
     def __init__(self, get_value_handlers, set_field_handlers):
-        super(DynamicField, self).__init__()
+        gtk.HBox.__init__(self)
         self.props.spacing = 5
         # Create the units label, hidden by default, packed to the end.
         units_label = self._units_label = gtk.Label()
@@ -157,7 +157,7 @@ class FieldLabel(gtk.EventBox):
     __gtype_name__ = 'FieldLabel'
 
     def __init__(self):
-        super(FieldLabel, self).__init__()
+        gtk.EventBox.__init__(self)
         self.set_visible_window(False)
         text = u'Field label:'
         label = gtk.Label()

@@ -56,7 +56,7 @@ class RelatedGrid(grid.Grid):
     gsignal('action-selected', object)
 
     def __init__(self):
-        super(RelatedGrid, self).__init__()
+        grid.Grid.__init__(self)
         self._show_hidden_extents = False
         self._filter = self._model.filter_new()
         self._filter.set_visible_func(self._is_visible)
@@ -130,7 +130,7 @@ class PopupMenu(grid.PopupMenu):
     def __init__(self, related_grid):
         self._related_grid = related_grid
         self._extent = None
-        super(PopupMenu, self).__init__()
+        grid.PopupMenu.__init__(self)
 
     def get_actions(self):
         extent = self._extent
@@ -147,7 +147,7 @@ class PopupMenu(grid.PopupMenu):
         extent = instance.extent
         self.clear()
         self.set_extent(extent)
-        super(PopupMenu, self).popup(event, extent)
+        grid.PopupMenu.popup(self, event, extent)
 
     def set_extent(self, extent):
         self.clear()

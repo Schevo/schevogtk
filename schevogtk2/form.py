@@ -25,7 +25,7 @@ from schevogtk2.utils import gsignal
 class FormBox(gtk.VBox):
 
     def __init__(self):
-        super(FormBox, self).__init__()
+        gtk.VBox.__init__(self)
         self.set_border_width(10)
         self.set_spacing(10)
         self.header = gtk.Label()
@@ -53,7 +53,7 @@ class FormBox(gtk.VBox):
 class FormWindow(gtk.Window):
 
     def __init__(self):
-        super(FormWindow, self).__init__()
+        gtk.Window.__init__(self)
         self._bindings = {}
         self._db = None
         self._model = None
@@ -254,7 +254,7 @@ class FormWindow(gtk.Window):
 class ExtentChoiceBox(gtk.VButtonBox):
 
     def __init__(self, allowed_extents):
-        super(ExtentChoiceBox, self).__init__()
+        gtk.VButtonBox.__init__(self)
         group = None
         self.selected_extent = None
         for extent in allowed_extents:
@@ -276,7 +276,7 @@ class ExtentChoiceBox(gtk.VButtonBox):
 class ExtentChoiceWindow(gtk.Window):
 
     def __init__(self, allowed_extents):
-        super(ExtentChoiceWindow, self).__init__()
+        gtk.Window.__init__(self)
         self.set_default_size(300, -1)
         self.vbox = vbox = gtk.VBox()
         vbox.set_spacing(5)

@@ -385,7 +385,7 @@ class PopupMenu(gtk.Menu):
     def __init__(self):
         self._instance = None
         self._signals = []
-        super(PopupMenu, self).__init__()
+        gtk.Menu.__init__(self)
 
     def clear(self):
         self._instance = None
@@ -400,10 +400,9 @@ class PopupMenu(gtk.Menu):
         if len(self):
             if event is None:
                 # Note: button = 1, and time = 0 is a known gtk+ hack.
-                super(PopupMenu, self).popup(None, None, None, 1, 0)
+                gtk.Menu.popup(self, None, None, None, 1, 0)
             else:
-                super(PopupMenu, self).popup(None, None, None,
-                                             event.button, event.time)
+                gtk.Menu.popup(self, None, None, None, event.button, event.time)
 
 
 def model_default_sort(model, row_iter1, row_iter2):

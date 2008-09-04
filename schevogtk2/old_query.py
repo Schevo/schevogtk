@@ -22,7 +22,7 @@ from kiwi.ui.objectlist import ObjectList, Column
 class Query(gtk.VBox):
 
     def __init__(self, db, extent, method_name):
-        super(Query, self).__init__()
+        gtk.VBox.__init__(self)
         self._db = db
         self._extent = extent
         method = extent.q[method_name]
@@ -69,7 +69,7 @@ class Query(gtk.VBox):
 class Results(gtk.VBox):
 
     def __init__(self, db, query):
-        super(Results, self).__init__()
+        gtk.VBox.__init__(self)
         self._db = db
         self._query = query
         self._class_expander = [
@@ -131,7 +131,7 @@ class ResultsListView(ObjectList):
                                 sorted=sorted)
                 columns.append(column)
                 sorted = False
-        super(ResultsListView, self).__init__(columns, results)
+        ObjectList.__init__(self, columns, results)
 
 
 ## class ResultsTreeView(gtk.TreeView):
@@ -293,7 +293,7 @@ def query_widget_intersection(db, query):
 class IntersectionForm(gtk.Frame):
 
     def __init__(self, db, query):
-        super(IntersectionForm, self).__init__(u'Intersection of')
+        gtk.Frame.__init__(self, u'Intersection of')
         self._db = db
         self._query = query
         q_widget = self._query_widget = {}
@@ -320,7 +320,7 @@ FIELDLESS_OPERATORS = frozenset(
 class MatchForm(gtk.HBox):
 
     def __init__(self, db, query):
-        super(MatchForm, self).__init__()
+        gtk.HBox.__init__(self)
         self._db = db
         self._query = query
         FieldClass = query.FieldClass
@@ -358,7 +358,7 @@ class OperatorComboBox(gtk.ComboBox):
 
     def __init__(self, query):
         model = gtk.ListStore(gobject.TYPE_STRING)
-        super(OperatorComboBox, self).__init__(model)
+        gtk.ComboBox.__init__(self, model)
         cell = gtk.CellRendererText()
         self.pack_start(cell, True)
         self.add_attribute(cell, 'text', 0)

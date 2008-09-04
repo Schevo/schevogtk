@@ -30,7 +30,7 @@ class NavigatorWindow(Window):
         file_open_title = 'Open Schevo Database File'
 
     def __init__(self):
-        super(NavigatorWindow, self).__init__()
+        Window.__init__(self)
         self.update_ui()
 
 ##     def database_new(self, filename):

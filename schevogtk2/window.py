@@ -372,9 +372,6 @@ class EmptyWindow(BaseWindow):
     # common use for this class is for modal dialogs.
     quit_on_hide = True
 
-    def __init__(self):
-        super(EmptyWindow, self).__init__()
-
     def hide(self):
         self.toplevel.hide()
         if self.quit_on_hide:

@@ -162,7 +162,7 @@ class ErrorMessage(gtk.Dialog):
 
     def __init__(self, title=None, parent=None, flags=None, buttons=None,
                  markup=None, exc_type=None, exc_val=None, exc_tb=None):
-        super(ErrorMessage, self).__init__(title, parent, flags, buttons)
+        gtk.Dialog.__init__(self, title, parent, flags, buttons)
         self.props.width_request = 400
         self.props.height_request = 300
         # Notebook.

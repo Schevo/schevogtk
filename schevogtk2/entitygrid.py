@@ -29,7 +29,7 @@ class EntityColumn(grid.Column):
     _has_icon = True
 
     def cell_icon(self, column, cell, model, row_iter):
-        super(EntityColumn, self).cell_icon(column, cell, model, row_iter)
+        grid.Column.cell_icon(self, column, cell, model, row_iter)
         instance = model[row_iter][OBJECT_COLUMN]
         try:
             entity = getattr(instance, self.attribute)
@@ -79,7 +79,7 @@ class EntityGrid(grid.Grid):
 
     def add_row(self, oid):
         instance = self._extent[oid]
-        row_iter = super(EntityGrid, self).add_row(instance)
+        row_iter = grid.Grid.add_row(self, instance)
         self._row_map[oid] = row_iter
 
     def columns_autosize_if_needed(self):
@@ -373,7 +373,7 @@ class PopupMenu(grid.PopupMenu):
         self._entity_grid = entity_grid
         self._extent = None
         self._entity = None
-        super(PopupMenu, self).__init__()
+        grid.PopupMenu.__init__(self)
 
     def get_actions(self):
         extent = self._extent
@@ -408,7 +408,7 @@ class PopupMenu(grid.PopupMenu):
 
     def popup(self, event, instance):
         self.set_entity(instance)
-        super(PopupMenu, self).popup(event, instance)
+        grid.PopupMenu.popup(self, event, instance)
 
     def set_entity(self, entity):
         self.clear()

@@ -14,7 +14,7 @@ from schevo.label import label, plural
 class ExtentExpanderBox(gtk.VBox):
 
     def __init__(self, db):
-        super(ExtentExpanderBox, self).__init__()
+        gtk.VBox.__init__(self)
         self._db = db
 ##         exp_ext = self._expander_extent = {}
 ##         ext_exp = self._extent_expander = {}

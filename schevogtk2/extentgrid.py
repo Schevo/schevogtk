@@ -35,7 +35,7 @@ class ExtentGrid(grid.Grid):
     gsignal('action-selected', object)
 
     def __init__(self):
-        super(ExtentGrid, self).__init__()
+        grid.Grid.__init__(self)
         self._show_hidden_extents = False
         self._filter = self._model.filter_new()
         self._filter.set_visible_func(self._is_visible)
@@ -113,9 +113,9 @@ type_register(ExtentGrid)
 class PopupMenu(grid.PopupMenu):
 
     def __init__(self, extent_grid):
+        grid.PopupMenu.__init__(self)
         self._extent_grid = extent_grid
         self._extent = None
-        super(PopupMenu, self).__init__()
 
     def get_actions(self):
         extent = self._extent
@@ -128,7 +128,7 @@ class PopupMenu(grid.PopupMenu):
 
     def popup(self, event, instance):
         self.set_extent(instance)
-        super(PopupMenu, self).popup(event, instance)
+        grid.PopupMenu.popup(self, event, instance)
 
     def set_extent(self, extent):
         self.clear()

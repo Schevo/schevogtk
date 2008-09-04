@@ -28,40 +28,35 @@ from schevogtk2.relatedgrid import RelatedGrid
 class EntityGridAdapter(PythonWidgetAdapter):
     object_type = EntityGrid
     def construct(self, name, gtype, properties):
-        return super(EntityGridAdapter, self).construct(name, gtype,
-                                                        properties)
+        return PythonWidgetAdapter.construct(self, name, gtype, properties)
 adapter_registry.register_adapter(EntityGridAdapter)
 
 
 class ExtentGridAdapter(PythonWidgetAdapter):
     object_type = ExtentGrid
     def construct(self, name, gtype, properties):
-        return super(ExtentGridAdapter, self).construct(name, gtype,
-                                                        properties)
+        return PythonWidgetAdapter.construct(self, name, gtype, properties)
 adapter_registry.register_adapter(ExtentGridAdapter)
 
 
 class FieldLabelAdapter(PythonWidgetAdapter):
     object_type = FieldLabel
     def construct(self, name, gtype, properties):
-        return super(FieldLabelAdapter, self).construct(name, gtype,
-                                                        properties)
+        return PythonWidgetAdapter.construct(self, name, gtype, properties)
 adapter_registry.register_adapter(FieldLabelAdapter)
 
 
 class DynamicFieldAdapter(PythonWidgetAdapter):
     object_type = DynamicField
     def construct(self, name, gtype, properties):
-        return super(DynamicFieldAdapter, self).construct(name, gtype,
-                                                          properties)
+        return PythonWidgetAdapter.construct(self, name, gtype, properties)
 adapter_registry.register_adapter(DynamicFieldAdapter)
 
 
 class RelatedGridAdapter(PythonWidgetAdapter):
     object_type = RelatedGrid
     def construct(self, name, gtype, properties):
-        return super(RelatedGridAdapter, self).construct(name, gtype,
-                                                        properties)
+        return PythonWidgetAdapter.construct(self, name, gtype, properties)
 adapter_registry.register_adapter(RelatedGridAdapter)
 
 

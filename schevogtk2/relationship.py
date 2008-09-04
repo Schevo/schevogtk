@@ -18,7 +18,7 @@ class RelationshipWindow(Window):
     gladefile = 'RelationshipNavigator'
 
     def __init__(self, db, entity):
-        super(RelationshipWindow, self).__init__()
+        Window.__init__(self)
         self._db = db
         self._entity = entity
         extent_text = label(entity.sys.extent)

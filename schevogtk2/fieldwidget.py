@@ -36,7 +36,7 @@ class EntityChooser(gtk.HBox):
     gsignal('value-changed')
 
     def __init__(self, db, field, show_buttons=True):
-        super(EntityChooser, self).__init__()
+        gtk.HBox.__init__(self)
         self.db = db
         self.field = field
         self.props.spacing = 1
@@ -314,7 +314,7 @@ class EntityComboBox(BaseComboBox):
     def __init__(self, db, field):
         self.db = db
         self.field = field
-        super(EntityComboBox, self).__init__()
+        BaseComboBox.__init__(self)
         if (self.autoselect_single_valid_value
             and field.valid_values is not None
             and len(field.valid_values) == 1
@@ -437,7 +437,7 @@ class ExtentComboBox(BaseComboBox):
     def __init__(self, db, field):
         self.db = db
         # XXX: Field is currently unused.
-        super(ExtentComboBox, self).__init__()
+        BaseComboBox.__init__(self)
         # Initially, select no extent.
         self.select_item_by_data(UNASSIGNED)
 
@@ -483,7 +483,7 @@ class FileChooser(gtk.EventBox):
     gsignal('value-changed')
 
     def __init__(self, db, field):
-        super(FileChooser, self).__init__()
+        gtk.EventBox.__init__(self)
         self.set_visible_window(False)
         self.db = db
         self.field = field
@@ -582,7 +582,7 @@ class ValueChooser(gtk.HBox):
     gsignal('value-changed')
 
     def __init__(self, db, field):
-        super(ValueChooser, self).__init__()
+        gtk.HBox.__init__(self)
         self.db = db
         self.field = field
         # Always add the combobox.
@@ -608,7 +608,7 @@ class ValueComboBox(BaseComboBox):
     def __init__(self, db, field):
         self.db = db
         self.field = field
-        super(ValueComboBox, self).__init__()
+        BaseComboBox.__init__(self)
         # Select the field's current item.
         self.select_item_by_data(field.get())
 
