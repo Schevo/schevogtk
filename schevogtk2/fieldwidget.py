@@ -447,7 +447,7 @@ class ExtentComboBox(BaseComboBox):
         Override in a subclass to limit to only a few extents rather
         than all extents in the database.
         """
-        return self.db.extents()
+        return self.db.extent_names()
 
     def cell_icon(self, layout, cell, model, row):
         extent = model[row][1]
