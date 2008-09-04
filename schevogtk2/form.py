@@ -50,136 +50,66 @@ class FormBox(gtk.VBox):
         self.header_sep.show()
 
 
-class FormWindow(gtk.Window):
+class FormBoxWithButtons(gtk.VBox):
+
+    gsignal('cancel-clicked')
+    gsignal('close-clicked')
+    gsignal('edit-clicked')
+    gsignal('ok-clicked')
 
     def __init__(self):
-        gtk.Window.__init__(self)
-        self._bindings = {}
-        self._db = None
-        self._model = None
-        self.tx_result = None
-        self.vbox = vbox = gtk.VBox()
-        vbox.set_spacing(5)
-        vbox.set_border_width(5)
-        self.set_default_size(400, -1)
-        vbox.show()
-        self.form_box = fbox = FormBox()
-        fbox.show()
-        self.footer_sep = fsep = gtk.HSeparator()
-        fsep.show()
-        self.button_box = bbox = gtk.HButtonBox()
-        bbox.set_layout(gtk.BUTTONBOX_END)
-        bbox.set_spacing(5)
-        bbox.show()
-        # OK
-        self.ok_button = button = gtk.Button(stock=gtk.STOCK_OK)
+        gtk.VBox.__init__(self)
+        self.db = None
+        self.model = None
+        # self
+        self.set_spacing(5)
+        self.set_border_width(5)
+        #   form_box
+        form_box = FormBox()
+        self.form_box = form_box
+        form_box.show()
+        self.pack_start(form_box, expand=True, fill=True, padding=0)
+        #   footer_sep
+        footer_sep = gtk.HSeparator()
+        footer_sep.show()
+        self.pack_start(footer_sep, expand=False, fill=False, padding=0)
+        #   button_box
+        button_box = gtk.HButtonBox()
+        button_box.set_layout(gtk.BUTTONBOX_END)
+        button_box.set_spacing(5)
+        button_box.show()
+        self.pack_start(button_box, expand=False, fill=True, padding=0)
+        #     ok_button
+        button = gtk.Button(stock=gtk.STOCK_OK)
+        self.ok_button = button
         button.connect('clicked', self.on_ok_button__clicked)
-        self.button_box.add(button)
-        # Cancel
-        self.cancel_button = button = gtk.Button(stock=gtk.STOCK_CANCEL)
+        button_box.add(button)
+        #     cancel_button
+        button = gtk.Button(stock=gtk.STOCK_CANCEL)
+        self.cancel_button = button
         button.connect('clicked', self.on_cancel_button__clicked)
-        self.button_box.add(button)
-        # Edit
-        self.edit_button = button = gtk.Button(stock=gtk.STOCK_EDIT)
+        button_box.add(button)
+        #     edit_button
+        button = gtk.Button(stock=gtk.STOCK_EDIT)
+        self.edit_button = button
         button.connect('clicked', self.on_edit_button__clicked)
-        self.button_box.add(button)
-        # Close
-        self.close_button = button = gtk.Button(stock=gtk.STOCK_CLOSE)
+        button_box.add(button)
+        #     close_button
+        button = gtk.Button(stock=gtk.STOCK_CLOSE)
+        self.close_button = button
         button.connect('clicked', self.on_close_button__clicked)
-        self.button_box.add(button)
-        vbox.pack_start(fbox, expand=True, fill=True, padding=0)
-        vbox.pack_start(fsep, expand=False, fill=False, padding=0)
-        vbox.pack_start(bbox, expand=False, fill=True, padding=0)
-        self.add(vbox)
-        self.connect('hide', self.quit)
-        self.connect('key-press-event', self._on_key_press_event)
-        self._set_bindings()
-
-    def on_cancel_button__clicked(self, widget):
-        self.hide()
-
-    def on_close_button__clicked(self, widget):
-        self.hide()
-
-    def on_edit_button__clicked(self, widget):
-        model = self._model
-        action = get_method_action(model, 't', 'update')
-        update_tx = action.method()
-        dialog = get_tx_dialog(
-            parent=self,
-            db=self._db,
-            tx=update_tx,
-            action=action,
-            get_value_handlers=self._get_value_handlers,
-            set_field_handlers=self._set_field_handlers,
-            )
-        dialog.run()
-        tx_result = dialog.tx_result
-        dialog.destroy()
-        # Only update field widgets if what we're viewing was what was
-        # updated.
-        if tx_result == model:
-            self.set_fields(
-                tx_result,
-                tx_result.sys.field_map().values(),
-                self._get_value_handlers,
-                self._set_field_handlers,
-                )
-
-    def _on_key_press_event(self, window, event):
-        keyval = event.keyval
-        mask = event.state & gdk.MODIFIER_MASK
-        binding = (keyval, mask)
-        if binding in self._bindings:
-            func = self._bindings[binding]
-            func()
-
-    def on_ok_button__clicked(self, widget):
-        with FriendlyErrorDialog(self):
-            tx = self._model
-            for name in tx.f:
-                field = tx.f[name]
-                if field.readonly or field.fget or field.hidden:
-                    continue
-                widget = field.x.control_widget
-                value = widget.get_value()
-                setattr(tx, name, value)
-            self.tx_result = self._db.execute(tx)
-            self.hide()
-
-    def quit(self, *args):
-        gtk.main_quit()
-
-    def run(self):
-        self.show()
-        gtk.main()
-
-    def _set_bindings(self):
-        items = [
-            ('<Control>F4', self.hide),
-            ('Escape', self.hide),
-            ]
-        self._bindings = dict([(gtk.accelerator_parse(name), func)
-                               for name, func in items])
-        # Hack to support these with CapsLock on.
-        for name, func in items:
-            keyval, mod = gtk.accelerator_parse(name)
-            mod = mod | gtk.gdk.LOCK_MASK
-            self._bindings[(keyval, mod)] = func
+        button_box.add(button)
 
     def set_db(self, db):
-        self._db = db
-
-    def set_header_text(self, text):
-        self.form_box.set_header_text(text)
+        self.db = db
 
     def set_fields(self, model, fields, get_value_handlers, set_field_handlers):
-        db = self._db
-        self._model = model
-        self._get_value_handlers = get_value_handlers
-        self._set_field_handlers = set_field_handlers
-        self.form_box.set_fields(self._db, fields,
-                                 get_value_handlers, set_field_handlers)
+        db = self.db
+        self.model = model
+        self.get_value_handlers = get_value_handlers
+        self.set_field_handlers = set_field_handlers
+        self.form_box.set_fields(
+            db, fields, get_value_handlers, set_field_handlers)
         # Set up handlers so that each field's widget will cause other
         # widgets to update.
         def on__changed(widget, changed_field):
@@ -226,9 +156,24 @@ class FormWindow(gtk.Window):
                 self.edit_button.hide()
             self.close_button.show()
 
+    def set_header_text(self, text):
+        self.form_box.set_header_text(text)
+
+    def on_cancel_button__clicked(self, button):
+        self.emit('cancel-clicked')
+
+    def on_close_button__clicked(self, button):
+        self.emit('close-clicked')
+
+    def on_edit_button__clicked(self, button):
+        self.emit('edit-clicked')
+
+    def on_ok_button__clicked(self, button):
+        self.emit('ok-clicked')
+
     def _update_ok_button(self):
         button = self.ok_button
-        model = self._model
+        model = self.model
         # First check for changed fields.
         if (isinstance(model, schevo.base.Transaction)
             and model.sys.requires_changes
@@ -249,6 +194,108 @@ class FormWindow(gtk.Window):
         # All required fields were assigned values, and the
         # transaction will allow execution attempt.
         button.props.sensitive = True
+
+
+class FormWindow(gtk.Window):
+
+    def __init__(self):
+        gtk.Window.__init__(self)
+        self._bindings = {}
+        self.tx_result = None
+        self.set_default_size(400, -1)
+        form_box = FormBoxWithButtons()
+        self.form_box = form_box
+        form_box.connect('cancel-clicked', self.on_form_box__cancel_clicked)
+        form_box.connect('close-clicked', self.on_form_box__close_clicked)
+        form_box.connect('edit-clicked', self.on_form_box__edit_clicked)
+        form_box.connect('ok-clicked', self.on_form_box__ok_clicked)
+        form_box.show()
+        self.add(form_box)
+        self.connect('hide', self.quit)
+        self.connect('key-press-event', self._on_key_press_event)
+        self._set_bindings()
+
+    def on_form_box__cancel_clicked(self, form_box):
+        self.hide()
+
+    def on_form_box__close_clicked(self, form_box):
+        self.hide()
+
+    def on_form_box__edit_clicked(self, form_box):
+        model = form_box.model
+        action = get_method_action(model, 't', 'update')
+        update_tx = action.method()
+        dialog = get_tx_dialog(
+            parent=self,
+            db=form_box.db,
+            tx=update_tx,
+            action=action,
+            get_value_handlers=form_box.get_value_handlers,
+            set_field_handlers=form_box.set_field_handlers,
+            )
+        dialog.run()
+        tx_result = dialog.tx_result
+        dialog.destroy()
+        # Only update field widgets if what we're viewing was what was
+        # updated.
+        if tx_result == model:
+            self.set_fields(
+                tx_result,
+                tx_result.sys.field_map().values(),
+                form_box.get_value_handlers,
+                form_box.set_field_handlers,
+                )
+
+    def on_form_box__ok_clicked(self, form_box):
+        with FriendlyErrorDialog(self):
+            tx = form_box.model
+            for name in tx.f:
+                field = tx.f[name]
+                if field.readonly or field.fget or field.hidden:
+                    continue
+                widget = field.x.control_widget
+                value = widget.get_value()
+                setattr(tx, name, value)
+            self.tx_result = form_box.db.execute(tx)
+            self.hide()
+
+    def _on_key_press_event(self, window, event):
+        keyval = event.keyval
+        mask = event.state & gdk.MODIFIER_MASK
+        binding = (keyval, mask)
+        if binding in self._bindings:
+            func = self._bindings[binding]
+            func()
+
+    def quit(self, *args):
+        gtk.main_quit()
+
+    def run(self):
+        self.show()
+        gtk.main()
+
+    def _set_bindings(self):
+        items = [
+            ('<Control>F4', self.hide),
+            ('Escape', self.hide),
+            ]
+        self._bindings = dict([(gtk.accelerator_parse(name), func)
+                               for name, func in items])
+        # Hack to support these with CapsLock on.
+        for name, func in items:
+            keyval, mod = gtk.accelerator_parse(name)
+            mod = mod | gtk.gdk.LOCK_MASK
+            self._bindings[(keyval, mod)] = func
+
+    def set_db(self, db):
+        self.form_box.set_db(db)
+
+    def set_header_text(self, text):
+        self.form_box.set_header_text(text)
+
+    def set_fields(self, model, fields, get_value_handlers, set_field_handlers):
+        self.form_box.set_fields(
+            model, fields, get_value_handlers, set_field_handlers)
 
 
 class ExtentChoiceBox(gtk.VButtonBox):
