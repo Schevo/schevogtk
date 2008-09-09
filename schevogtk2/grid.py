@@ -58,7 +58,7 @@ class Column(object):
         strikethrough = model[row_iter][STRIKETHROUGH_COLUMN]
         cell.set_property('strikethrough', strikethrough)
         try:
-            data = getattr(instance, self.attribute)
+            data = self.cell_data_getattr(instance, self.attribute)
         except EntityDoesNotExist:
             data = None
         if self.call:
@@ -66,7 +66,7 @@ class Column(object):
         prop = self.cell_prop
         if data is not None:
             if prop == 'text':
-                data = str(data)
+                data = unicode(data)
             elif prop == 'pixbuf':
                 loader = gtk.gdk.PixbufLoader()
                 loader.write(data)
@@ -75,6 +75,8 @@ class Column(object):
             elif prop == 'active':
                 data = bool(data)
         cell.set_property(prop, data)
+
+    cell_data_getattr = staticmethod(getattr)
 
     def cell_icon(self, column, cell, model, row_iter):
         instance = model[row_iter][OBJECT_COLUMN]

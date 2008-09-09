@@ -24,6 +24,12 @@ import gtk
 from schevogtk2.grid import OBJECT_COLUMN
 
 
+class FieldColumn(grid.Column):
+
+    def cell_data_getattr(self, instance, attribute):
+        return getattr(instance.f, attribute)
+
+
 class EntityColumn(grid.Column):
 
     _has_icon = True
@@ -345,7 +351,7 @@ class EntityGrid(grid.Grid):
                     column = grid.Column(field_name, title, data_type,
                                          type='pixbuf')
                 else:
-                    column = grid.Column(field_name, title, data_type)
+                    column = FieldColumn(field_name, title, data_type)
                 columns.append(column)
         return columns
 
