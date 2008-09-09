@@ -217,6 +217,11 @@ class EntityGrid(grid.Grid):
 
     def select_delete_action(self):
         entity = self.get_selected()
+        if isinstance(entity, list):
+            if len(entity) == 1:
+                entity = entity[0]
+            else:
+                entity = None
         if entity is not None:
             method_name = 'delete'
             if method_name in entity.t:
@@ -225,6 +230,11 @@ class EntityGrid(grid.Grid):
 
     def select_update_action(self):
         entity = self.get_selected()
+        if isinstance(entity, list):
+            if len(entity) == 1:
+                entity = entity[0]
+            else:
+                entity = None
         if entity is not None:
             method_name = 'update'
             if method_name in entity.t:
@@ -233,6 +243,11 @@ class EntityGrid(grid.Grid):
 
     def select_view_action(self):
         entity = self.get_selected()
+        if isinstance(entity, list):
+            if len(entity) == 1:
+                entity = entity[0]
+            else:
+                entity = None
         if (entity is not None
             and (entity._hidden_views is None
                  or 'default' not in entity._hidden_views
