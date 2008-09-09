@@ -365,12 +365,22 @@ class Grid(gtk.VBox):
     def _on_view__button_release_event(self, view, event):
         if event.button == 3 and self._row_popup_menu is not None:
             instance = self.get_selected()
+            if isinstance(instance, list):
+                if len(instance) == 1:
+                    instance = instance[0]
+                else:
+                    instance = None
             self._row_popup_menu.popup(event, instance)
 
     def _on_view__popup_menu(self, view):
         if self._row_popup_menu is not None:
             event = None
             instance = self.get_selected()
+            if isinstance(instance, list):
+                if len(instance) == 1:
+                    instance = instance[0]
+                else:
+                    instance = None
             self._row_popup_menu.popup(event, instance)
             return True
 
