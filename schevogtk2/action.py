@@ -30,6 +30,7 @@ class Action(object):
     method = None
     name = ''
     related = None
+    selection = None
     type = ''
 
     @property
@@ -112,13 +113,14 @@ def get_tx_actions(instance, related=None):
             actions.append(action)
     return sorted(actions)
 
-def get_tx_selectionmethod_actions(instance):
+def get_tx_selectionmethod_actions(instance, selection):
     """Return list of selectionmethod transactions for an extent."""
     actions = []
     if instance is not None:
         t_methods = set(instance.t(isselectionmethod))
         for method_name in sorted(t_methods):
             action = get_method_action(instance, 't', method_name)
+            action.selection = selection
             actions.append(action)
     return sorted(actions)
 

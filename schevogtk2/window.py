@@ -13,8 +13,9 @@ from gtk import gdk
 
 import os
 
-import schevo.database
 from schevo.constant import UNASSIGNED
+import schevo.database
+from schevo.decorator import isselectionmethod
 
 from schevogtk2.cursor import TemporaryCursor
 from schevogtk2 import dialog
@@ -100,7 +101,10 @@ class BaseWindow(object):
             entity = action.instance
             self.run_relationship_dialog(entity)
         elif action.type == 'transaction':
-            tx = action.method()
+            if not isselectionmethod(action.method):
+                tx = action.method()
+            else:
+                tx = action.method(action.selection)
             if action.related is not None:
                 # Initialize the related field if the transaction
                 # setup hasn't already done so or set it to readonly.

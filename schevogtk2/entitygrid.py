@@ -430,8 +430,9 @@ class PopupMenu(grid.PopupMenu):
             items.extend(actions)
         # Extent tx selectionmethod actions.
         selection_mode = self._entity_grid._view.get_selection().get_mode()
+        selection = self._entity_grid.get_selected()
         if selection_mode == gtk.SELECTION_MULTIPLE:
-            actions = get_tx_selectionmethod_actions(extent)
+            actions = get_tx_selectionmethod_actions(extent, selection)
             if actions:
                 if items:
                     items.append(None)
