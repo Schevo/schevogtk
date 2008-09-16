@@ -14,7 +14,8 @@ from schevo.error import EntityDoesNotExist
 
 from schevogtk2.action import (
     get_method_action, get_relationship_actions,
-    get_tx_actions, get_view_action, get_view_actions)
+    get_tx_actions, get_tx_selectionmethod_actions,
+    get_view_action, get_view_actions)
 from schevogtk2 import grid
 from schevogtk2 import icon
 from schevogtk2.utils import gsignal, type_register
@@ -421,6 +422,12 @@ class PopupMenu(grid.PopupMenu):
                 items.extend(actions)
         # Entity tx actions.
         actions = get_tx_actions(entity)
+        if actions:
+            if items:
+                items.append(None)
+            items.extend(actions)
+        # Extent tx selectionmethod actions.
+        actions = get_tx_selectionmethod_actions(extent)
         if actions:
             if items:
                 items.append(None)

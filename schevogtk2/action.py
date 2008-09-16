@@ -7,6 +7,7 @@ import sys
 from schevo.lib import optimize
 
 from schevo.base import Entity, Extent, View
+from schevo.decorator import isselectionmethod
 from schevo.label import label
 
 
@@ -108,6 +109,16 @@ def get_tx_actions(instance, related=None):
         t_methods = set(instance.t)
         for method_name in sorted(t_methods):
             action = get_method_action(instance, 't', method_name, related)
+            actions.append(action)
+    return sorted(actions)
+
+def get_tx_selectionmethod_actions(instance):
+    """Return list of selectionmethod transactions for an extent."""
+    actions = []
+    if instance is not None:
+        t_methods = set(instance.t(isselectionmethod))
+        for method_name in sorted(t_methods):
+            action = get_method_action(instance, 't', method_name)
             actions.append(action)
     return sorted(actions)
 
