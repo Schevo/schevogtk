@@ -84,7 +84,7 @@ class EntityGrid(grid.Grid):
                 self._view.set_model(self._model)
             self.set_columns(columns)
         # Use multi-selection for entity grids by default.
-        self._view.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+        self.set_selection_mode(gtk.SELECTION_MULTIPLE)
 
     def add_row(self, oid):
         instance = self._extent[oid]

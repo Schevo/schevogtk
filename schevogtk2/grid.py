@@ -184,8 +184,8 @@ class Grid(gtk.VBox):
         scrolled.add(view)
         self.set_columns(columns)
         selection = view.get_selection()
-        selection.set_mode(gtk.SELECTION_BROWSE)
         selection.connect('changed', self._on_selection__changed)
+        self.set_selection_mode(gtk.SELECTION_BROWSE)
 
     def add_row(self, instance):
         color = self.row_background_color(instance)
@@ -328,6 +328,9 @@ class Grid(gtk.VBox):
         view.set_search_entry(entry)
         entry_box.show()
         entry.grab_focus()
+
+    def set_selection_mode(self, mode):
+        self._view.get_selection().set_mode(mode)
 
     def set_visible_func(self, func, data=None):
         self._filter = self._model.filter_new()
