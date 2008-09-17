@@ -174,6 +174,8 @@ class Grid(gtk.VBox):
         model.set_default_sort_func(model_default_sort)
         self._view = view = gtk.TreeView(model)
         view.connect(
+            'button-press-event', self._on_view__button_press_event)
+        view.connect(
             'button-release-event', self._on_view__button_release_event)
         view.connect_after(
             'key-press-event', self._after_view__key_press_event)
@@ -329,6 +331,9 @@ class Grid(gtk.VBox):
         entry_box.show()
         entry.grab_focus()
 
+    def get_selection_mode(self):
+        return self._view.get_selection().get_mode()
+
     def set_selection_mode(self, mode):
         self._view.get_selection().set_mode(mode)
 
@@ -364,6 +369,30 @@ class Grid(gtk.VBox):
         """Transform selection::changed into selection-changed."""
         item = self.get_selected()
         self.emit('selection-changed', item)
+
+    def _on_view__button_press_event(self, view, event):
+        if self.get_selection_mode() == gtk.SELECTION_MULTIPLE:
+            if event.button == 3 and self._row_popup_menu is not None:
+                # Determine if mouse cursor is over a selected item.
+                #
+                # If it is, do not allow the event to propagate, so
+                # that the current multiselection is kept.
+                #
+                # If not, allow the event to propagate, so that the
+                # non-selected item is selected before the menu
+                # appears.
+                x, y = event.get_coords()
+                x, y = view.widget_to_tree_coords(int(x), int(y))
+                path = view.get_path_at_pos(x, y)
+                if path is not None:
+                    path, col, cell_x, cell_y = path
+                    row = self._model[path]
+                    item = row[OBJECT_COLUMN]
+                    cursor_over_selected_item = item in self.get_selected()
+                    return cursor_over_selected_item
+                else:
+                    # Not over any row; allow event to propagate.
+                    return False
 
     def _on_view__button_release_event(self, view, event):
         if event.button == 3 and self._row_popup_menu is not None:
