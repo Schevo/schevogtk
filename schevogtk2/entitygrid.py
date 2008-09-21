@@ -118,7 +118,7 @@ class EntityGrid(grid.Grid):
                 self.remove_row(oid)
             for oid in summary.creates.get(self._extent.name, []):
                 self.add_row(oid)
-            if isinstance(result, self._extent._EntityClass):
+            if isinstance(result, self._extent.EntityClass):
                 self.select_row(result.sys.oid)
             self.columns_autosize_if_needed()
 
@@ -428,11 +428,13 @@ class PopupMenu(grid.PopupMenu):
             if items:
                 items.append(None)
             items.extend(actions)
-        # Extent tx selectionmethod actions.
+        # Tx selectionmethod actions.
         selection_mode = self._entity_grid._view.get_selection().get_mode()
         selection = self._entity_grid.get_selected()
         if selection_mode == gtk.SELECTION_MULTIPLE:
-            actions = get_tx_selectionmethod_actions(extent, selection)
+            actions = get_tx_selectionmethod_actions(entity, selection)
+            actions.extend(
+                get_tx_selectionmethod_actions(extent, selection))
             if actions:
                 if items:
                     items.append(None)
