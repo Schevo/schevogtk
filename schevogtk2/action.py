@@ -7,7 +7,7 @@ import sys
 from schevo.lib import optimize
 
 from schevo.base import Entity, Extent, View
-from schevo.introspect import isselectionmethod
+from schevo.introspect import commontype, isselectionmethod
 from schevo.label import label
 
 
@@ -113,16 +113,18 @@ def get_tx_actions(instance, related=None):
             actions.append(action)
     return sorted(actions)
 
-def get_tx_selectionmethod_actions(instance, selection):
+def get_tx_selectionmethod_actions(selection):
     """Return list of selectionmethod transactions for an extent."""
-    actions = []
-    if instance is not None:
-        t_methods = set(instance.t(isselectionmethod))
-        for method_name in sorted(t_methods):
-            action = get_method_action(instance, 't', method_name)
+    cls = commontype(selection)
+    if cls is None:
+        return []
+    else:
+        actions = []
+        for method_name in sorted(cls.t):
+            action = get_method_action(cls, 't', method_name)
             action.selection = selection
             actions.append(action)
-    return sorted(actions)
+        return sorted(actions)
 
 def get_view_actions(entity):
     """Return list of view actions for an entity instance."""
