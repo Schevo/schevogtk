@@ -7,7 +7,7 @@ import sys
 from schevo.lib import optimize
 
 from schevo.base import Entity, Extent, View
-from schevo.decorator import isselectionmethod
+from schevo.introspect import isselectionmethod
 from schevo.label import label
 
 

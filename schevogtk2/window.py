@@ -15,7 +15,7 @@ import os
 
 from schevo.constant import UNASSIGNED
 import schevo.database
-from schevo.decorator import isselectionmethod
+from schevo.introspect import isselectionmethod
 
 from schevogtk2.cursor import TemporaryCursor
 from schevogtk2 import dialog
