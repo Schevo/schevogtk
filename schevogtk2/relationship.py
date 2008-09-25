@@ -21,7 +21,7 @@ class RelationshipWindow(Window):
         Window.__init__(self)
         self._db = db
         self._entity = entity
-        extent_text = label(entity.sys.extent)
+        extent_text = label(entity.s.extent)
         text = u'%s :: %s' % (extent_text, entity)
         markup = u'<b>%s</b>' % escape(text)
         self.header_label.set_markup(markup)

@@ -47,7 +47,7 @@ class EntityColumn(grid.Column):
             cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
             cell.set_property('visible', False)
         else:
-            extent = entity.sys.extent
+            extent = entity.s.extent
             pixbuf = icon.small_pixbuf(self, extent)
             cell.set_property('pixbuf', pixbuf)
             cell.set_property('visible', True)
@@ -113,13 +113,13 @@ class EntityGrid(grid.Grid):
 
     def reflect_changes(self, result, tx):
         if self._extent is not None:
-            summary = tx.sys.summarize()
+            summary = tx.s.summarize()
             for oid in summary.deletes.get(self._extent.name, []):
                 self.remove_row(oid)
             for oid in summary.creates.get(self._extent.name, []):
                 self.add_row(oid)
             if isinstance(result, self._extent.EntityClass):
-                self.select_row(result.sys.oid)
+                self.select_row(result.s.oid)
             self.columns_autosize_if_needed()
 
     def refresh(self):
@@ -155,10 +155,10 @@ class EntityGrid(grid.Grid):
                 else:
                     self.select_row(identity)
         elif related is not None:
-            if related.entity.sys.exists:
+            if related.entity.s.exists:
                 if extent is not None:
-                    results = related.entity.sys.links(extent.name,
-                                                       related.field_name)
+                    results = related.entity.s.links(extent.name,
+                                                     related.field_name)
                     oids = [entity._oid for entity in results]
                     self.refresh_add_delete(oids)
             else:
@@ -330,8 +330,8 @@ class EntityGrid(grid.Grid):
                 self._related = related
                 self._row_popup_menu.set_extent(extent)
                 columns = self._get_columns_for_field_spec(extent.field_spec)
-                results = related.entity.sys.links(extent.name,
-                                                   related.field_name)
+                results = related.entity.s.links(extent.name,
+                                                 related.field_name)
                 self.set_columns(columns)
                 self.set_rows(results)
 

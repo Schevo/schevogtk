@@ -176,8 +176,8 @@ class FormBoxWithButtons(gtk.VBox):
         model = self.model
         # First check for changed fields.
         if (isinstance(model, schevo.base.Transaction)
-            and model.sys.requires_changes
-            and not model.sys.field_was_changed
+            and model.s.requires_changes
+            and not model.s.field_was_changed
             ):
             button.props.sensitive = False
             return
@@ -241,7 +241,7 @@ class FormWindow(gtk.Window):
         if tx_result == model:
             self.set_fields(
                 tx_result,
-                tx_result.sys.field_map().values(),
+                tx_result.s.field_map().values(),
                 form_box.get_value_handlers,
                 form_box.set_field_handlers,
                 )
@@ -390,7 +390,7 @@ def get_custom_view_dialog(WindowClass, parent, db, entity, action):
 
 def get_default_tx_dialog(parent, db, tx,
                           get_value_handlers, set_field_handlers):
-    extent_name = tx.sys.extent_name
+    extent_name = tx.s.extent_name
     if extent_name is None:
         title = u'%s' % label(tx)
         text = u'%s' % label(tx)
@@ -398,7 +398,7 @@ def get_default_tx_dialog(parent, db, tx,
         extent_label = label(db.extent(extent_name))
         title = u'%s :: %s' % (label(tx), extent_label)
         text = u'%s :: %s' % (label(tx), extent_label)
-    field_map = tx.sys.field_map()
+    field_map = tx.s.field_map()
     fields = field_map.values()
     dialog = get_dialog(title, parent, text, db, tx, fields,
                         get_value_handlers, set_field_handlers)
@@ -406,7 +406,7 @@ def get_default_tx_dialog(parent, db, tx,
 
 def get_default_view_dialog(parent, db, entity, action,
                             get_value_handlers, set_field_handlers):
-    extent_text = label(entity.sys.extent)
+    extent_text = label(entity.s.extent)
     title = u'View :: %s' % (extent_text, )
     text = u'View :: %s :: %s' % (extent_text, entity)
     def include(field):
@@ -416,7 +416,7 @@ def get_default_view_dialog(parent, db, entity, action,
             return False
         else:
             return True
-    f_map = entity.sys.field_map(include)
+    f_map = entity.s.field_map(include)
     fields = f_map.values()
     dialog = get_dialog(title, parent, text, db, entity, fields,
                         get_value_handlers, set_field_handlers)

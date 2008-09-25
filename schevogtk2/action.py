@@ -70,12 +70,12 @@ def get_method_action(instance, namespace_id, method_name, related=None):
             # prefixes.
             if isinstance(instance, Entity):
                 action.label = u'%s %s...' % (
-                    method_label, label(instance.sys.extent))
+                    method_label, label(instance.s.extent))
             elif isinstance(instance, Extent):
                 action.label = u'%s %s...' % (method_label, label(instance))
             elif isinstance(instance, View):
                 action.label = u'%s %s...' % (
-                    method_label, label(instance.sys.entity.sys.extent))
+                    method_label, label(instance.s.entity.s.extent))
     action.method = method
     action.name = method_name
     action.related = related
@@ -90,7 +90,7 @@ def get_relationship_actions(entity):
     actions = []
     if entity is not None:
         items = []
-        if entity.sys.extent.relationships:
+        if entity.s.extent.relationships:
             items = [
                 'Relationships...',
                 ]

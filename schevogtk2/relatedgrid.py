@@ -33,7 +33,7 @@ class Related(object):
             return cmp(hash(self), hash(other))
 
     def __len__(self):
-        return self.entity.sys.count(self.extent.name, self.field_name)
+        return self.entity.s.count(self.extent.name, self.field_name)
 
     def __repr__(self):
         return '%s %s %s' % (self.entity, self.extent, self.field_name)
@@ -88,7 +88,7 @@ class RelatedGrid(grid.Grid):
     def set_entity(self, db, entity):
         self._db = db
         relateds = []
-        for extent_name, field_name in entity.sys.extent.relationships:
+        for extent_name, field_name in entity.s.extent.relationships:
             extent = db.extent(extent_name)
             related = Related(entity, extent, field_name)
             relateds.append(related)

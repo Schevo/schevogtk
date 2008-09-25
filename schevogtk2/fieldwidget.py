@@ -335,7 +335,7 @@ class EntityComboBox(BaseComboBox):
             cell.set_property('stock_size', gtk.ICON_SIZE_SMALL_TOOLBAR)
             cell.set_property('visible', False)
         else:
-            extent = entity.sys.extent
+            extent = entity.s.extent
             pixbuf = icon.small_pixbuf(self, extent)
             cell.set_property('pixbuf', pixbuf)
             cell.set_property('visible', True)
@@ -363,7 +363,7 @@ class EntityComboBox(BaseComboBox):
                 if entity is UNASSIGNED:
                     continue
                 if allow_multiple:
-                    extent_text = label(entity.sys.extent)
+                    extent_text = label(entity.s.extent)
                     text = u'%s :: %s' % (entity_label(entity), extent_text)
                 else:
                     text = u'%s' % (entity_label(entity), )
@@ -383,7 +383,7 @@ class EntityComboBox(BaseComboBox):
                 if entity in preferred_values:
                     continue
                 if allow_multiple:
-                    extent_text = label(entity.sys.extent)
+                    extent_text = label(entity.s.extent)
                     text = u'%s :: %s' % (entity_label(entity), extent_text)
                 else:
                     text = u'%s' % (entity_label(entity), )
@@ -410,7 +410,7 @@ class EntityComboBox(BaseComboBox):
             items.append((None, None))
             # Invalid, but current value.
             if allow_multiple:
-                extent_text = label(entity.sys.extent)
+                extent_text = label(entity.s.extent)
                 text = u'%s :: %s' % (entity_label(entity), extent_text)
             else:
                 text = u'%s' % (entity_label(entity), )

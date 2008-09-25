@@ -89,7 +89,7 @@ def show_error(parent, exc_type, exc_val, exc_tb):
                 restrictions = sorted(exc_val.restrictions)
                 ref_extents = set()
                 for entity, ref_entity, ref_field_name in restrictions:
-                    ref_extents.add(ref_entity.sys.extent)
+                    ref_extents.add(ref_entity.s.extent)
                 for extent in sorted(ref_extents):
                     markup.append(BULLET + '<b>%s</b>\n' % plural(extent))
             elif issubclass(exc_type, schevo.error.FieldReadonly):

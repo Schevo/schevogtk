@@ -114,7 +114,7 @@ class BaseWindow(object):
                     setattr(tx, field_name, action.related.entity)
             self.before_tx(tx, action)
             tx_result = self.run_tx_dialog(tx, action)
-            if tx.sys.executed:
+            if tx.s.executed:
                 reflect_changes = getattr(widget, 'reflect_changes', None)
                 if reflect_changes:
                     reflect_changes(tx_result, tx)
