@@ -43,9 +43,9 @@ class ExtentGrid(grid.Grid):
         self._row_popup_menu = PopupMenu(self)
         self._set_bindings()
         columns = self._columns = []
-        column = ExtentColumn('_plural', 'Name', str)
+        column = ExtentColumn(self, '_plural', 'Name', str)
         columns.append(column)
-        column = grid.Column('__len__', 'Qty', int, call=True)
+        column = grid.Column(self, '__len__', 'Qty', int, call=True)
         columns.append(column)
         self.set_columns(columns)
 

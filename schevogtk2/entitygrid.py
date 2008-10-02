@@ -348,10 +348,10 @@ class EntityGrid(grid.Grid):
     def _get_columns_for_field_spec(self, field_spec):
         columns = []
         if '_oid' not in self._hidden:
-            column = grid.Column('_oid', 'OID', data_type=int)
+            column = grid.Column(self, '_oid', 'OID', data_type=int)
             columns.append(column)
         if '_rev' not in self._hidden:
-            column = grid.Column('_rev', 'Rev', data_type=int)
+            column = grid.Column(self, '_rev', 'Rev', data_type=int)
             columns.append(column)
         for field_name, FieldClass in field_spec.iteritems():
             if field_name in self._hidden:
@@ -364,12 +364,12 @@ class EntityGrid(grid.Grid):
                 data_type = FieldClass.data_type
                 title = label(FieldClass)
                 if issubclass(FieldClass, field.Entity):
-                    column = EntityColumn(field_name, title, data_type)
+                    column = EntityColumn(self, field_name, title, data_type)
                 elif issubclass(FieldClass, field.Image):
-                    column = grid.Column(field_name, title, data_type,
+                    column = grid.Column(self, field_name, title, data_type,
                                          type='pixbuf')
                 else:
-                    column = FieldColumn(field_name, title, data_type)
+                    column = FieldColumn(self, field_name, title, data_type)
                 columns.append(column)
         return columns
 

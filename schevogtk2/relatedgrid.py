@@ -64,11 +64,11 @@ class RelatedGrid(grid.Grid):
         self._row_popup_menu = PopupMenu(self)
         self._set_bindings()
         columns = []
-        column = RelatedExtentColumn('plural', 'Name', str)
+        column = RelatedExtentColumn(self, 'plural', 'Name', str)
         columns.append(column)
-        column = grid.Column('field_label', 'Field', str)
+        column = grid.Column(self, 'field_label', 'Field', str)
         columns.append(column)
-        column = grid.Column('__len__', 'Qty', int, call=True)
+        column = grid.Column(self, '__len__', 'Qty', int, call=True)
         columns.append(column)
         self.set_columns(columns)
 

@@ -33,7 +33,9 @@ class Column(object):
     _has_icon = False
     _style = gtk.Style()
 
-    def __init__(self, attribute, title, data_type, type='text', call=False):
+    def __init__(self, grid, attribute, title, data_type,
+                 type='text', call=False):
+        self.grid = grid
         self.attribute = attribute
         self.title = title
         self.data_type = data_type
@@ -54,7 +56,9 @@ class Column(object):
     def cell_data(self, column, cell, model, row_iter):
         instance = model[row_iter][OBJECT_COLUMN]
         color = model[row_iter][COLOR_COLUMN]
-        cell.set_property('cell-background', color)
+        limits = self.grid.limit_row_background_color
+        if limits is not None and self.attribute in limits:
+            cell.set_property('cell-background', color)
         strikethrough = model[row_iter][STRIKETHROUGH_COLUMN]
         cell.set_property('strikethrough', strikethrough)
         try:
@@ -81,7 +85,9 @@ class Column(object):
     def cell_icon(self, column, cell, model, row_iter):
         instance = model[row_iter][OBJECT_COLUMN]
         color = model[row_iter][COLOR_COLUMN]
-        cell.set_property('cell-background', color)
+        limits = self.grid.limit_row_background_color
+        if limits is not None and self.attribute in limits:
+            cell.set_property('cell-background', color)
 
     def create_column(self, grid):
         self.is_row_strikethrough = grid.is_row_strikethrough
@@ -141,6 +147,8 @@ class Grid(gtk.VBox):
     gsignal('row-activated', object)
 
     gsignal('selection-changed', object)
+
+    limit_row_background_color = None
 
     search_equal_func = None
 
