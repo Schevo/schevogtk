@@ -119,11 +119,16 @@ def get_tx_selectionmethod_actions(selection):
     if cls is None:
         return []
     else:
+        if getattr(cls, '_hidden_t_selectionmethods', None) is not None:
+            hidden = cls._hidden_t_selectionmethods(selection) or []
+        else:
+            hidden = []
         actions = []
         for method_name in sorted(cls.t):
-            action = get_method_action(cls, 't', method_name)
-            action.selection = selection
-            actions.append(action)
+            if method_name not in hidden:
+                action = get_method_action(cls, 't', method_name)
+                action.selection = selection
+                actions.append(action)
         return sorted(actions)
 
 def get_view_actions(entity):
