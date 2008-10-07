@@ -283,7 +283,8 @@ class EntityGrid(grid.Grid):
                 if first_row is None:
                     first_row = row_iter
         # XXX: Need to focus first row here.
-        pass
+        if first_row is not None:
+            self._view.scroll_to_cell(self._model[first_row].path)
 
     def set_all_x(self, name, value):
         """Set x.name to value for all entities."""
