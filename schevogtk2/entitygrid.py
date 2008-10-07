@@ -21,6 +21,7 @@ from schevogtk2 import grid
 from schevogtk2 import icon
 from schevogtk2.utils import gsignal, type_register
 
+import gobject
 import gtk
 
 from schevogtk2.grid import OBJECT_COLUMN
@@ -138,6 +139,7 @@ class EntityGrid(grid.Grid):
             else:
                 # Get current selection identity so we can reselect it.
                 selected = self.get_selected()
+                rect = self._view.get_visible_rect()
                 if selected is None:
                     identity = None
                 elif isinstance(selected, list):
@@ -155,6 +157,16 @@ class EntityGrid(grid.Grid):
                     self.select_rows(identity)
                 else:
                     self.select_row(identity)
+                if rect.y == 0:
+                    rect_y = rect.y
+                else:
+                    # XXX: For some reason, if we are at the very end
+                    # of the scroll view, scrolling to the point will
+                    # cause the view to scroll to the very top. Take
+                    # one away from the Y coordinate so that this
+                    # doesn't happen.
+                    rect_y = rect.y - 1
+                self._view.scroll_to_point(rect.x, rect_y)
         elif related is not None:
             if related.entity.s.exists:
                 if extent is not None:
@@ -282,9 +294,6 @@ class EntityGrid(grid.Grid):
                 selection.select_iter(row_iter)
                 if first_row is None:
                     first_row = row_iter
-        # XXX: Need to focus first row here.
-        if first_row is not None:
-            self._view.scroll_to_cell(self._model[first_row].path)
 
     def set_all_x(self, name, value):
         """Set x.name to value for all entities."""
