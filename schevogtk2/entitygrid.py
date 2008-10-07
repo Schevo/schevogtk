@@ -282,8 +282,8 @@ class EntityGrid(grid.Grid):
                 selection.select_iter(row_iter)
                 if first_row is None:
                     first_row = row_iter
-        if first_row is not None:
-            self.select_and_focus_row(first_row)
+        # XXX: Need to focus first row here.
+        pass
 
     def set_all_x(self, name, value):
         """Set x.name to value for all entities."""
