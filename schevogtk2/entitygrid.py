@@ -275,10 +275,15 @@ class EntityGrid(grid.Grid):
 
     def select_rows(self, oids):
         selection = self._view.get_selection()
+        first_row = None
         for oid in oids:
             row_iter = self._row_map.get(oid, None)
             if row_iter is not None:
                 selection.select_iter(row_iter)
+                if first_row is None:
+                    first_row = row_iter
+        if first_row is not None:
+            self.select_and_focus_row(first_row)
 
     def set_all_x(self, name, value):
         """Set x.name to value for all entities."""
