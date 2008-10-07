@@ -11,6 +11,7 @@ from schevo import field
 from schevo.label import label, plural
 from schevo.constant import UNASSIGNED
 from schevo.error import EntityDoesNotExist
+from schevo.introspect import commontype
 
 from schevogtk2.action import (
     get_method_action, get_relationship_actions,
@@ -219,44 +220,52 @@ class EntityGrid(grid.Grid):
                 self.select_action(m_action)
 
     def select_delete_action(self):
-        entity = self.get_selected()
-        if isinstance(entity, list):
-            if len(entity) == 1:
-                entity = entity[0]
+        selection = self.get_selected()
+        if isinstance(selection, list):
+            if len(selection) == 1:
+                selection = selection[0]
+                # Pass through to 'if selection is not None' block
+                # below.
             else:
-                entity = None
-        if entity is not None:
+                cls = commontype(selection)
+                method_name = 'delete_selected'
+                if method_name in cls.t:
+                    m_action = get_method_action(cls, 't', method_name)
+                    m_action.selection = selection
+                    self.select_action(m_action)
+                    return
+        if selection is not None:
             method_name = 'delete'
-            if method_name in entity.t:
-                m_action = get_method_action(entity, 't', method_name)
+            if method_name in selection.t:
+                m_action = get_method_action(selection, 't', method_name)
                 self.select_action(m_action)
 
     def select_update_action(self):
-        entity = self.get_selected()
-        if isinstance(entity, list):
-            if len(entity) == 1:
-                entity = entity[0]
+        selection = self.get_selected()
+        if isinstance(selection, list):
+            if len(selection) == 1:
+                selection = selection[0]
             else:
-                entity = None
-        if entity is not None:
+                selection = None
+        if selection is not None:
             method_name = 'update'
-            if method_name in entity.t:
-                m_action = get_method_action(entity, 't', method_name)
+            if method_name in selection.t:
+                m_action = get_method_action(selection, 't', method_name)
                 self.select_action(m_action)
 
     def select_view_action(self):
-        entity = self.get_selected()
-        if isinstance(entity, list):
-            if len(entity) == 1:
-                entity = entity[0]
+        selection = self.get_selected()
+        if isinstance(selection, list):
+            if len(selection) == 1:
+                selection = selection[0]
             else:
-                entity = None
-        if (entity is not None
-            and (entity._hidden_views is None
-                 or 'default' not in entity._hidden_views
+                selection = None
+        if (selection is not None
+            and (selection._hidden_views is None
+                 or 'default' not in selection._hidden_views
                  )
             ):
-            v_action = get_view_action(entity, include_expensive=False)
+            v_action = get_view_action(selection, include_expensive=False)
             self.select_action(v_action)
 
     def select_row(self, oid):
