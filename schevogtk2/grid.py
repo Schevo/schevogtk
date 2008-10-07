@@ -390,8 +390,7 @@ class Grid(gtk.VBox):
                 # non-selected item is selected before the menu
                 # appears.
                 x, y = event.get_coords()
-                x, y = view.widget_to_tree_coords(int(x), int(y))
-                path = view.get_path_at_pos(x, y)
+                path = view.get_path_at_pos(int(x), int(y))
                 if path is not None:
                     path, col, cell_x, cell_y = path
                     row = self._model[path]
