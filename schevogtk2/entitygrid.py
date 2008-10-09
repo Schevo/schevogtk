@@ -247,7 +247,7 @@ class EntityGrid(grid.Grid):
                     m_action = get_method_action(cls, 't', method_name)
                     m_action.selection = selection
                     self.select_action(m_action)
-                    return
+                return
         if selection is not None:
             method_name = 'delete'
             if method_name in selection.t:
