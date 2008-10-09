@@ -240,6 +240,8 @@ class EntityGrid(grid.Grid):
                 # below.
             else:
                 cls = commontype(selection)
+                if cls is None:
+                    return
                 method_name = 'delete_selected'
                 if method_name in cls.t:
                     m_action = get_method_action(cls, 't', method_name)
