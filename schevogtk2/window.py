@@ -52,6 +52,12 @@ class BaseWindow(object):
         self._set_bindings()
         self._statusbar_context = self.statusbar.get_context_id('APP')
 
+    def after_action(self, action):
+        pass
+
+    def before_action(self, action):
+        pass
+
     def after_tx(self, tx, tx_result):
         pass
 
@@ -97,6 +103,7 @@ class BaseWindow(object):
         dialog.destroy()
 
     def _on_action_selected(self, widget, action):
+        self.before_action(action)
         if action.type == 'relationship':
             entity = action.instance
             self.run_relationship_dialog(entity)
@@ -123,6 +130,7 @@ class BaseWindow(object):
         elif action.type == 'view':
             entity = action.instance
             self.run_view_dialog(entity, action)
+        self.after_action(action)
         # XXX Hack due to a bug where this window doesn't become
         # active when one modal dialog leads to another (including the
         # dialog used by FileChooserButton, or an error message).
@@ -397,6 +405,26 @@ class EmptyWindow(BaseWindow):
             keyval, mod = gtk.accelerator_parse(name)
             mod = mod | gtk.gdk.LOCK_MASK
             self._bindings[(keyval, mod)] = func
+
+
+class DisabledWindow(object):
+
+    def __init__(self, window):
+        self.window = window
+
+    def __enter__(self):
+        window = self.window
+        self.old_sensitive = window.props.sensitive
+        window.props.sensitive = False
+        while gtk.events_pending():
+            gtk.main_iteration()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.window.props.sensitive = self.old_sensitive
+        while gtk.events_pending():
+            gtk.main_iteration()
+        # Do not ignore exception.
+        return False
 
 
 class _StatusbarContextManager(object):
