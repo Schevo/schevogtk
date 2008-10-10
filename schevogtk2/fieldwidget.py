@@ -315,15 +315,17 @@ class EntityComboBox(BaseComboBox):
         self.db = db
         self.field = field
         BaseComboBox.__init__(self)
-        if (self.autoselect_single_valid_value
-            and field.valid_values is not None
-            and len(field.valid_values) == 1
-            ):
-            # If the field has exactly one valid value, choose that.
-            value = iter(field.valid_values).next()
-        else:
-            # Select the field's current item.
-            value = field.get()
+        # Default to the field's current item.
+        value = field.get()
+        if self.autoselect_single_valid_value:
+            if field.valid_values is not None:
+                if len(field.valid_values) == 1:
+                    # If the field has exactly one valid value, choose that.
+                    value = iter(field.valid_values).next()
+            else:
+                if field.required and len(self.model) == 2:
+                    # If the field has exactly one available value, choose it.
+                    value = self.model[-1][-1]
         self.select_item_by_data(value)
         if value != field.get():
             gobject.timeout_add(0, self.emit, 'value-changed')
