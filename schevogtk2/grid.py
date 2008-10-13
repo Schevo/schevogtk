@@ -70,14 +70,20 @@ class Column(object):
         prop = self.cell_prop
         if data is not None:
             if prop == 'text':
-                data = unicode(data)
+                try:
+                    data = unicode(data)
+                except EntityDoesNotExist:
+                    data = None
             elif prop == 'pixbuf':
                 loader = gtk.gdk.PixbufLoader()
                 loader.write(data)
                 loader.close()
                 data = loader.get_pixbuf()
             elif prop == 'active':
-                data = bool(data)
+                try:
+                    data = bool(data)
+                except EntityDoesNotExist:
+                    data = None
         cell.set_property(prop, data)
 
     cell_data_getattr = staticmethod(getattr)
