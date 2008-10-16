@@ -181,7 +181,7 @@ class BaseWindow(object):
 
     def run_tx_dialog(self, tx, action):
         with TemporaryCursor(self):
-            db = self._db
+            db = tx._db
             parent = self.toplevel
             dialog = form.get_tx_dialog(
                 parent, db, tx, action,
