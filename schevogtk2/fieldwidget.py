@@ -492,12 +492,13 @@ class FileChooser(gtk.EventBox):
         if os.name == 'nt' and not field.directory_only:
             if field.file_only:
                 stock_id = gtk.STOCK_FILE
-##             elif field.directory_only:
-##                 stock_id = gtk.STOCK_DIRECTORY
             self._hbox = hbox = gtk.HBox()
             hbox.show()
             self._entry = entry = gtk.Entry()
             entry.show()
+            entry.props.editable = False
+            entry.props.can_focus = False
+            entry.props.has_focus = False
             self._button = button = gtk.Button()
             button.show()
             image = gtk.Image()
@@ -507,7 +508,6 @@ class FileChooser(gtk.EventBox):
             hbox.pack_start(entry)
             hbox.pack_start(button, expand=False)
             button.connect('clicked', self._on_clicked)
-            entry.connect('activate', self._on_changed)
             self.add(hbox)
         else:
             title = 'Choose %r file' % label(self.field)
@@ -527,6 +527,7 @@ class FileChooser(gtk.EventBox):
     def set_filename(self, filename):
         if os.name == 'nt' and not self.field.directory_only:
             self._entry.set_text(filename)
+            self.emit('value-changed')
         else:
             return self._filechooser.set_filename(filename)
 
@@ -544,13 +545,7 @@ class FileChooser(gtk.EventBox):
                 filename, custom_filter, flags = win32gui.GetSaveFileNameW(
                     InitialDir='.',
                     Flags=win32con.OFN_EXPLORER,
-                    Title='Select'
-##                     File='',
-##                     DefExt='',
-##                     Title=self.file_open_title,
-##                     Filter=self.file_ext_filter,
-##                     CustomFilter=self.file_custom_filter,
-##                     FilterIndex=1,
+                    Title='Select',
                     )
             except pywintypes.error:
                 # Cancel button raises an exception.
@@ -561,12 +556,6 @@ class FileChooser(gtk.EventBox):
                     InitialDir='.',
                     Flags=win32con.OFN_EXPLORER,
                     Title='Select'
-##                     File='',
-##                     DefExt='',
-##                     Title=self.file_open_title,
-##                     Filter=self.file_ext_filter,
-##                     CustomFilter=self.file_custom_filter,
-##                     FilterIndex=1,
                     )
             except pywintypes.error:
                 # Cancel button raises an exception.
