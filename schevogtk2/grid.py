@@ -60,7 +60,11 @@ class Column(object):
         if limits is not None and self.attribute in limits:
             cell.set_property('cell-background', color)
         strikethrough = model[row_iter][STRIKETHROUGH_COLUMN]
-        cell.set_property('strikethrough', strikethrough)
+        try:
+            cell.set_property('strikethrough', strikethrough)
+        except TypeError:
+            # Cell does not have the 'strikethrough' property.
+            pass
         try:
             data = self.cell_data_getattr(instance, self.attribute)
         except EntityDoesNotExist:
