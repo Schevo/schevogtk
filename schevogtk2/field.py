@@ -274,6 +274,9 @@ def _get_value_generic(widget):
     value = widget.get_text()
     if not value:
         value = UNASSIGNED
+    else:
+        value = value.replace('\n', ' ')
+        value = value.strip()
     return (widget, False, value)
 
 DEFAULT_GET_VALUE_HANDLERS = [
