@@ -256,7 +256,7 @@ class FormWindow(gtk.Window):
                 widget = field.x.control_widget
                 value = widget.get_value()
                 setattr(tx, name, value)
-            self.tx_result = form_box.db.execute(tx)
+            self.tx_result = tx._db.execute(tx)
             self.hide()
 
     def _on_key_press_event(self, window, event):
