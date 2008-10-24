@@ -325,8 +325,8 @@ def _set_field_rw_boolean(container, db, field, change_cb):
         value = field.value
         if value is UNASSIGNED:
             value = False
-        if (field.true_label != schevo.field.Boolean.true_label or
-            field.false_label != schevo.field.Boolean.false_label):
+        if (field.true_label.lower() not in ('', 't', 'true', 'y', 'yes') or
+            field.false_label.lower() not in ('', 'f', 'false', 'n', 'no')):
             widget = fieldwidget.BooleanRadio(field)
             widget.connect('value-changed', change_cb, field)
         else:
