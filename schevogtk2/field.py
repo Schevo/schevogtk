@@ -332,6 +332,7 @@ def _set_field_rw_boolean(container, db, field, change_cb):
         else:
             widget = gtk.CheckButton()
             widget.set_active(value)
+            widget.connect('toggled', change_cb, field)
         return (False, widget, None)
     else:
         return (True, None, None)
