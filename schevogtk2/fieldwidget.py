@@ -35,8 +35,8 @@ class BooleanRadio(gtk.VBox):
     def __init__(self, field):
         gtk.VBox.__init__(self)
         self._value = value = field.get()
-        button_1 = gtk.RadioButton(None, field.true_label)
-        button_2 = gtk.RadioButton(button_1, field.false_label)
+        button_1 = gtk.RadioButton(None, field.true_description)
+        button_2 = gtk.RadioButton(button_1, field.false_description)
         button_1.show()
         button_2.show()
         self.add(button_1)
