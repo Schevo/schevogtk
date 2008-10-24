@@ -26,6 +26,40 @@ from schevogtk2 import icon
 from schevogtk2.utils import gsignal, type_register
 
 
+class BooleanRadio(gtk.VBox):
+
+    __gtype_name__ = 'BooleanRadio'
+
+    gsignal('value-changed')
+
+    def __init__(self, field):
+        gtk.VBox.__init__(self)
+        self._value = value = field.get()
+        button_1 = gtk.RadioButton(None, field.true_label)
+        button_2 = gtk.RadioButton(button_1, field.false_label)
+        button_1.show()
+        button_2.show()
+        self.add(button_1)
+        self.add(button_2)
+        if value:
+            button_1.set_active(True)
+        else:
+            button_2.set_active(True)
+        button_1.connect('toggled', self._on_toggled, True)
+        button_2.connect('toggled', self._on_toggled, False)
+
+    def _on_toggled(self, widget, value):
+        # Gets called twice: once to set the first button to inactive,
+        # and a second time to set the other button to active.  We
+        # only emit value-changed for the second toggle.
+        if widget.get_active():
+            self._value = value
+            self.emit('value-changed')
+
+    def get_value(self):
+        return self._value
+
+
 class EntityChooser(gtk.HBox):
 
     __gtype_name__ = 'EntityChooser'

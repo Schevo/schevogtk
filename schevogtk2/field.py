@@ -213,6 +213,14 @@ def _get_value_ScrolledWindow(widget):
     return (widget, True, None)
 
 @optimize.do_not_optimize
+def _get_value_BooleanRadio(widget):
+    if isinstance(widget, fieldwidget.BooleanRadio):
+        value = widget.get_value()
+        return (widget, False, value)
+    else:
+        return (widget, True, None)
+
+@optimize.do_not_optimize
 def _get_value_CheckButton(widget):
     if isinstance(widget, gtk.CheckButton):
         value = widget.get_active()
@@ -281,6 +289,7 @@ def _get_value_generic(widget):
 
 DEFAULT_GET_VALUE_HANDLERS = [
     _get_value_ScrolledWindow,
+    _get_value_BooleanRadio,
     _get_value_CheckButton,
     _get_value_FileChooser,
     _get_value_Image,
@@ -314,20 +323,15 @@ DEFAULT_GET_VALUE_HANDLERS = [
 def _set_field_rw_boolean(container, db, field, change_cb):
     if isinstance(field, schevo.field.Boolean) and not field.readonly:
         value = field.value
-        widget = gtk.CheckButton()
         if value is UNASSIGNED:
             value = False
-        widget.set_active(value)
-        def on_toggled(widget):
-            active = widget.get_active()
-            if active:
-                widget.set_label(field.true_label)
-            else:
-                widget.set_label(field.false_label)
-        # Set initial label.
-        on_toggled(widget)
-        widget.connect('toggled', on_toggled)
-        widget.connect('toggled', change_cb, field)
+        if (field.true_label != schevo.field.Boolean.true_label or
+            field.false_label != schevo.field.Boolean.false_label):
+            widget = fieldwidget.BooleanRadio(field)
+            widget.connect('value-changed', change_cb, field)
+        else:
+            widget = gtk.CheckButton()
+            widget.set_active(value)
         return (False, widget, None)
     else:
         return (True, None, None)
