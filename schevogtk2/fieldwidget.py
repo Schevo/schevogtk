@@ -561,12 +561,14 @@ class FileChooser(gtk.EventBox):
     def set_filename(self, filename):
         if os.name == 'nt' and not self.field.directory_only:
             self._entry.set_text(filename)
-            self.emit('value-changed')
+            if os.path.exists(filename):
+                self.emit('value-changed')
         else:
             return self._filechooser.set_filename(filename)
 
     def _on_changed(self, widget):
-        self.emit('value-changed')
+        if os.path.exists(self.get_filename()):
+            self.emit('value-changed')
 
     def _on_clicked(self, widget):
         field = self.field
