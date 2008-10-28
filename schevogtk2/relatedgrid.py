@@ -81,8 +81,8 @@ class RelatedGrid(grid.Grid):
         if extent is not None:
             method_name = 'create'
             if method_name in extent.t:
-                m_action = action.get_method_action(extent, 't', method_name,
-                                                    related)
+                m_action = action.get_method_action(
+                    self._db, extent, 't', method_name, related)
                 self.select_action(m_action)
 
     def set_entity(self, db, entity):
@@ -137,7 +137,7 @@ class PopupMenu(grid.PopupMenu):
         related = self._related_grid.get_selected()
         items = []
         # Get extent actions.
-        actions = action.get_tx_actions(extent, related)
+        actions = action.get_tx_actions(self._related_grid._db, extent, related)
         if actions:
             items.extend(actions)
             items.append(None)

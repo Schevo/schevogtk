@@ -163,7 +163,7 @@ class BaseWindow(object):
     def run_relationship_dialog(self, entity):
         from schevogtk2 import relationship
         with TemporaryCursor(self):
-            db = self._db
+            db = entity._db
             parent = self.toplevel
             dialog = relationship.RelationshipWindow(db, entity)
             dialog.after_tx = self.after_tx
@@ -181,7 +181,7 @@ class BaseWindow(object):
 
     def run_tx_dialog(self, tx, action):
         with TemporaryCursor(self):
-            db = tx._db
+            db = action.db
             parent = self.toplevel
             dialog = form.get_tx_dialog(
                 parent, db, tx, action,
@@ -194,7 +194,7 @@ class BaseWindow(object):
 
     def run_view_dialog(self, entity, action):
         with TemporaryCursor(self):
-            db = self._db
+            db = action.db
             parent = self.toplevel
             dialog = form.get_view_dialog(
                 parent, db, entity, action,

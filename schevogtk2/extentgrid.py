@@ -57,7 +57,8 @@ class ExtentGrid(grid.Grid):
         if extent is not None:
             method_name = 'create'
             if method_name in extent.t:
-                m_action = action.get_method_action(extent, 't', method_name)
+                m_action = action.get_method_action(
+                    self._db, extent, 't', method_name)
                 self.select_action(m_action)
 
     def set_db(self, db):
@@ -121,7 +122,7 @@ class PopupMenu(grid.PopupMenu):
         extent = self._extent
         items = []
         # Get extent actions.
-        actions = action.get_tx_actions(extent)
+        actions = action.get_tx_actions(self._extent_grid._db, extent)
         if actions:
             items.extend(actions)
         return items

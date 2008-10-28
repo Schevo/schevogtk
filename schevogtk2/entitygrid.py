@@ -227,7 +227,7 @@ class EntityGrid(grid.Grid):
         if extent is not None:
             method_name = 'create'
             if method_name in extent.t:
-                m_action = get_method_action(extent, 't', method_name,
+                m_action = get_method_action(self._db, extent, 't', method_name,
                                              self._related)
                 self.select_action(m_action)
 
@@ -244,14 +244,16 @@ class EntityGrid(grid.Grid):
                     return
                 method_name = 'delete_selected'
                 if method_name in cls.t:
-                    m_action = get_method_action(cls, 't', method_name)
+                    m_action = get_method_action(
+                        self._db, cls, 't', method_name)
                     m_action.selection = selection
                     self.select_action(m_action)
                 return
         if selection is not None:
             method_name = 'delete'
             if method_name in selection.t:
-                m_action = get_method_action(selection, 't', method_name)
+                m_action = get_method_action(
+                    self._db, selection, 't', method_name)
                 self.select_action(m_action)
 
     def select_update_action(self):
@@ -264,7 +266,8 @@ class EntityGrid(grid.Grid):
         if selection is not None:
             method_name = 'update'
             if method_name in selection.t:
-                m_action = get_method_action(selection, 't', method_name)
+                m_action = get_method_action(
+                    self._db, selection, 't', method_name)
                 self.select_action(m_action)
 
     def select_view_action(self):
@@ -279,7 +282,8 @@ class EntityGrid(grid.Grid):
                  or 'default' not in selection._hidden_views
                  )
             ):
-            v_action = get_view_action(selection, include_expensive=False)
+            v_action = get_view_action(
+                self._db, selection, include_expensive=False)
             self.select_action(v_action)
 
     def select_row(self, oid):
@@ -426,30 +430,31 @@ class PopupMenu(grid.PopupMenu):
         grid.PopupMenu.__init__(self)
 
     def get_actions(self):
+        db = self._entity_grid._db
         extent = self._extent
         entity = self._entity
         items = []
         # Extent tx actions.
-        actions = get_tx_actions(extent, self._entity_grid._related)
+        actions = get_tx_actions(db, extent, self._entity_grid._related)
         if actions:
             if items:
                 items.append(None)
             items.extend(actions)
         # Entity view actions.
-        actions = get_view_actions(entity)
+        actions = get_view_actions(db, entity)
         if actions:
             if items:
                 items.append(None)
             items.extend(actions)
         # Entity relationship actions.
         if self._entity_grid.show_relationships_in_menu:
-            actions = get_relationship_actions(entity)
+            actions = get_relationship_actions(db, entity)
             if actions:
                 if items:
                     items.append(None)
                 items.extend(actions)
         # Entity tx actions.
-        actions = get_tx_actions(entity)
+        actions = get_tx_actions(db, entity)
         if actions:
             if items:
                 items.append(None)
@@ -458,7 +463,7 @@ class PopupMenu(grid.PopupMenu):
         selection_mode = self._entity_grid._view.get_selection().get_mode()
         selection = self._entity_grid.get_selected()
         if selection_mode == gtk.SELECTION_MULTIPLE:
-            actions = get_tx_selectionmethod_actions(selection)
+            actions = get_tx_selectionmethod_actions(db, selection)
             if actions:
                 if items:
                     items.append(None)

@@ -25,6 +25,7 @@ LABELS_WITH_SHORTCUTS = {
 
 class Action(object):
 
+    db = None
     instance = None
     label = ''
     method = None
@@ -46,12 +47,14 @@ class Action(object):
         except AttributeError:
             return cmp(hash(self), hash(other))
 
-def get_method_action(instance, namespace_id, method_name, related=None):
+
+def get_method_action(db, instance, namespace_id, method_name, related=None):
     """Return action for method name."""
     namespace = getattr(instance, namespace_id)
     method = namespace[method_name]
     method_label = label(method)
     action = Action()
+    action.db = db
     action.instance = instance
     # Default label.
     action.label = u'%s...' % method_label
@@ -85,7 +88,8 @@ def get_method_action(instance, namespace_id, method_name, related=None):
         action.type = 'transaction'
     return action
 
-def get_relationship_actions(entity):
+
+def get_relationship_actions(db, entity):
     """Return list of relationship actions for an entity instance."""
     actions = []
     if entity is not None:
@@ -96,6 +100,7 @@ def get_relationship_actions(entity):
                 ]
         for text in items:
             action = Action()
+            action.db = db
             action.instance = entity
             action.label = text
             action.name = 'relationship'
@@ -103,17 +108,19 @@ def get_relationship_actions(entity):
             actions.append(action)
     return sorted(actions)
 
-def get_tx_actions(instance, related=None):
+
+def get_tx_actions(db, instance, related=None):
     """Return list of actions for an extent or entity instance."""
     actions = []
     if instance is not None:
         t_methods = set(instance.t)
         for method_name in sorted(t_methods):
-            action = get_method_action(instance, 't', method_name, related)
+            action = get_method_action(db, instance, 't', method_name, related)
             actions.append(action)
     return sorted(actions)
 
-def get_tx_selectionmethod_actions(selection):
+
+def get_tx_selectionmethod_actions(db, selection):
     """Return list of selectionmethod transactions for an extent."""
     cls = commontype(selection)
     if cls is None:
@@ -126,12 +133,13 @@ def get_tx_selectionmethod_actions(selection):
         actions = []
         for method_name in sorted(cls.t):
             if method_name not in hidden:
-                action = get_method_action(cls, 't', method_name)
+                action = get_method_action(db, cls, 't', method_name)
                 action.selection = selection
                 actions.append(action)
         return sorted(actions)
 
-def get_view_actions(entity):
+
+def get_view_actions(db, entity):
     """Return list of view actions for an entity instance."""
     actions = []
     if entity is not None:
@@ -146,16 +154,18 @@ def get_view_actions(entity):
 ##                 options.append(True)
                 break
         for include_expensive in options:
-            action = get_view_action(entity, include_expensive)
+            action = get_view_action(db, entity, include_expensive)
             actions.append(action)
     return sorted(actions)
 
-def get_view_action(entity, include_expensive):
+
+def get_view_action(db, entity, include_expensive):
     if include_expensive:
         text = u'View (including expensive fields)...'
     else:
         text = u'View...'
     action = Action()
+    action.db = db
     action.include_expensive = include_expensive
     action.instance = entity
     action.label = text

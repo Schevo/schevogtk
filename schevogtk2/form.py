@@ -223,7 +223,7 @@ class FormWindow(gtk.Window):
 
     def on_form_box__edit_clicked(self, form_box):
         model = form_box.model
-        action = get_method_action(model, 't', 'update')
+        action = get_method_action(form_box.db, model, 't', 'update')
         update_tx = action.method()
         dialog = get_tx_dialog(
             parent=self,
@@ -444,7 +444,7 @@ def attach_create_update_view_handlers(
         # User may not have chosen an extent.  Only continue if
         # they have. Otherwise do nothing.
         if extent is not None:
-            action = get_method_action(extent, 't', 'create')
+            action = get_method_action(db, extent, 't', 'create')
             create_tx = action.method()
             dialog = get_tx_dialog(
                 parent=window,
@@ -465,7 +465,7 @@ def attach_create_update_view_handlers(
                     field.x.control_widget.set_field(db, field)
                     field.x.control_widget.grab_focus()
     def on_update_clicked(dynamic_field, entity_to_update, done_cb=None):
-        action = get_method_action(entity_to_update, 't', 'update')
+        action = get_method_action(db, entity_to_update, 't', 'update')
         update_tx = action.method()
         dialog = get_tx_dialog(
             parent=window,
@@ -486,7 +486,7 @@ def attach_create_update_view_handlers(
                 field.x.control_widget.set_field(db, field)
                 field.x.control_widget.grab_focus()
     def on_view_clicked(dynamic_field, entity_to_view):
-        action = get_view_action(entity_to_view, include_expensive=False)
+        action = get_view_action(db, entity_to_view, include_expensive=False)
         dialog = get_view_dialog(
             parent=window,
             db=db,
