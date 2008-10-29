@@ -415,6 +415,23 @@ def _set_field_rw_path(container, db, field, change_cb):
         return (True, None, None)
 
 @optimize.do_not_optimize
+def _set_field_ro_boolean(container, db, field, change_cb):
+    if isinstance(field, schevo.field.Boolean) and field.readonly:
+        value = field.value
+        if value is UNASSIGNED:
+            value = field.unassigned_label
+        elif value == True:
+            value = field.true_description or field.true_label
+        else:
+            value = field.false_description or field.false_label
+        widget = gtk.Entry()
+        widget.set_text(value)
+        widget.props.height_request = STANDARD_HEIGHT
+        return (False, widget, None)
+    else:
+        return (True, None, None)
+
+@optimize.do_not_optimize
 def _set_field_generic_valid_values(container, db, field, change_cb):
     if field.valid_values is not None and not (field.readonly or field.fget):
         widget = fieldwidget.ValueChooser(db, field)
@@ -444,6 +461,7 @@ DEFAULT_SET_FIELD_HANDLERS = [
     _set_field_multiline_string,
     _set_field_calculated,
     _set_field_rw_path,
+    _set_field_ro_boolean,
     _set_field_generic_valid_values,
     _set_field_generic,
     ]
