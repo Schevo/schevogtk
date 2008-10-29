@@ -606,7 +606,12 @@ class FileChooser(gtk.EventBox):
                 # Cancel button raises an exception.
                 pass
         if filename is not None:
-            self.set_filename(filename)
+            if ((field.path_must_exist and os.path.exists(filename))
+                or not field.path_must_exist
+                ):
+                self.set_filename(filename)
+            else:
+                self.set_filename(UNASSIGNED)
 
 type_register(FileChooser)
 
