@@ -554,9 +554,10 @@ class FileChooser(gtk.EventBox):
 
     def get_filename(self):
         if os.name == 'nt' and not self.field.directory_only:
-            return self._entry.get_text()
+            text = self._entry.get_text()
         else:
-            return self._filechooser.get_filename()
+            text = self._filechooser.get_filename()
+        return text or UNASSIGNED
 
     def set_filename(self, filename):
         if os.name == 'nt' and not self.field.directory_only:
