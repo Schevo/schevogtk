@@ -581,11 +581,17 @@ class FileChooser(gtk.EventBox):
             try:
                 if field.path_must_exist:
                     get_filename = win32gui.GetOpenFileNameW
+                    flags = (
+                        win32con.OFN_EXPLORER
+                        | win32con.OFN_PATHMUSTEXIST
+                        | win32con.OFN_FILEMUSTEXIST
+                        )
                 else:
                     get_filename = win32gui.GetSaveFileNameW
+                    flags = win32con.OFN_EXPLORER
                 filename, custom_filter, flags = get_filename(
                     InitialDir='.',
-                    Flags=win32con.OFN_EXPLORER,
+                    Flags=flags,
                     Title='Select',
                     )
             except pywintypes.error:
@@ -596,11 +602,17 @@ class FileChooser(gtk.EventBox):
             try:
                 if field.path_must_exist:
                     get_filename = win32gui.GetOpenFileNameW
+                    flags = (
+                        win32con.OFN_EXPLORER
+                        | win32con.OFN_PATHMUSTEXIST
+                        | win32con.OFN_FILEMUSTEXIST
+                        )
                 else:
                     get_filename = win32gui.GetSaveFileNameW
+                    flags = win32con.OFN_EXPLORER
                 filename, custom_filter, flags = get_filename(
                     InitialDir='.',
-                    Flags=win32con.OFN_EXPLORER,
+                    Flags=flags,
                     Title='Select',
                     )
             except pywintypes.error:
