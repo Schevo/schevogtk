@@ -578,7 +578,11 @@ class FileChooser(gtk.EventBox):
         file_open_title = 'Select File'
         if field.file_only:
             try:
-                filename, custom_filter, flags = win32gui.GetSaveFileNameW(
+                if field.path_must_exist:
+                    get_filename = win32gui.GetOpenFileNameW
+                else:
+                    get_filename = win32gui.GetSaveFileNameW
+                filename, custom_filter, flags = get_filename(
                     InitialDir='.',
                     Flags=win32con.OFN_EXPLORER,
                     Title='Select',
@@ -587,11 +591,16 @@ class FileChooser(gtk.EventBox):
                 # Cancel button raises an exception.
                 pass
         elif field.directory_only:
+            # XXX: Use directory chooser.
             try:
-                filename, custom_filter, flags = win32gui.GetSaveFileNameW(
+                if field.path_must_exist:
+                    get_filename = win32gui.GetOpenFileNameW
+                else:
+                    get_filename = win32gui.GetSaveFileNameW
+                filename, custom_filter, flags = get_filename(
                     InitialDir='.',
                     Flags=win32con.OFN_EXPLORER,
-                    Title='Select'
+                    Title='Select',
                     )
             except pywintypes.error:
                 # Cancel button raises an exception.
