@@ -561,8 +561,8 @@ class FileChooser(gtk.EventBox):
     def set_filename(self, filename):
         if os.name == 'nt' and not self.field.directory_only:
             self._entry.set_text(filename)
-            if os.path.exists(filename):
-                self.emit('value-changed')
+            field = self.field
+            self.emit('value-changed')
         else:
             return self._filechooser.set_filename(filename)
 
@@ -611,7 +611,7 @@ class FileChooser(gtk.EventBox):
                 ):
                 self.set_filename(filename)
             else:
-                self.set_filename(UNASSIGNED)
+                self.set_filename('')
 
 type_register(FileChooser)
 
