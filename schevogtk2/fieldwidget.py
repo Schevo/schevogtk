@@ -568,7 +568,10 @@ class FileChooser(gtk.EventBox):
             return self._filechooser.set_filename(filename)
 
     def _on_changed(self, widget):
-        if os.path.exists(self.get_filename()):
+        filename = self.get_filename()
+        if filename is UNASSIGNED:
+            filename = ''
+        if os.path.exists(''):
             self.emit('value-changed')
 
     def _on_clicked(self, widget):
