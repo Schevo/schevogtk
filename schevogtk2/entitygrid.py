@@ -166,7 +166,8 @@ class EntityGrid(grid.Grid):
                     # one away from the Y coordinate so that this
                     # doesn't happen.
                     rect_y = rect.y - 1
-                self._view.scroll_to_point(rect.x, rect_y)
+                if self._view.window:
+                    self._view.scroll_to_point(rect.x, rect_y)
         elif related is not None:
             if related.entity.s.exists:
                 if extent is not None:
