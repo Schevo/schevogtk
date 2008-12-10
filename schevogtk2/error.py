@@ -15,7 +15,7 @@ from schevo.placeholder import Placeholder
 import schevo.error
 from schevo.label import label, plural
 
-from atfg.gtk.constants import MONO_FONT
+from schevogtk2.constants import MONO_FONT
 
 
 BULLET = u'\u2022 '
