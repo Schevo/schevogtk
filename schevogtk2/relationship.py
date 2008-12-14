@@ -27,6 +27,7 @@ class RelationshipWindow(Window):
         self.header_label.set_markup(markup)
         self.related_grid.show_hidden_extents = True
         self.related_grid.set_entity(db, entity)
+        self.entity_grid.set_db(db)
 
     def on_Hidden__activate(self, action):
         grid = self.related_grid
