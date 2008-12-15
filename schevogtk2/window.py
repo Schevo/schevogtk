@@ -129,7 +129,9 @@ class BaseWindow(object):
             self.after_tx(tx, tx_result)
         elif action.type == 'view':
             entity = action.instance
-            self.run_view_dialog(entity, action)
+            view = getattr(entity.v, action.name)()
+            # self.run_view_dialog(entity, action)
+            self.run_view_dialog(view, action)
         self.after_action(action)
         # XXX Hack due to a bug where this window doesn't become
         # active when one modal dialog leads to another (including the

@@ -15,7 +15,7 @@ import schevo.base
 from schevo.constant import UNASSIGNED
 from schevo.label import label
 
-from schevogtk2.action import get_method_action, get_view_action
+from schevogtk2.action import get_method_action # , get_view_action
 from schevogtk2.error import FriendlyErrorDialog
 from schevogtk2.field import FieldLabel, DynamicField
 from schevogtk2 import plugin
@@ -410,9 +410,13 @@ def get_default_view_dialog(parent, db, entity, action,
     title = u'View :: %s' % (extent_text, )
     text = u'View :: %s :: %s' % (extent_text, entity)
     def include(field):
-        if action.include_expensive:
-            return True
-        elif field.expensive:
+        # if action.include_expensive:
+        #     return True
+        # elif field.expensive:
+        #     return False
+        # else:
+        #     return True
+        if field.expensive:
             return False
         else:
             return True
@@ -486,7 +490,8 @@ def attach_create_update_view_handlers(
                 field.x.control_widget.set_field(db, field)
                 field.x.control_widget.grab_focus()
     def on_view_clicked(dynamic_field, entity_to_view):
-        action = get_view_action(db, entity_to_view, include_expensive=False)
+        # action = get_view_action(db, entity_to_view, include_expensive=False)
+        action = get_method_action(db, entity_to_view, 'v', 'default')
         dialog = get_view_dialog(
             parent=window,
             db=db,

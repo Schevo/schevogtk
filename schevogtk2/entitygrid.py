@@ -16,7 +16,8 @@ from schevo.introspect import commontype
 from schevogtk2.action import (
     get_method_action, get_relationship_actions,
     get_tx_actions, get_tx_selectionmethod_actions,
-    get_view_action, get_view_actions)
+    # get_view_action, 
+    get_view_actions)
 from schevogtk2 import grid
 from schevogtk2 import icon
 from schevogtk2.utils import gsignal, type_register
@@ -283,8 +284,9 @@ class EntityGrid(grid.Grid):
                  or 'default' not in selection._hidden_views
                  )
             ):
-            v_action = get_view_action(
-                self._db, selection, include_expensive=False)
+            v_action = get_method_action(self._db, selection, 'v', 'default')
+            # v_action = get_view_action(
+            #     self._db, selection, include_expensive=False)
             self.select_action(v_action)
 
     def select_row(self, oid):

@@ -86,6 +86,8 @@ def get_method_action(db, instance, namespace_id, method_name, related=None):
         action.type = 'query'
     elif namespace_id == 't':
         action.type = 'transaction'
+    elif namespace_id == 'v':
+        action.type = 'view'
     return action
 
 
@@ -143,35 +145,41 @@ def get_view_actions(db, entity):
     """Return list of view actions for an entity instance."""
     actions = []
     if entity is not None:
-        if (entity._hidden_views is not None
-            and 'default' in entity._hidden_views
-            ):
-            return actions
-        options = [False]
-        for name, FieldClass in entity._field_spec.iteritems():
-            if FieldClass.expensive:
-                # XXX: Remove this and add support for View objects.
-##                 options.append(True)
-                break
-        for include_expensive in options:
-            action = get_view_action(db, entity, include_expensive)
+        v_methods = set(entity.v)
+        for method_name in sorted(v_methods):
+            action = get_method_action(db, entity, 'v', method_name)
             actions.append(action)
     return sorted(actions)
+#     if entity is not None:
+#         if (entity._hidden_views is not None
+#             and 'default' in entity._hidden_views
+#             ):
+#             return actions
+#         options = [False]
+#         for name, FieldClass in entity._field_spec.iteritems():
+#             if FieldClass.expensive:
+#                 # XXX: Remove this and add support for View objects.
+# ##                 options.append(True)
+#                 break
+#         for include_expensive in options:
+#             action = get_view_action(db, entity, include_expensive)
+#             actions.append(action)
+#     return sorted(actions)
 
 
-def get_view_action(db, entity, include_expensive):
-    if include_expensive:
-        text = u'View (including expensive fields)...'
-    else:
-        text = u'View...'
-    action = Action()
-    action.db = db
-    action.include_expensive = include_expensive
-    action.instance = entity
-    action.label = text
-    action.name = 'view'
-    action.type = 'view'
-    return action
+# def get_view_action(db, entity, include_expensive):
+#     if include_expensive:
+#         text = u'View (including expensive fields)...'
+#     else:
+#         text = u'View...'
+#     action = Action()
+#     action.db = db
+#     action.include_expensive = include_expensive
+#     action.instance = entity
+#     action.label = text
+#     action.name = 'view'
+#     action.type = 'view'
+#     return action
 
 
 optimize.bind_all(sys.modules[__name__])  # Last line of module.
