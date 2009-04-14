@@ -18,11 +18,10 @@ from schevo.label import label
 from schevo.base import Entity, Transaction
 from schevo.constant import UNASSIGNED
 
+from schevogtk2.constants import MONO_FONT
 from schevogtk2 import fieldwidget
 from schevogtk2.utils import gsignal, type_register
 
-
-MONO_FONT = pango.FontDescription('monospace normal')
 
 # Set the standard height equal to that of an ComboBoxEntry widget.
 width, STANDARD_HEIGHT = gtk.ComboBoxEntry().size_request()
