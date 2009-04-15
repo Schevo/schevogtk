@@ -1,6 +1,9 @@
+*.egg-info
 *.pyc
+*.pyd
 *.pyo
-*.egg-info/*
-build/*
-dist/*
+build
+dist
+*.so
 *~
+doc/build
