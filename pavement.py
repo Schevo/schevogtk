@@ -62,7 +62,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'Schevo >= 3.1',
+        'Schevo >= 3.1-dev',
     ],
     tests_require=['nose >= 0.10.4'],
     test_suite='nose.collector',
@@ -148,7 +148,7 @@ else:
         import sphinx
         options.order('sphinx', add_rest=True)
         paths = _get_paths()
-        sphinxopts = ['', '-b', 'doctest', '-d', paths.doctrees, 
+        sphinxopts = ['', '-b', 'doctest', '-d', paths.doctrees,
             paths.srcdir, paths.htmldir]
         ret = dry(
             "sphinx-build %s" % (" ".join(sphinxopts),), sphinx.main, sphinxopts)
