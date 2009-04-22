@@ -1,5 +1,8 @@
 """Gazpacho integration: loader and extensions"""
 
+# Copyright (c) 2001-2009 ElevenCraft Inc.
+# See LICENSE for details.
+
 # Set up the kiwi environment, using brute force evilness.
 from kiwi.environ import environ
 import os
