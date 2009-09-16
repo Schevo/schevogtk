@@ -63,6 +63,7 @@ class NavigatorWindow(Window):
     def on_extent_grid__selection_changed(self, widget, extent):
         if extent is not None:
             with TemporaryCursor(self):
+                self._db.backend.rollback()
                 icon_set = icon.iconset(widget, extent)
                 size = gtk.ICON_SIZE_LARGE_TOOLBAR
                 self.entity_grid_image.set_from_icon_set(icon_set, size)
