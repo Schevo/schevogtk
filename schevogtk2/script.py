@@ -20,9 +20,9 @@ from schevo.script import opt
 
 
 USAGE = """\
-schevo gnav [options] [DBFILE]
+schevo gnav [options] [URL]
 
-DBFILE: The database file to use.  If not specified you may open a
+URL: URL of the database file to use.  If not specified you may open a
 database using the File menu."""
 
 
@@ -63,18 +63,15 @@ class Navigator(Command):
             parser = _parser()
             options, args = parser.parse_args(list(args))
             if args:
-                db_filename = args.pop(0)
-                if not os.path.isfile(db_filename):
-                    print 'File %r must already exist' % db_filename
-                    return 1
+                url = args[0]
             else:
-                db_filename = None
+                url = None
             # Create PyGTK application.
             app = Application()
             # Open the database.
-            if db_filename:
-                print 'Opened database', db_filename
-                app.database_open(db_filename)
+            if url:
+                print 'Opening database', url
+                app.database_open(url)
             # Start PyCrust if requested.
             if options.pycrust:
                 start_pycrust(app=app)
