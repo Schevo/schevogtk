@@ -59,6 +59,7 @@ setup(
     license='MIT',
     packages=find_packages(exclude=['doc', 'tests']),
     include_package_data=True,
+    package_data={'': ['*.glade']},
     zip_safe=False,
     install_requires=[
         'Schevo == dev, >= 3.1b1dev-20090919',
