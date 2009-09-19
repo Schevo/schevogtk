@@ -61,7 +61,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'Schevo >= 3.1-dev',
+        'Schevo == dev, >= 3.1b1dev-20090919',
         'kiwi == 1.9.26',
         'Gazpacho == 0.7.2',
     ],
