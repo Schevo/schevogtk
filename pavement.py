@@ -62,6 +62,11 @@ setup(
     zip_safe=False,
     install_requires=[
         'Schevo >= 3.1-dev',
+        'kiwi == 1.9.26',
+        'Gazpacho == 0.7.2',
+    ],
+    dependency_links=[
+        'http://schevo.org/eggs/',
     ],
     tests_require=['nose >= 0.10.4'],
     test_suite='nose.collector',
