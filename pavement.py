@@ -8,7 +8,7 @@ from textwrap import dedent
 from setuptools import Extension, find_packages
 
 
-VERSION = '3.1'
+VERSION = '3.1.0'
 DEVELOPMENT = True
 
 
@@ -62,7 +62,7 @@ setup(
     package_data={'': ['*.glade']},
     zip_safe=False,
     install_requires=[
-        'Schevo == dev, >= 3.1b1dev-20090919',
+        'Schevo == dev, >= 3.1.0dev-20090919',
         'kiwi == 1.9.26',
         'Gazpacho == 0.7.2',
     ],
